@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     print('\nLoading parameters from checkpoint : ', args.ckpt_filename, sep='\n')
     print('\nParameters : ', params, sep='\n')
-    print('accuracy : {:.3f}%'.format(acc))
+    print('Accuracy : {:.3f}%'.format(acc))
 
     if 'sparsify_activations' in params and params['sparsify_activations'] is True:
         net  = Manager.build_model(params, 'cuda:0')

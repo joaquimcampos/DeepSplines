@@ -37,7 +37,7 @@ if __name__ == "__main__":
             max_std = weight[argmax].item()
             max_mean = bias[argmax].item()
 
-    print('\n\nMax 68% quantile :', max_quantile_68.item())
+    print('\nMax 68% quantile :', max_quantile_68.item())
     print('Avg [mean/std] : [{:.3f}, {:.3f}]'.format(acc_mean/total,
                                                     acc_std/total))
     print('Max [mean/std] : [{:.3f}, {:.3f}]'.format(max_mean, max_std))

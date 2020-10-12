@@ -15,11 +15,11 @@ from scripts.gridsearch.torch_dataset.torch_dataset_search_run import TorchDatas
 if __name__ == "__main__" :
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Deepspline vs Deeprelu',
+    parser = argparse.ArgumentParser(description='Deepspline vs Deeprelu vs APL',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser = TorchDatasetSearchRun.add_default_args(parser)
-    activation_choices = {'deepBspline', 'deepRelu'}
+    parser = TorchDatasetSearchRun.add_default_args(parser, is_deepspline=True, is_apl=True)
+    activation_choices = {'deepBspline', 'deepRelu', 'apl'}
     parser.add_argument('activation_type', metavar='activation_type[STR]', type=str,
                         choices=activation_choices, help=f'{activation_choices}.')
     parser.add_argument('--num_runs', metavar='INT,>0', type=ArgCheck.p_int, default=10,
@@ -32,8 +32,11 @@ if __name__ == "__main__" :
     params = srun.default_params(args.activation_type)
     params['num_epochs'] = args.num_epochs # override default number of epochs
 
-    base_model_name = (f'{args.activation_type}_{params["net"]}_' +
-                        f'size{params["spline_size"]}')
+    base_model_name = f'{params["net"]}_{params["activation_type"]}'
+    if params['activation_type'] == 'apl':
+        base_model_name += f'_S_apl_{params["S_apl"]}'
+    else:
+        base_model_name += f'_size{params["spline_size"]}'
 
     start_idx, end_idx = srun.init_indexes(params['log_dir'], args.num_runs)
 

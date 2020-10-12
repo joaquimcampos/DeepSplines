@@ -1,9 +1,46 @@
+""" This code implements linear splines activation functions.
+
+A linear spline activation with parameters {a_k} and b1, b0, with knots placed
+on a grid of spacing T, is described as:
+deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
+
+The ReLU representation is not well-conditioned and leads to an exponential growth
+with the number of coefficients of the computational and memory requirements for
+training the network.
+In this module, we use an alternative B1 spline representation for the activations.
+the number of b-spline coefficients exceed the number of ReLU coefficients by 2,
+such that len(a) + len((b1, b_0)) = len(c), so we have the same total amount of parameters.
+
+The coefficients of the ReLU can be computed via:
+a = Lc, where L is a second finite difference matrix.
+
+This additional number of B1 spline coefficients (2), compared to the ReLU,
+allows the unique specification of the linear term term, which is in the
+nullspace of the L second finite-difference matrix.
+In other words, two sets of coefficients [c], [c'] which are related by
+a linear term, give the same ReLU coefficients [a].
+Outside a region of interest, the activation is computed via left and right
+linear extrapolations using the two leftmost and rightmost coefficients, respectively.
+
+The regularization term applied to this function is:
+TV(2)(deepsline) = ||a||_1 = ||Lc||_1
+
+For the theoretical motivation and optimality results,
+please see https://arxiv.org/abs/1802.09210.
+
+For more information, please read the original deepspline network paper.
+For any queries email: joaquim.campos@epfl.ch or harshit.gupta@epfl.ch.
+Copyright 2020, Joaquim Campos & Harshit Gupta, All right reserved.
+The user is free to use and edit the code.
+"""
+
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torch import Tensor
 import numpy as np
 from scipy.linalg import toeplitz
+from abc import abstractproperty
 from models.deepspline_base import DeepSplineBase
 
 
@@ -67,7 +104,6 @@ class DeepBSplineBase(DeepSplineBase):
 
         self.init_zero_knot_indexes()
         self.init_derivative_filters()
-        self.init_admm() # TODO: Remove
 
 
     def init_zero_knot_indexes(self):
@@ -87,41 +123,25 @@ class DeepBSplineBase(DeepSplineBase):
         self.D2_filter = Tensor([1,-2,1]).view(1,1,3).to(**self.device_type).div(self.grid)
 
 
-    # TODO: Remove
-    def init_admm(self):
-        """ Explicitly build toeplitz regularization matrix L and
-        initialize tensors for ADMM
-        """
-        D2_filter_np = self.D2_filter.view(-1).cpu().numpy()
-        # define column of L matrix
-        L_first_col = np.zeros(self.size-2)
-        L_first_col[0] = D2_filter_np[0]
-        # define row of L matrix
-        L_first_row = np.zeros(self.size)
-        L_first_row[0:3] = D2_filter_np
-        # construct L toeplitz matrix
-        L = toeplitz(L_first_col, L_first_row)
-        self.L = torch.from_numpy(L).to(**self.device_type)
-
-        self.Id = torch.eye(self.size).to(**self.device_type)
-        self.LT = self.L.t() # size: (self.size, self.size-2)
-        self.LTL = self.LT @ self.L # size: (self.size, self.size)
-        self.init_uvec = \
-            torch.zeros((self.num_activations, self.size-2, 1)).to(**self.device_type)
-
+    @abstractproperty
+    def coefficients_vect_(self):
+        """ B-spline vectorized coefficients of activations """
+        pass
 
 
     @property
     def coefficients(self):
         """ B-spline coefficients.
         """
-        return self.coefficients_vect.view(self.num_activations, self.size)
+        return self.coefficients_vect_.view(self.num_activations, self.size)
+
 
     @property
     def coefficients_grad(self):
         """ B-spline coefficients gradients.
         """
-        return self.coefficients_vect.grad.view(self.num_activations, self.size)
+        return self.coefficients_vect_.grad.view(self.num_activations, self.size)
+
 
     @property
     def slopes(self):
@@ -139,19 +159,40 @@ class DeepBSplineBase(DeepSplineBase):
 
 
 
+    def reshape_forward(self, input):
+        """ """
+        input_size = input.size()
+        if self.mode == 'linear':
+            if len(input_size) == 2:
+                # one activation per conv channel
+                x = input.view(*input_size, 1, 1) # transform to 4D size (N, num_units=num_activations, 1, 1)
+            elif len(input_size) == 4:
+                # one activation per conv output unit
+                x = input.view(input_size[0], -1).unsqueeze(-1).unsqueeze(-1)
+            else:
+                raise ValueError(f'input size is {len(input_size)}D but should be 2D or 4D...')
+        else:
+            assert len(input_size) == 4, 'input to activation should be 4D (N, C, H, W) if mode="conv".'
+            x = input
+
+        return x
+
+
+    def reshape_back(self, output, input_size):
+        """ """
+        if self.mode == 'linear':
+            output = output.view(*input_size) # transform back to 2D size (N, num_units)
+
+        return output
+
+
     def forward(self, input):
         """
         Args:
             input : 2D/4D tensor
         """
         input_size = input.size()
-        if self.mode == 'linear':
-            assert len(input_size) == 2, 'input to activation should be 2D (N, num_units) if mode="linear".'
-            x = input.view(*input_size, 1, 1) # transform to 4D size (N, num_units=num_activations, 1, 1)
-        else:
-            assert len(input_size) == 4, 'input to activation should be 4D (N, C, H, W) if mode="conv".'
-            x = input
-
+        x = self.reshape_forward(input)
         assert x.size(1) == self.num_activations, 'input.size(1) != num_activations.'
 
         # Linear extrapolations:
@@ -170,11 +211,10 @@ class DeepBSplineBase(DeepSplineBase):
         # linearExtrapolations is zero for values inside range
         linearExtrapolations = leftExtrapolations + rightExtrapolations
 
-        output = DeepBSpline_Func.apply(x, self.coefficients_vect, self.grid, self.zero_knot_indexes, self.size) + \
+        output = DeepBSpline_Func.apply(x, self.coefficients_vect_, self.grid, self.zero_knot_indexes, self.size) + \
                 linearExtrapolations
 
-        if self.mode == 'linear':
-            output = output.view(*input_size) # transform back to 2D size (N, num_units)
+        output = self.reshape_back(output, input_size)
 
         return output
 
@@ -187,10 +227,10 @@ class DeepBSplineBase(DeepSplineBase):
         first_knots_indexes = first_knots_indexes.long()
 
         zeros = torch.zeros_like(first_knots_indexes).float()
-        if not self.coefficients_vect[first_knots_indexes].allclose(zeros):
+        if not self.coefficients_vect_[first_knots_indexes].allclose(zeros):
             raise AssertionError('First coefficients are not zero...')
 
-        self.coefficients_vect.grad[first_knots_indexes] = zeros
+        self.coefficients_vect_.grad[first_knots_indexes] = zeros
 
 
 
@@ -199,39 +239,5 @@ class DeepBSplineBase(DeepSplineBase):
         """
         with torch.no_grad():
             new_slopes = super().apply_threshold(threshold)
-            self.coefficients_vect.data = \
+            self.coefficients_vect_.data = \
                 self.iterative_slopes_to_coefficients(new_slopes).view(-1)
-
-
-    # TODO: Remove
-    def update_admm(self, lmbda):
-        """ Update A matrix """
-        self.lmbda = lmbda
-        self.A = torch.inverse(self.Id + self.lmbda*self.LTL) # size: (self.size, self.size)
-
-    # TODO: Remove
-    def apply_prox(self, prox_iter):
-        """
-        Apply proximal operator computed by ADMM
-        """
-        with torch.no_grad():
-
-            # coefficients size: (self.num_activations, self.size, 1)
-            orig_coefficients = self.coefficients.unsqueeze(-1).clone().detach()
-            coefficients = orig_coefficients.clone()
-            uvec = self.init_uvec
-
-            for i in range(prox_iter):
-                Lc = torch.matmul(self.L, coefficients)
-                assert Lc.size() == (self.num_activations, self.size-2, 1)
-
-                # z_vec size: (self.num_activations, self.size-2, 1)
-                zvec = F.softshrink(Lc + uvec, lambd=self.lmbda)
-                uvec = uvec + Lc - zvec
-                b = orig_coefficients + self.lmbda * torch.matmul(self.LT, zvec-uvec)
-                assert b.size() == (self.num_activations, self.size, 1)
-
-                coefficients = torch.matmul(self.A, b)
-                assert coefficients.size() == (self.num_activations, self.size, 1)
-
-            self.coefficients_vect.data = coefficients.view(-1)

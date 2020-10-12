@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from ds_utils import ArgCheck
 import argparse
 import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+from ds_utils import ArgCheck
 from project import Project
 
 
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser.add_argument('sparsified_log_dir', metavar='sparsified_log_dir[STR]',
                         type=str, help='')
     parser.add_argument('--save_fig', action='store_true', help='')
-    parser.add_argument('--output', metavar='output folder', type=str, help='')
+    parser.add_argument('--output', metavar='STR', type=str, help='')
     parser.add_argument('--yrange', metavar='LIST', nargs='+', type=ArgCheck.nn_float,
                         help=' ')
     args = parser.parse_args()

@@ -91,7 +91,10 @@ class Manager(Project):
                         'simplenet'         : SimpleNet,
                         'simplestnet'       : SimplestNet,
                         'resnet20'          : ResNet20,
-                        'resnet32'          : ResNet32 }
+                        'resnet32'          : ResNet32,
+                        'resnet32_linear'   : ResNet32Linear,
+                        'nin'               : NIN,
+                        'nin_linear'        : NINLinear}
 
         assert params['net'] in models_dict.keys(), 'network not found: please add net to models_dict.'
         net = models_dict[params['net']](**params['model'], device=device)
@@ -122,7 +125,7 @@ class Manager(Project):
         if len(self.optim_names) == 2:
             try:
                 # main optimizer only for network parameters
-                main_params_iter = self.net.parameters_no_deepspline()
+                main_params_iter = self.net.parameters_no_deepspline_apl()
             except AttributeError:
                 print('Cannot use aux optimizer.')
                 raise
@@ -137,9 +140,12 @@ class Manager(Project):
         self.aux_optimizer, self.aux_scheduler = None, None
 
         if len(self.optim_names) == 2:
-            # aux optimizer/scheduler for deepspline parameters
+            # aux optimizer/scheduler for deepspline/apl parameters
             try:
-                aux_params_iter = self.net.parameters_deepspline()
+                if self.net.deepspline is not None:
+                    aux_params_iter = self.net.parameters_deepspline()
+                elif self.net.apl is not None:
+                    aux_params_iter = self.net.parameters_apl()
             except AttributeError:
                 print('Cannot use aux optimizer.')
                 raise
@@ -244,6 +250,9 @@ class Manager(Project):
             # the regularization weight is multiplied inside weight_decay()
             regularization = regularization + self.net.weight_decay()
 
+        if self.net.apl_weight_decay_regularization is True:
+            regularization = regularization + self.net.apl_weight_decay()
+
         if self.net.tv_bv_regularization is True:
             # the regularization weight is multiplied inside TV_BV()
             tv_bv, tv_bv_unweighted = self.net.TV_BV()
@@ -295,8 +304,6 @@ class Manager(Project):
             outputs, losses = self.forward_backward_train_batch(inputs, labels)
 
             if self.net.training is True:
-                if self.params['clip_grad'] is True:
-                    torch.nn.utils.clip_grad_value_(self.net.parameters_deepspline(), 0.1)
                 self.optimizer_step()
 
             running_losses = update_running_losses(running_losses, losses)

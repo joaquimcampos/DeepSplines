@@ -1,3 +1,6 @@
+""" See deepRelu.py, deepspline_Base.py, deepBspline.by.
+"""
+
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -7,18 +10,14 @@ from models.deepRelu import DeepReLU
 from models.deepspline_base import DeepSplineBase
 
 
-
 class HybridDeepSpline(DeepSplineBase):
     """ see deepspline_base.py
-
-    Args:
-        bias: (flag) learn deepRelu bias
     """
-    def __init__(self, bias=True, **kwargs): # TODO: bias=False may not make sense?
+    def __init__(self, **kwargs):
 
         super().__init__(**kwargs)
         self.deepBspline = DeepBSpline(**kwargs)
-        self.deepRelu = DeepReLU(bias=bias, **kwargs)
+        self.deepRelu = DeepReLU(**kwargs)
 
 
     def zero_grad_coefficients(self):
@@ -54,8 +53,7 @@ class HybridDeepSpline(DeepSplineBase):
             deepRelu_coefficients_grad = \
                 self.coefficients_grad_to_deepRelu_coefficients_grad(self.coefficients_grad)
 
-            if self.learn_bias:
-                self.bias.grad = deepRelu_coefficients_grad[:, 0].clone()
+            self.bias.grad = deepRelu_coefficients_grad[:, 0].clone()
             self.weight.grad = deepRelu_coefficients_grad[:, 1].clone()
             self.slopes.grad = deepRelu_coefficients_grad[:, 2::].clone()
 
@@ -82,10 +80,6 @@ class HybridDeepSpline(DeepSplineBase):
         if which == 'all':
             for name in DeepBSpline.parameter_names():
                 yield name
-
-    @property
-    def learn_bias(self):
-        return self.deepRelu.learn_bias
 
     @property
     def bias(self):

@@ -11,11 +11,11 @@ from torch_dataset_search_run import TorchDatasetSearchRun
 if __name__ == "__main__" :
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Gridsearch on cifar10/mnist with a network '
+    parser = argparse.ArgumentParser(description='Gridsearch on cifar/mnist with a network '
                                                 'with standard activations.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser = TorchDatasetSearchRun.add_default_args(parser, is_standard=True)
+    parser = TorchDatasetSearchRun.add_default_args(parser, is_deepspline=False)
     activation_choices = {'relu', 'leaky_relu', 'prelu'}
     parser.add_argument('activation_type', metavar='activation_type[STR]',
             type=str, choices=activation_choices, help=f'{activation_choices}.')
@@ -25,11 +25,14 @@ if __name__ == "__main__" :
     params = srun.default_params(args.activation_type)
     params['verbose'] = True
 
-    base_model_name = (f'{params["net"]}_{params["activation_type"]}_' 
+    base_model_name = (f'{params["net"]}_{params["activation_type"]}_'
                        f'lr_{params["lr"]}')
 
     # change gridsearch values as desired
-    weight_decay_list = [1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2]
+    if params["net"].startswith('nin'):
+        weight_decay_list = [1e-4]
+    else:
+        weight_decay_list = [5e-4]
 
     search_len = len(weight_decay_list)
     start_idx, end_idx = srun.init_indexes(params['log_dir'], search_len)

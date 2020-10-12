@@ -13,7 +13,7 @@ def init_dataset(**params):
 
     # add your datasets here and create a corresponding Dataset class
     dataset_dict = {'s_shape_1500' : S_shape, 'circle_1500' : Circle,
-                    'cifar10' : Cifar10, 'mnist' : MNIST}
+                    'cifar10' : Cifar10, 'cifar100' : Cifar100, 'mnist' : MNIST}
 
     if params['dataset_name'] not in dataset_dict.keys():
         raise ValueError('Chosen dataset is not available... Exiting.')
@@ -159,6 +159,51 @@ class Cifar10(TorchDataset):
     def get_torchvision_dataset(self):
         """ """
         return torchvision.datasets.CIFAR10
+
+
+
+class Cifar100(TorchDataset):
+
+    def __init__(self, **params):
+        """ """
+        super().__init__(**params)
+        self.num_classes = 100
+        self.norm_mean = (0.5072, 0.4867, 0.4412)
+        self.norm_std  = (0.2673, 0.2564, 0.2762)
+        self.classes = ('apple', 'aquarium_fish', 'baby', 'bear', 'beaver',
+                        'bed', 'bee', 'beetle', 'bicycle', 'bottle',
+                        'bowl', 'boy', 'bridge', 'bus', 'butterfly',
+                        'camel', 'can', 'castle', 'caterpillar', 'cattle',
+                        'chair', 'chimpanzee', 'clock', 'cloud', 'cockroach',
+                        'couch', 'crab', 'crocodile', 'cup', 'dinosaur',
+                        'dolphin', 'elephant', 'flatfish', 'forest', 'fox',
+                        'girl', 'hamster', 'house', 'kangaroo', 'keyboard',
+                        'lamp', 'lawn_mower', 'leopard', 'lion', 'lizard',
+                        'lobster', 'man', 'maple_tree', 'motorcycle', 'mountain',
+                        'mouse', 'mushroom', 'oak_tree', 'orange', 'orchid',
+                        'otter', 'palm_tree', 'pear', 'pickup_truck', 'pine_tree',
+                        'plain', 'plate', 'poppy', 'porcupine', 'possum',
+                        'rabbit', 'raccoon', 'ray', 'road', 'rocket',
+                        'rose', 'sea', 'seal', 'shark', 'shrew',
+                        'skunk', 'skyscraper', 'snail', 'snake', 'spider',
+                        'squirrel', 'streetcar', 'sunflower', 'sweet_pepper', 'table',
+                        'tank', 'telephone', 'television', 'tiger', 'tractor',
+                        'train', 'trout', 'tulip', 'turtle', 'wardrobe',
+                        'whale', 'willow_tree', 'wolf', 'woman', 'worm')
+
+
+    def get_augment_transform_list(self):
+        """ Gets list of training augmentation transforms
+        """
+        train_transform_list = [transforms.RandomCrop(32, padding=4)]
+        train_transform_list += [transforms.RandomHorizontalFlip()]
+
+        return train_transform_list
+
+
+    def get_torchvision_dataset(self):
+        """ """
+        return torchvision.datasets.CIFAR100
 
 
 
@@ -399,15 +444,3 @@ class S_shape(twoD):
 
         ax.plot(t_left, np.full_like(t_left, -self.y_cutoff),  c=color, linewidth=3)
         ax.plot(t_right, np.full_like(t_right, self.y_cutoff), c=color, linewidth=3)
-
-
-
-if __name__ == "__main__" :
-
-    c = init_dataset(**{'dataset_name': 's_shape', 'model_name':'aa',
-                        'log_dir' : './paper_experiments/test1/',
-                        'save_imgs':False, 'plot_imgs' : True})
-
-    inputs, labels = c.generate_set('train', 1500)
-    inputs, outputs = c.get_test_set()
-    c.plot_test_imgs(inputs, outputs)

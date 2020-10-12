@@ -33,7 +33,7 @@ if __name__ == "__main__" :
     params['test_as_valid'] = True # train on full training data
     if params['multires_milestones'] is not None:
         params['reset_multires'] = True
-    if params['dataset_name'] == 'cifar10':
+    if params['dataset_name'].startswith('cifar'):
         params['valid_log_step'] = 391
     elif params['dataset_name'] == 'mnist':
         params['valid_log_step'] = 938

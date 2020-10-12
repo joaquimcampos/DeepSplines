@@ -19,7 +19,7 @@ import sys
 from models.basemodel import BaseModel
 
 
-__all__ = ['ResNet20', 'ResNet32', 'ResNet44']
+__all__ = ['ResNet32Linear']
 
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1):
@@ -52,13 +52,13 @@ class BasicBlock(BaseModel):
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv3x3(in_planes, planes, stride)
         self.bn1 = nn.BatchNorm2d(planes)
-        activation_specs.append(('conv', planes))
+        activation_specs.append(('linear', planes*(int(512/planes) ** 2)))
 
         self.dropout = nn.Dropout(p=self.dropout_rate)
 
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = nn.BatchNorm2d(planes)
-        activation_specs.append(('conv', planes))
+        activation_specs.append(('linear', planes*(int(512/planes) ** 2)))
 
         self.downsample = downsample
         self.stride = stride
@@ -87,69 +87,16 @@ class BasicBlock(BaseModel):
         return out
 
 
+class ResNetLinear(BaseModel):
 
-class Bottleneck(BaseModel):
-    expansion = 4
-
-    def __init__(self, in_planes, planes, stride=1, downsample=None, **params):
-        """
-        Args:
-            in_planes : number of input in_channels
-            planes : number of output channels after first convolution
-            downsample : None or downsample/channel_augmentation strategy
-        """
-        super().__init__(**params)
-
-        # stores layer type ('conv'/'linear') and number of channels/neurons for each layer
-        activation_specs = []
-
-        self.conv1 = conv1x1(in_planes, planes)
-        self.bn1 = nn.BatchNorm2d(planes)
-        activation_specs.append(('conv', planes))
-
-        # Both self.conv2 and self.downsample layers downsample the input when stride != 1
-        self.conv2 = conv3x3(planes, planes, stride)
-        self.bn2 = nn.BatchNorm2d(planes)
-        activation_specs.append(('conv', planes))
-
-        self.conv3 = conv1x1(planes, self.expansion * planes)
-        self.bn3 = nn.BatchNorm2d(self.expansion * planes)
-        activation_specs.append(('conv', self.expansion * planes))
-
-        self.downsample = downsample
-        self.stride = stride
-        self.activations = self.init_activation_list(activation_specs, bias=False)
-
-
-    def forward(self, x):
-        """ """
-        identity = x
-
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.activations[0](out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.activations[1](out)
-
-        out = self.conv3(out)
-        out = self.bn3(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-        out = self.activations[2](out)
-
-        return out
-
-
-
-class ResNet(BaseModel):
-    def __init__(self, block, num_blocks, in_planes=64, **params):
+    def __init__(self, block, num_blocks, in_planes=16, **params):
         """ """
         super().__init__(**params)
+        if not self.dataset_name.startswith('cifar'):
+            raise(f'Can only use this module on cifar (not on {self.dataset_name})...')
+        assert num_blocks == [5,5,5]
+        assert in_planes == 16
+        assert block == BasicBlock
 
         self.in_planes = in_planes
         self.layer0 = self._make_layer0(in_planes)
@@ -175,19 +122,11 @@ class ResNet(BaseModel):
 
     def _make_layer0(self, in_planes):
         """ """
-        if self.dataset_name.startswith('cifar'):
-            layer0 = nn.Sequential(
-                nn.Conv2d(3, in_planes, kernel_size=3, stride=1, padding=1, bias=False),
-                nn.BatchNorm2d(in_planes),
-                self.init_activation(('conv', in_planes), bias=False)
-            )
-        else:
-            layer0 = nn.Sequential(
-                 nn.Conv2d(3, in_planes, kernel_size=7, stride=2, padding=3, bias=False),
-                 nn.BatchNorm2d(in_planes),
-                 self.init_activation(('conv', in_planes), bias=False),
-                 nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-            )
+        layer0 = nn.Sequential(
+            nn.Conv2d(3, in_planes, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(in_planes),
+            self.init_activation(('linear', in_planes*(int(512/in_planes) ** 2)), bias=False)
+        )
 
         return layer0
 
@@ -237,11 +176,5 @@ class ResNet(BaseModel):
 
 ################################################################################
 
-def ResNet20(**params):
-    return ResNet(BasicBlock, [3, 3, 3], in_planes=16, **params)
-
-def ResNet32(**params):
-    return ResNet(BasicBlock, [5, 5, 5], in_planes=16, **params)
-
-def ResNet44(**params):
-    return ResNet(BasicBlock, [7, 7, 7], in_planes=16, **params)
+def ResNet32Linear(**params):
+    return ResNetLinear(BasicBlock, [5, 5, 5], in_planes=16, **params)

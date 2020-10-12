@@ -10,7 +10,7 @@ from models.basemodel import BaseModel
 
 class SimpleNet(BaseModel):
     """
-    input size cifar10:
+    input size cifar:
     N x 3 x 32 x 32
 
     Each filtering with a filter size of 5 reduces the height and

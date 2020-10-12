@@ -6,6 +6,8 @@ import numpy as np
 import sys
 import copy
 import shutil
+
+from ds_utils import ArgCheck
 from project import Project
 from main import main_prog
 
@@ -33,6 +35,8 @@ if __name__ == "__main__":
                         help='Log directory with model runs.')
     parser.add_argument('out_log_dir', metavar='out_log_dir[STR]', type=str,
                         help='Output log directory for sparsified models.')
+    parser.add_argument('acc_drop_threshold', metavar='FLOAT,<0', type=ArgCheck.n_float, default=-0.25,
+                        help='Maximum train accuracy percentage drop allowed for sparsification.')
     args = parser.parse_args()
 
     if not os.path.isdir(args.out_log_dir):
@@ -68,7 +72,7 @@ if __name__ == "__main__":
         prev_model_name = None # previous model name
         chosen_model, chosen_threshold = None, None
 
-        acc_drop_threshold = -1 # training accuracy maximum allowed percentage drop
+        acc_drop_threshold = args.acc_drop_threshold # training accuracy maximum allowed percentage drop
         threshold_list = np.concatenate((np.zeros(1),
                                         np.arange(0.0002, 0.004, 0.0002),
                                         np.arange(0.004, 1, 0.05),

@@ -1,3 +1,6 @@
+""" See deepBspline_base.py, deepBspline_explicit_linear.py.
+"""
+
 import torch
 from torch import nn
 

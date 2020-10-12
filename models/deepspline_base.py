@@ -1,11 +1,15 @@
+"""
+"""
+
 import torch
 from torch import nn
 from torch import Tensor
 import numpy as np
 from scipy.linalg import toeplitz
+from abc import ABC, abstractproperty
 
 
-class DeepSplineBase(nn.Module):
+class DeepSplineBase(ABC, nn.Module):
     """
     Args:
         mode : 'conv' or 'linear'
@@ -130,16 +134,16 @@ class DeepSplineBase(nn.Module):
         return (self.P.t() @ coefficients_grad.unsqueeze(-1)).squeeze(-1)
 
 
-    @property
+    @abstractproperty
     def coefficients(self):
         """ B-spline coefficients of activations """
-        raise NotImplementedError
+        pass
 
-    @property
+
+    @abstractproperty
     def slopes(self):
         """ Slopes of activations """
-        raise NotImplementedError
-
+        pass
 
 
     def totalVariation(self, **kwargs):
@@ -178,8 +182,6 @@ class DeepSplineBase(nn.Module):
 
 
 
-    # TODO: Actually, I believe there was a mistake in the matrix self.P
-    # Now that it is corrected, using P instead of iterative method probably works well.
     def iterative_slopes_to_coefficients(self, slopes):
         """ Better conditioned than matrix formulation (see self.P)
 

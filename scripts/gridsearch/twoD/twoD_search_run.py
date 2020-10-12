@@ -17,11 +17,11 @@ class TwoDSearchRun(SearchRun):
 
 
     @staticmethod
-    def add_default_args(parser, is_standard=False):
+    def add_default_args(parser, is_deepspline=False, is_apl=False):
         """ Add default args
 
         Args:
-            is_standard: True, if activation is standard.
+            is_deepspline: True, if activation is standard.
         """
         parser = SearchRun.add_default_args(parser)
 
@@ -39,9 +39,13 @@ class TwoDSearchRun(SearchRun):
         parser.add_argument('--num_epochs', metavar='INT,>0', type=ArgCheck.p_int, default=500,
                             choices=num_epochs_choices, help=f'{str(num_epochs_choices)}')
 
-        if is_standard is False:
+        if is_apl is True:
+            parser.add_argument('--S_apl', metavar='INT,>0', type=ArgCheck.p_int,
+                            default=1, help=f'Additional number of APL knots.')
+
+        if is_deepspline is True:
             parser.add_argument('--spline_size', metavar='LIST[INT>0]', nargs='+',
-                                type=ArgCheck.p_odd_int, default=[33],
+                                type=ArgCheck.p_odd_int, default=[21],
                                 help='Number of activation coefficients.')
             parser.add_argument('--spline_range', metavar='FLOAT,>0', default=1,
                                 type=ArgCheck.p_float, help='one-sided deepspline range.')
@@ -57,9 +61,9 @@ class TwoDSearchRun(SearchRun):
     def default_params(self, activation_type):
         """ Return default params, common to deepspline and standard gridsearch.
         """
-        assert activation_type in ['deepBspline', 'deepBspline_explicit_linear',
-                                    'hybrid_deepspline', 'deepBspline_superposition',
-                                    'relu', 'leaky_relu', 'prelu']
+        assert activation_type in ['deepBspline', 'deepBspline_explicit_linear', \
+                                    'hybrid_deepspline', 'deepBspline_superposition', \
+                                    'apl', 'relu', 'leaky_relu', 'prelu']
 
         milestones = [440, 480] if self.args.num_epochs == 500 else [830, 950]
         batch_size = 10
@@ -87,6 +91,11 @@ class TwoDSearchRun(SearchRun):
             params['outer_norm'] = self.args.outer_norm
         else:
             params['lmbda'] = 0
+
+        if 'apl' in activation_type:
+            params['S_apl'] = self.args.S_apl
+        else:
+            params['beta'] = 0
 
 
         super_params = super().default_params()

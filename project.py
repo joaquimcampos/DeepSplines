@@ -15,6 +15,12 @@ from ds_utils import json_load, json_dump
 
 class Project():
 
+    train_results_json_filename = 'train_results.json'
+    test_results_json_filename = 'test_results.json'
+    train_sorting_key = 'latest_valid_acc'
+    test_sorting_key = 'test_acc'
+
+
     def __init__(self, params, user_params):
 
         self.params = params
@@ -69,21 +75,12 @@ class Project():
             print('\nUsing CPU.')
 
 
-
-    @staticmethod
-    def get_train_results_json_filename():
-        return 'train_results.json'
-
-    @staticmethod
-    def get_test_results_json_filename():
-        return 'test_results.json'
-
     @property
     def results_json_filename(self):
         if self.training is True:
-            return self.get_train_results_json_filename()
+            return self.train_results_json_filename
         else:
-            return self.get_test_results_json_filename()
+            return self.test_results_json_filename
 
 
     @property
@@ -91,10 +88,9 @@ class Project():
         """ Key for sorting models in json file.
         """
         if self.training:
-            return 'latest_valid_acc'
+            return self.train_sorting_key
         else:
-            return 'test_acc'
-
+            return self.test_sorting_key
 
 
     def init_json(self):
@@ -332,9 +328,9 @@ class Project():
         """
         assert mode in ['train', 'test'], 'mode should be "train" or "test"...'
         if mode == 'train':
-            results_json_filename = cls.get_train_results_json_filename()
+            results_json_filename = cls.train_results_json_filename
         else:
-            results_json_filename = cls.get_test_results_json_filename()
+            results_json_filename = cls.test_results_json_filename
 
         results_json = os.path.join(log_dir, results_json_filename)
         results_dict = json_load(results_json)
@@ -350,9 +346,9 @@ class Project():
         """
         assert mode in ['train', 'test'], 'mode should be "train" or "test"...'
         if mode == 'train':
-            results_json_filename = cls.get_train_results_json_filename()
+            results_json_filename = cls.train_results_json_filename
         else:
-            results_json_filename = cls.get_test_results_json_filename()
+            results_json_filename = cls.test_results_json_filename
 
         results_json = os.path.join(log_dir, results_json_filename)
         json_dump(results_dict, results_json)

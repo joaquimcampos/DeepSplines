@@ -56,9 +56,6 @@ if __name__ == "__main__":
     P = get_P(T, size)
     P_inv = get_P_inv(T, size)
 
-    print('P : ', P, sep='\n')
-    print('\nP^-1 : ', P_inv, sep='\n')
-
     P_P_inv = P @ P_inv
     P_P_inv[np.absolute(P_P_inv) < 1e-7] = 0.
 

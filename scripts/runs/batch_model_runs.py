@@ -35,7 +35,7 @@ def get_recursive_dirs(path, level, base=True):
 if __name__ == "__main__" :
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Run several (best) models, for each size.',
+    parser = argparse.ArgumentParser(description='Run several (best) models, one for each gridsearched configuration.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('log_dir', metavar='log_dir[STR]',
@@ -50,7 +50,7 @@ if __name__ == "__main__" :
     in_paths = get_recursive_dirs(args.gridsearch_dir, args.num_levels)
     out_paths = [os.path.join(args.log_dir, '/'.join(dirs.split('/')[-args.num_levels:])) \
                 for dirs in in_paths]
-    
+
     for path in out_paths:
         try:
             os.makedirs(path)

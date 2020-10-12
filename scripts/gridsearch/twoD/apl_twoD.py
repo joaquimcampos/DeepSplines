@@ -2,6 +2,7 @@
 
 import copy
 import argparse
+import sys
 
 from main import main_prog
 from ds_utils import ArgCheck
@@ -12,21 +13,22 @@ if __name__ == "__main__" :
 
     # parse arguments
     parser = argparse.ArgumentParser(description='Gridsearch on twoD dataset with a twoDnet '
-                                                'with standard activations.',
+                                                'with APL activations.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser = TwoDSearchRun.add_default_args(parser, is_deepspline=False)
-    activation_choices = {'relu', 'leaky_relu', 'prelu'}
-    parser.add_argument('activation_type', metavar='activation_type[STR]',
-            type=str, choices=activation_choices, help=f'{activation_choices}.')
-
+    parser = TwoDSearchRun.add_default_args(parser, is_apl=True)
     args = parser.parse_args()
+
     srun = TwoDSearchRun(args) # instantiate search object
-    params = srun.default_params(args.activation_type)
+    params = srun.default_params('apl')
     params['verbose'] = True
 
-    base_model_name = (f'{params["net"]}_{params["activation_type"]}_'
-                        f'hidden{params["hidden"]}')
+    # print command-line arguments (for debugging bash scripts)
+    cmd_args = ' '.join(sys.argv)
+    print('\nCmd args : ', cmd_args, sep='\n')
+
+    base_model_name = (f'{params["net"]}_{params["activation_type"]}_' +
+                        f'S_apl_{params["S_apl"]}_hidden{params["hidden"]}_')
 
     # change gridsearch values as desired
     weight_decay_list = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
@@ -43,7 +45,7 @@ if __name__ == "__main__" :
         params['model_name'] = base_model_name + '_weight_decay_{:.1E}'.format(weight_decay)
 
         combination_str = (f'\nsearch idx {idx}/{end_idx-1}, '
-                            'weight decay {:.1E}.'.format(weight_decay))
+                            'weight_decay {:.1E}.'.format(weight_decay))
 
         params['combination_str'] = combination_str
         main_prog(copy.deepcopy(params))

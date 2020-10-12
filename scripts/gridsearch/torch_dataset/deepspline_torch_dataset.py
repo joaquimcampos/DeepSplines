@@ -11,11 +11,11 @@ from torch_dataset_search_run import TorchDatasetSearchRun
 if __name__ == "__main__" :
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Gridsearch on cifar10/mnist with a network '
+    parser = argparse.ArgumentParser(description='Gridsearch on cifar/mnist with a network '
                                                 'with deep spline activations.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser = TorchDatasetSearchRun.add_default_args(parser)
+    parser = TorchDatasetSearchRun.add_default_args(parser, is_deepspline=True)
     activation_choices = {'deepBspline_explicit_linear',
                         'hybrid_deepspline', 'deepBspline_superposition'}
     parser.add_argument('activation_type', metavar='activation_type[STR]',
@@ -36,13 +36,14 @@ if __name__ == "__main__" :
 
     size_str = '_'.join(str(i) for i in params["spline_size"])
 
-    base_model_name = (f'{params["net"]}_size{size_str}_' +
+    base_model_name = (f'{params["net"]}_{params["activation_type"]}_size{size_str}_' +
+                        'weight_decay_{:.1E}_'.format(params["weight_decay"]) +
                         f'range{params["spline_range"]}_' +
-                        f'lr_{params["lr"]}_aux_lr_{params["aux_lr"]}'
+                        f'lr_{params["lr"]}_aux_lr_{params["aux_lr"]}' +
                         f'{lipschitz_str}{hyperparam_tuning_str}{multires_str}')
 
     # change gridsearch values as desired
-    lmbda_list = [1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 1e-1, 1, 10, 50]
+    lmbda_list = [1e-5, 1e-4, 1e-3, 5e-5, 5e-4]
 
     search_len = len(lmbda_list)
     start_idx, end_idx = srun.init_indexes(params['log_dir'], search_len)

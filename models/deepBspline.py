@@ -1,3 +1,6 @@
+""" See deepBspline_base.py.
+"""
+
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -48,6 +51,11 @@ class DeepBSpline(DeepBSplineBase):
         self.coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
 
 
+    @property
+    def coefficients_vect_(self):
+        return self.coefficients_vect
+
+    
     @staticmethod
     def parameter_names(**kwargs):
         yield 'coefficients_vect'

@@ -48,10 +48,10 @@ if __name__ == "__main__":
 
     idx = np.argsort(lmbdas)
 
-    lmbdas = lmbdas[idx]# [1::]
-    error_rates = error_rates[idx]# [1::]
-    sparsities = sparsities[idx]# [1::]
-    lipschitz_bounds = lipschitz_bounds[idx]# [1::]
+    lmbdas = lmbdas[idx]
+    error_rates = error_rates[idx]
+    sparsities = sparsities[idx]
+    lipschitz_bounds = lipschitz_bounds[idx]
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
@@ -66,9 +66,7 @@ if __name__ == "__main__":
     ax.set_ylabel("Number of non-sparse coefficients", fontsize=14)
 
     ax.grid(True)
-    # fig.tight_layout()
 
-    # ax.axvline(x=lmbda_formula, c='red', linestyle='--')
     ax.plot(lmbdas, sparsities, '--o', linewidth=1.0)
     ax.set_xscale('log')
     ax.set_xlim([lmbdas.min()/10, lmbdas.max()*10])
@@ -90,7 +88,6 @@ if __name__ == "__main__":
     ax.set_ylabel(r"Error$ \ $rate (\%)", fontsize=14)
 
     ax.grid(True)
-    # ax.axvline(x=lmbda_formula, c='red', linestyle='--')
     ax.plot(lmbdas, error_rates, '--o', linewidth=1.0)
 
     ax.set_xscale('log')
@@ -111,7 +108,6 @@ if __name__ == "__main__":
     ax.set_ylabel(r"Lipschitz$ \ $bound", fontsize=14)
 
     ax.grid(True)
-    # ax.axvline(x=lmbda_formula, c='red', linestyle='--')
     ax.plot(lmbdas, np.absolute(lipschitz_bounds), '--o', linewidth=1.0)
 
     ax.set_xscale('log')

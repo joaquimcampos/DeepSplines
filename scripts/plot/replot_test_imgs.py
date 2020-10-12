@@ -20,9 +20,12 @@ if __name__ == "__main__":
 
     params['mode'] = 'test'
     params['ckpt_filename'] = ckpt_filename
+
     if args.log_dir_model[-1] == '/':
         args.log_dir_model = args.log_dir_model[:-1]
+
     params['log_dir'] = '/'.join(args.log_dir_model.split('/')[:-1])
     params['plot_imgs'] = True
     params['save_imgs'] = args.save_fig
+
     main_prog(copy.deepcopy(params))

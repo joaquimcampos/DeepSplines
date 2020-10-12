@@ -62,6 +62,19 @@ class ArgCheck():
         return ivalue
 
 
+
+    @staticmethod
+    def n_float(value):
+        """ Check if float value got from argparse is negative
+            and raise error if not.
+        """
+        ivalue = float(value)
+        if ivalue >= 0:
+             raise argparse.ArgumentTypeError(f'{value} is an invalid negative float value')
+        return ivalue
+
+
+
     @staticmethod
     def frac_float(value):
         """ Check if float value got from argparse is >= 0 and <= 1

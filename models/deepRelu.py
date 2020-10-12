@@ -1,3 +1,24 @@
+""" This code creates a linear spline activation function, parameterized by a
+ReLU expansion + linear term.
+
+A linear spline activation with ReLU parameters {a_k},
+linear parameters b1, b0, and knot locations {z_k} is described as:
+deepspline(x) = sum_k [a_k * ReLU(x-z_k)] + (b1*x + b0)
+
+The process of discovering knots is expensive. To eliminate the need for knot
+discovery, we restrict the search space by placing the knots in a grid with
+spacing T. As T goes to zero we can approximate any function in the original
+search space.
+
+A linear spline activation with parameters {a_k} and b1, b0, with knots placed
+on a grid of spacing T, is described as:
+deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
+
+Preference should be given to Deepspline moydule which use
+an alternative B-spline representation for the linear spline.
+For more details, see deepspline_base.py
+"""
+
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -116,8 +137,12 @@ class DeepReLU(DeepSplineBase):
         """
         input_size = input.size()
         if self.mode == 'linear':
-            assert len(input_size) == 2, 'input to activation should be 2D (N, num_units) if mode="linear".'
-            x = input.view(*input_size, 1, 1) # transform to 4D size (N, num_units=num_activations, 1, 1)
+            if len(input_size) == 2:
+                # one activation per conv channel
+                x = input.view(*input_size, 1, 1) # transform to 4D size (N, num_units=num_activations, 1, 1)
+            elif len(input_size) == 4:
+                # one activation per conv output unit
+                x = input.view(input_size[0], -1).unsqueeze(-1).unsqueeze(-1)
         else:
             assert len(input_size) == 4, 'input to activation should be 4D (N, C, H, W) if mode="conv".'
             x = input

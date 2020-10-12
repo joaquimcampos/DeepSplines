@@ -1,3 +1,26 @@
+""" See deepBspline_base.py.
+
+In practice, deepsplines need more flexibility to work well in high
+regularization regimes.
+(try running approximate_parabola.py with deepspline activations
+and a high regularization weight and number of coefficients).
+Therefore, it is useful to add an explicit linear term to the activation,
+as is the case for this module.
+Attention is required here since now we have an over-representation (two
+different sets of parameters can result in the same activation overall).
+This could be solved by always keeping the first two coefficients
+always zero (see reset_first_coefficients() method). In practice,
+we observed a worse performance and so chose to simply add this
+linear term directly to the output of the activation.
+Another trick is used to solve optimization issues with deepspline:
+multi-resolution. This module contains a method to increase the resolution,
+by increasing the number of coefficients by a certain order, while keeping
+the previous solution (activation).
+
+In summary (not rigorously),
+deepBspline_explicit_linear.py = deepBspline.py + explicit linear term + multires
+"""
+
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -80,20 +103,25 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
             self.spline_bias = spline_bias
 
 
+    @property
+    def coefficients_vect_(self):
+        return self.coefficients_vect
+
 
     @staticmethod
     def parameter_names(**kwargs):
         for name in ['coefficients_vect', 'spline_weight', 'spline_bias']:
             yield name
 
+
     @property
     def weight(self):
         return self.spline_weight
 
+
     @property
     def bias(self):
         return self.spline_bias
-
 
 
     def forward(self, input):
@@ -101,14 +129,15 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
         Args:
             input : 2D/4D tensor
         """
+        input_size = input.size()
         output = super().forward(input)
 
-        view_size = (1, -1) if len(input.size()) == 2 else (1, -1, 1, 1)
-        b0 = self.spline_bias.view(view_size)
-        b1 = self.spline_weight.view(view_size)
+        x = self.reshape_forward(input)
+        b0 = self.spline_bias.view((1, -1, 1, 1))
+        b1 = self.spline_weight.view((1, -1, 1, 1))
 
-        out_linear = b0 + b1 * input
-        output = output + out_linear
+        out_linear = b0 + b1 * x
+        output = output + self.reshape_back(out_linear, input_size)
 
         return output
 
