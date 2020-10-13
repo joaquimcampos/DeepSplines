@@ -21,7 +21,7 @@ class BaseModel(nn.Module):
                             'num_classes', 'device')
         # deepspline
         self.set_attributes('spline_init', 'spline_size',
-                            'spline_range', 'S_apl', 'slope_threshold')
+                            'spline_range', 'S_apl', 'slope_diff_threshold')
         # regularization
         self.set_attributes('hyperparam_tuning', 'outer_norm')
 
@@ -499,15 +499,15 @@ class BaseModel(nn.Module):
 
 
     def sparsify_activations(self):
-        """ Sparsifies the deepspline activations, eliminating the slopes
-        smaller than a threshold.
+        """ Sparsifies the deepspline activations, eliminating the slope
+        changes smaller than a threshold.
 
         Note that deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
-        This function sets a_k to zero if |a_k| < slope_threshold.
+        This function sets a_k to zero if |a_k| < slope_diff_threshold.
         """
         for module in self.modules():
             if isinstance(module, self.deepspline):
-                module.apply_threshold(self.slope_threshold)
+                module.apply_threshold(self.slope_diff_threshold)
 
 
     def compute_sparsity(self):
@@ -516,7 +516,7 @@ class BaseModel(nn.Module):
         sparsity = 0
         for module in self.modules():
             if isinstance(module, self.deepspline):
-                module_sparsity, _ = module.get_threshold_sparsity(self.slope_threshold)
+                module_sparsity, _ = module.get_threshold_sparsity(self.slope_diff_threshold)
                 sparsity += module_sparsity.sum().item()
 
         return sparsity
@@ -540,7 +540,7 @@ class BaseModel(nn.Module):
                         # (num_activations, size)
                         output = output.transpose(0,1).squeeze(-1).squeeze(-1)
 
-                    _, threshold_sparsity_mask = module.get_threshold_sparsity(self.slope_threshold)
+                    _, threshold_sparsity_mask = module.get_threshold_sparsity(self.slope_diff_threshold)
                     activations_list.append({'name': '_'.join([name, module.mode]),
                                             'x': grid_tensor.clone().detach().cpu(),
                                             'y': output.clone().detach().cpu(),

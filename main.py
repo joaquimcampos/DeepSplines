@@ -119,9 +119,10 @@ def get_arg_parser():
     parser.add_argument('--valid_log_step', metavar='INT,>0', type=ArgCheck.p_int,
                         help=f'Validation step in epochs. Default: {default_values["valid_log_step"]}.')
 
-    parser.add_argument('--sparsify_activations', action='store_true', help='Sparsify activations by eliminating slopes below threshold.')
-    parser.add_argument('--slope_threshold', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
-                        help=f'Activation slopes threshold. Default: {default_values["slope_threshold"]}.')
+    parser.add_argument('--sparsify_activations', action='store_true',
+                        help='Sparsify activations by eliminating slopes changes below threshold.')
+    parser.add_argument('--slope_diff_threshold', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
+                        help=f'Activation slopes diff threshold. Default: {default_values["slope_diff_threshold"]}.')
 
     # dataloader
     parser.add_argument('--seed', metavar='INT,>0', type=ArgCheck.nn_int,

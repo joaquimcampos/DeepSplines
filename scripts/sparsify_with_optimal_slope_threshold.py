@@ -83,8 +83,8 @@ if __name__ == "__main__":
         for k in range(threshold_list.shape[0]):
 
             threshold = threshold_list[k]
-            params['model_name'] = base_model_name + '_slope_threshold_{:.4f}'.format(threshold)
-            params['slope_threshold'] = threshold
+            params['model_name'] = base_model_name + '_slope_diff_threshold_{:.4f}'.format(threshold)
+            params['slope_diff_threshold'] = threshold
 
             sys.stdout = open(os.devnull, "w")
             main_prog(copy.deepcopy(params), isloaded_params=True)
@@ -114,7 +114,7 @@ if __name__ == "__main__":
                     delete_model(args.out_log_dir, prev_model_name)
 
                 chosen_model = {params['model_name']: model_dict}
-                chosen_threshold = params['slope_threshold']
+                chosen_threshold = params['slope_diff_threshold']
                 prev_model_name = params['model_name']
 
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
         # test model
         params['model_name'] = next(iter(chosen_model))
-        params['slope_threshold'] = chosen_threshold
+        params['slope_diff_threshold'] = chosen_threshold
         params['mode'] = 'test'
         sys.stdout = open(os.devnull, "w")
         main_prog(copy.deepcopy(params))

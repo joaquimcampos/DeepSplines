@@ -27,10 +27,10 @@ if __name__ == "__main__":
         net.load_state_dict(ckpt['model_state'], strict=True)
         net.eval()
 
-        slope_threshold = net.slope_threshold
+        slope_diff_threshold = net.slope_diff_threshold
         sparsity = net.compute_sparsity()
         lipschitz_bound = net.lipschitz_bound()
 
-        print('slope_threshold : {:.4f}'.format(slope_threshold))
+        print('slope_diff_threshold : {:.4f}'.format(slope_diff_threshold))
         print('sparsity : {:d}'.format(sparsity))
         print('lipschitz_bound : {:.3f}'.format(lipschitz_bound))
