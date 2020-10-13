@@ -12,7 +12,6 @@ import time
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
 from models.deepRelu import DeepReLU
-from models.basemodel import MultiResScheduler
 from ds_utils import ArgCheck, spline_grid_from_range
 
 
@@ -61,7 +60,6 @@ if __name__ == "__main__":
     parser.add_argument('--no_bias', action='store_true', help='Remove activation bias.')
     parser.add_argument('--lipschitz', action='store_true',
                         help='Add lipschitz regularization (controled by --lmbda)')
-    parser.add_argument('--multires', action='store_true', help='Perform multires.')
     parser.add_argument('--save_fig', action='store_true',
                         help='Save learned/gtruth plots.')
     parser.add_argument('--log_dir', metavar='STR', type=str,
@@ -137,14 +135,6 @@ if __name__ == "__main__":
 
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optim, milestones, gamma=0.1)
 
-    multires_scheduler = None
-    if args.activation_type == 'deepBspline_explicit_linear' and args.multires is True:
-        multires_milestones = [ int(2*num_epochs/10),
-                                int(6*num_epochs/10),
-                                int(8*num_epochs/10)]
-        multires_scheduler = MultiResScheduler(multires_milestones)
-
-
     print(f'\n==> Training {activ.__class__.__name__}')
 
     start_time = time.time()
@@ -164,22 +154,10 @@ if __name__ == "__main__":
         optim.step()
         scheduler.step()
 
-        if multires_scheduler is not None:
-            step_done = multires_scheduler.step((activ,))
-            if step_done is True:
-                learning_rates = scheduler.get_lr()
-                optim = optim_class(activ.parameters(), **optim_params)
-                scheduler = torch.optim.lr_scheduler.MultiStepLR(optim, milestones, gamma=0.6)
-                for j, g in enumerate(optim.param_groups):
-                    g['lr'] = learning_rates[j]
-                scheduler.last_epoch = i
-
         if i % 1000 == 0:
             loss = df_loss + tv_bv_loss
             print(f'\nepoch: {i+1}/{num_epochs}; ',
                   'loss: {:.8f}'.format(loss.item()), sep='')
-            if multires_scheduler is not None:
-                print(f'activation size: {activ.size}')
 
             lr = [group['lr'] for group in optim.param_groups]
             print(f'scheduler: learning rate - {lr}')

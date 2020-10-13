@@ -9,54 +9,6 @@ from models.apl import APL
 from ds_utils import spline_grid_from_range
 
 
-
-class MultiResScheduler():
-    """ Scheduler for multi-resolution approach
-    for increasing spline coefficients.
-    """
-
-    def __init__(self, milestones, order=2):
-        """
-        Args:
-            milestones: epochs for which to increase resolution.
-            order: order of increase of the number of spline coefficients.
-        """
-        assert isinstance(milestones, list), 'milestones should be a list.'
-        self.milestones = milestones
-        self.gamma = order # for compatibility with scheduler terminology
-        self.last_epoch = 0
-        self.idx = 0
-
-
-    def step(self, modules_deepspline, epoch=None):
-        """ Increase resolution (number of coefficients) of
-        deepspline modules.
-
-        Args:
-            modules_deepspline: iterator over deepspline modules.
-        Returns:
-            step_done: True if multires step was performed.
-        """
-        step_done = False
-        if epoch is not None:
-            self.last_epoch = epoch
-
-        if self.idx < len(self.milestones) and self.last_epoch == self.milestones[self.idx]:
-            for module in modules_deepspline:
-                if isinstance(module, DeepBSplineExplicitLinear):
-                    module.increase_resolution(order=self.gamma)
-                else:
-                    raise ValueError('Found deepspline module which is not DeepBSplineExplicitLinear...')
-
-            self.idx += 1
-            step_done = True
-
-        self.last_epoch += 1
-
-        return step_done
-
-
-
 class BaseModel(nn.Module):
 
     def __init__(self, **params):

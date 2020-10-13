@@ -13,7 +13,6 @@ from project import Project
 from ds_utils import update_running_losses
 
 from models import *
-from models.basemodel import MultiResScheduler
 from datasets import init_dataset
 
 
@@ -43,8 +42,6 @@ class Manager(Project):
             print('\n==> Parameters info: ', self.params, sep='\n')
 
         self.init_dataset()
-        if self.training and self.params['multires_milestones'] is not None:
-            self.init_multires(loading_success)
 
         self.net = self.build_model(self.params, self.device)
 
@@ -113,13 +110,6 @@ class Manager(Project):
     def set_optimization(self):
         """ """
         self.optim_names = self.params['optimizer']
-
-        self.multires_scheduler = None
-        if self.params['multires_milestones'] is not None:
-            self.multires_scheduler = MultiResScheduler(self.params['multires_milestones'])
-            if len(self.optim_names) == 1:
-                # use aux optimizer with MultiResScheduler
-                self.optim_names.append(self.optim_names[0])
 
         # main optimizer/scheduler
         if len(self.optim_names) == 2:
@@ -344,36 +334,6 @@ class Manager(Project):
                 aux_lr = [group['lr'] for group in self.aux_optimizer.param_groups]
                 print(f'aux scheduler: epoch - {self.aux_scheduler.last_epoch}; '
                     f'learning rate - {aux_lr}')
-
-        if self.multires_scheduler is not None:
-            self.multires_scheduler_step(epoch)
-            if self.params['verbose']:
-                module = next(self.net.modules_deepspline())
-                assert isinstance(module.size, int)
-                self.params['model']['spline_size'] = module.size
-                self.params['model']['spline_grid'] = module.grid[0].item()
-                print('multires scheduler: number of spline coefficients - '
-                    f'{self.params["model"]["spline_size"]}; '
-                    f'grid size - {self.params["model"]["spline_grid"]}')
-
-
-
-    def multires_scheduler_step(self, epoch):
-        """ """
-        assert self.net.deepspline is not None
-        step_done = self.multires_scheduler.step(self.net.modules_deepspline(), epoch)
-
-        if step_done is True:
-            # reset aux optimization
-            aux_lr = [group['lr'] for group in self.aux_optimizer.param_groups]
-            last_epoch = self.aux_scheduler.last_epoch
-            aux_params_iter = self.net.parameters_deepspline()
-            self.aux_optimizer = self.construct_optimizer(aux_params_iter,
-                                                    self.optim_names[1], 'aux')
-            self.aux_scheduler = self.construct_scheduler(self.aux_optimizer)
-            for i, g in enumerate(self.aux_optimizer.param_groups):
-                g['lr'] = aux_lr[i]
-            self.aux_scheduler.last_epoch = last_epoch
 
 
 

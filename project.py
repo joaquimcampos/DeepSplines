@@ -146,19 +146,6 @@ class Project():
 
 
 
-    def init_multires(self, loading_success):
-        """ """
-        model_params = self.params['model']
-
-        if self.params['reset_multires']:
-            # reset deepspline to initial size
-            model_params['spline_size'] = model_params['initial_spline_size']
-        elif loading_success is False:
-            # new training
-            model_params['initial_spline_size'] = model_params['spline_size']
-
-
-
     def restore_ckpt_params(self):
         """ Restore the parameters from a previously saved checkpoint
         (either provided via --ckpt_filename or saved in log_dir/model_name)
@@ -553,8 +540,8 @@ class Project():
             print(self.aux_optimizer)
 
         # scheduler
-        scheduler_list = [self.main_scheduler, self.aux_scheduler, self.multires_scheduler]
-        scheduler_name_list = ['Main', 'Aux', 'MultiRes']
+        scheduler_list = [self.main_scheduler, self.aux_scheduler]
+        scheduler_name_list = ['Main', 'Aux']
         for scheduler, aux_str in zip(scheduler_list, scheduler_name_list):
             if scheduler is not None:
                 print('--' + aux_str + ' Scheduler : ')

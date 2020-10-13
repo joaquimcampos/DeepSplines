@@ -98,10 +98,6 @@ def get_arg_parser():
                         help='Milestones for multi-step lr_scheduler. Set to a single value higher than num_epochs '
                             'if you do not wish to lower the learning rate during training. '
                             f'Default: {default_values["milestones"]}.')
-    # multi-resolution scheduler
-    parser.add_argument('--multires_milestones', metavar='LIST[INT,>0]', nargs='+', type=ArgCheck.p_int,
-                    help='Milestones for spline multi-resolution scheduling. '
-                        f'Default: {default_values["multires_milestones"]}.')
 
     # logs-related
     parser.add_argument('--ckpt_filename', metavar='STR', type=str,
@@ -192,11 +188,6 @@ def verify_params(params):
             user_params['ckpt_filename'] = params['ckpt_filename']
         else:
             raise ValueError('Please provide --ckpt_filename for testing.')
-
-    if params['multires_milestones'] is not None and \
-                params['activation_type'] != 'deepBspline_explicit_linear':
-        raise ValueError('Only possible to use multires scheduling with '
-                        'deepBspline_explicit_linear activations.')
 
     if params['resume_from_best']:
         params['resume'] = True  # set 'resume' to True if 'resume_from_best' is True

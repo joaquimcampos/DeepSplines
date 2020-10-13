@@ -1,24 +1,9 @@
 """ See deepBspline_base.py.
 
-In practice, deepsplines need more flexibility to work well in high
-regularization regimes.
-(try running approximate_parabola.py with deepspline activations
-and a high regularization weight and number of coefficients).
-Therefore, it is useful to add an explicit linear term to the activation,
-as is the case for this module.
-Attention is required here since now we have an over-representation (two
-different sets of parameters can result in the same activation overall).
-This could be solved by always keeping the first two coefficients
-always zero (see reset_first_coefficients() method). In practice,
-we observed a worse performance and so chose to simply add this
-linear term directly to the output of the activation.
-Another trick is used to solve optimization issues with deepspline:
-multi-resolution. This module contains a method to increase the resolution,
-by increasing the number of coefficients by a certain order, while keeping
-the previous solution (activation).
+In practice, giving deepsplines extra flexibility --- by adding an explicit
+linear term to the activation --- helps.
 
-In summary (not rigorously),
-deepBspline_explicit_linear.py = deepBspline.py + explicit linear term + multires
+deepBspline_explicit_linear.py = deepBspline.py + explicit linear term
 """
 
 import torch
@@ -39,7 +24,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
 
         super().__init__(**kwargs)
         self.learn_bias = bias # flag
-        # used to save state for increase_resolution()
+        # used to save state
         self.input_dict = {'bias': self.learn_bias, **kwargs}
 
         # tensor with locations of spline coefficients
@@ -140,44 +125,6 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
         output = output + self.reshape_back(out_linear, input_size)
 
         return output
-
-
-
-    def increase_resolution(self, order=2):
-        """ Refine the activation by increasing the number of coefficients
-        by an order given in the arguments.
-
-        Initialize the new coefficients according to the activation values.
-        """
-        new_size = order * (self.size - 1) + 1 # e.g. 101 -> 201
-        new_grid = self.grid.div(order)
-        # size: (new_size, num_activations)
-        new_grid_tensor = self.get_grid_tensor(new_size, new_grid).transpose(0, 1)
-
-        if self.mode == 'conv':
-            in_tensor = new_grid_tensor.unsqueeze(-1).unsqueeze(-1) # 4D
-
-        with torch.no_grad():
-            out_tensor = self.forward(in_tensor)
-            if self.mode == 'conv':
-                out_tensor = out_tensor.squeeze(-1).squeeze(-1) # (2, num_activations)
-
-            # remove explicit linear part
-            b0 = self.spline_bias.view(1, -1)
-            b1 = self.spline_weight.view(1, -1)
-            new_coefficients = out_tensor - (b0 + b1 * new_grid_tensor)
-
-            new_coefficients = new_coefficients.transpose(0, 1)
-            assert new_coefficients.size() == (self.num_activations, new_size)
-
-        tuple_init = (self.spline_bias.data, self.spline_weight.data,
-                        new_coefficients)
-
-        new_input_dict = {'size': new_size, 'grid': new_grid.item(),
-                        'init': tuple_init, **self.input_dict}
-
-        self.__init__(**new_input_dict)
-
 
 
     def extra_repr(self):

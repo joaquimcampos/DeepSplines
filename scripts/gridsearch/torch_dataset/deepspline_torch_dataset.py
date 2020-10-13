@@ -28,10 +28,6 @@ if __name__ == "__main__" :
 
     lipschitz_str = '_lipschitz' if params['lipschitz'] is True else ''
     hyperparam_tuning_str = '_hyperparam_tuning' if params['hyperparam_tuning'] is True else ''
-    multires_str = ''
-    if params['multires_milestones'] is not None:
-        multires_miles = '_'.join(str(i) for i in params["multires_milestones"])
-        multires_str = f'_multires_{multires_miles}'
 
     size_str = str(params["spline_size"])
 
@@ -39,7 +35,7 @@ if __name__ == "__main__" :
                         'weight_decay_{:.1E}_'.format(params["weight_decay"]) +
                         f'range{params["spline_range"]}_' +
                         f'lr_{params["lr"]}_aux_lr_{params["aux_lr"]}' +
-                        f'{lipschitz_str}{hyperparam_tuning_str}{multires_str}')
+                        f'{lipschitz_str}{hyperparam_tuning_str}')
 
     # change gridsearch values as desired
     lmbda_list = [1e-5, 1e-4, 1e-3, 5e-5, 5e-4]

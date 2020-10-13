@@ -59,9 +59,6 @@ class TorchDatasetSearchRun(SearchRun):
                                 help='Number of activation coefficients.')
             parser.add_argument('--spline_range', metavar='FLOAT,>0', default=3,
                                 type=ArgCheck.p_float, help='one-sided deepspline range.')
-            parser.add_argument('--multires_milestones', metavar='LIST[INT,>0]',
-                                nargs='+', type=ArgCheck.p_int,
-                                help='Milestones for spline multi-resolution scheduling.')
             parser.add_argument('--lipschitz', action='store_true',
                                 help='Perform lipschitz BV(2) regularization.')
             parser.add_argument('--hyperparam_tuning', action='store_true',
@@ -106,12 +103,9 @@ class TorchDatasetSearchRun(SearchRun):
                 'num_workers': 4, 'tensorboard': True}
 
         if 'deep' in activation_type:
-            params['multires_milestones'] = self.args.multires_milestones
             params['spline_init'] = self.args.spline_init
             params['spline_size'] = self.args.spline_size
             params['spline_range'] = self.args.spline_range
-            if activation_type == 'deepBspline_explicit_linear':
-                params['multires_milestones'] = self.args.multires_milestones
 
             params['hyperparam_tuning'] = self.args.hyperparam_tuning
             params['lipschitz'] = self.args.lipschitz
