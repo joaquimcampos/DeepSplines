@@ -18,7 +18,7 @@ structure = {   'spline_range' : None,
 
 
 params = {'mode': 'train', 'net': None, 'model_name': None, 'num_epochs': 301,
-        'spline_size': [121], 'spline_range': 3, 'log_step': None,
+        'spline_size': 121, 'spline_range': 3, 'log_step': None,
         'seed': 0, 'dataset_name': None, 'data_dir': None, 'batch_size': None}
 
 

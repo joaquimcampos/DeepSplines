@@ -54,8 +54,8 @@ class TorchDatasetSearchRun(SearchRun):
             spline_init_choices = {'leaky_relu', 'softplus'}
             parser.add_argument('--spline_init', choices=spline_init_choices, type=str, default='leaky_relu',
                                 help='Initialize the b-spline coefficients according to this function. ')
-            parser.add_argument('--spline_size', metavar='LIST[INT>0]', nargs='+',
-                                type=ArgCheck.p_odd_int, default=[51],
+            parser.add_argument('--spline_size', metavar='INT>0',
+                                type=ArgCheck.p_odd_int, default=51,
                                 help='Number of activation coefficients.')
             parser.add_argument('--spline_range', metavar='FLOAT,>0', default=3,
                                 type=ArgCheck.p_float, help='one-sided deepspline range.')
@@ -77,7 +77,7 @@ class TorchDatasetSearchRun(SearchRun):
         """ Return default params, common to deepspline and standard gridsearch.
         """
         assert activation_type in ['deepBspline', 'deepRelu', 'deepBspline_explicit_linear', \
-                                'hybrid_deepspline', 'deepBspline_superposition', \
+                                'hybrid_deepspline', \
                                 'apl', 'relu', 'leaky_relu', 'prelu']
 
         if self.args.dataset.startswith('cifar'):

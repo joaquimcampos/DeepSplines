@@ -32,7 +32,7 @@ if __name__ == "__main__" :
     print('\nCmd args : ', cmd_args, sep='\n')
 
     lipschitz_str = 'lipschitz_' if params['lipschitz'] is True else ''
-    size_str = '_'.join(str(i) for i in params["spline_size"])
+    size_str = str(params["spline_size"])
 
     base_model_name = (f'{params["net"]}_{params["activation_type"]}_' +
                         f'hidden{params["hidden"]}_size{size_str}_' +

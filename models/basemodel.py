@@ -4,7 +4,6 @@ from torch import Tensor
 
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
-from models.deepBspline_superposition import DeepBSplineSuperposition
 from models.deepRelu import DeepReLU
 from models.hybrid_deepspline import HybridDeepSpline
 from models.apl import APL
@@ -75,14 +74,8 @@ class BaseModel(nn.Module):
         # regularization
         self.set_attributes('hyperparam_tuning', 'outer_norm')
 
-        self.spline_grid = [0.] * len(self.spline_size)
-        for i in range(len(self.spline_size)):
-            self.spline_grid[i] = spline_grid_from_range(self.spline_size[i],
-                                                            self.spline_range)
-
-        if len(self.spline_size) > 1 and self.activation_type != 'deepBspline_superposition':
-                raise ValueError(f'Found sizes list of length {len(self.spline_size)}. '
-                                'Multiple sizes are not allowed for this activation...')
+        self.spline_grid = spline_grid_from_range(self.spline_size,
+                                                    self.spline_range)
 
         self.deepspline = None
         if self.activation_type == 'deepRelu':
@@ -93,8 +86,6 @@ class BaseModel(nn.Module):
             self.deepspline = DeepBSpline
         elif self.activation_type == 'deepBspline_explicit_linear':
             self.deepspline = DeepBSplineExplicitLinear
-        elif self.activation_type == 'deepBspline_superposition':
-            self.deepspline = DeepBSplineSuperposition
 
         self.apl = None
         if self.activation_type == 'apl':
@@ -125,12 +116,7 @@ class BaseModel(nn.Module):
         assert isinstance(activation_specs, list)
 
         if self.deepspline is not None:
-            if len(self.spline_size) == 1:
-                # no superposition of activations
-                size, grid = self.spline_size[0], self.spline_grid[0]
-            else:
-                size, grid = self.spline_size, self.spline_grid
-
+            size, grid = self.spline_size, self.spline_grid
             activations = nn.ModuleList()
             for mode, num_activations in activation_specs:
                 activations.append(self.deepspline(size=size, grid=grid, init=self.spline_init,

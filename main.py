@@ -35,7 +35,7 @@ def get_arg_parser():
 
     # model parameters
     activation_type_choices = {'deepBspline', 'deepRelu', 'deepBspline_explicit_linear', \
-                                'hybrid_deepspline', 'deepBspline_superposition', \
+                                'hybrid_deepspline', \
                                 'apl', 'relu', 'leaky_relu', 'prelu'}
     parser.add_argument('--activation_type', choices=activation_type_choices, type=str,
                         help=f'Default: {default_values["activation_type"]}.')
@@ -44,9 +44,8 @@ def get_arg_parser():
     parser.add_argument('--spline_init', choices=spline_init_choices, type=str,
                         help='Initialize the b-spline coefficients according to this function. '
                             f'Default: {default_values["spline_init"]}.')
-    parser.add_argument('--spline_size', metavar='LIST[INT>0]', nargs='+', type=ArgCheck.p_odd_int,
-                        help='Number of spline coefficients. Can be a list of more than one item if '
-                            f'--activation_type=deepBspline_superposition. Default: {default_values["spline_size"]}.')
+    parser.add_argument('--spline_size', metavar='INT>0', type=ArgCheck.p_odd_int,
+                        help='Number of spline coefficients. Default: {default_values["spline_size"]}.')
     parser.add_argument('--spline_range', metavar='FLOAT,>0', type=ArgCheck.p_float,
                         help=f'Range of spline representation. Default: {default_values["spline_range"]}.')
 
@@ -199,9 +198,6 @@ def verify_params(params):
                 params['activation_type'] != 'deepBspline_explicit_linear':
         raise ValueError('Only possible to use multires scheduling with '
                         'deepBspline_explicit_linear activations.')
-
-    if len(params['spline_size']) > 1 and params['activation_type'] != 'deepBspline_superposition':
-        raise ValueError('Can only have multiple sizes with deepBspline_superposition.')
 
     if params['resume_from_best']:
         params['resume'] = True  # set 'resume' to True if 'resume_from_best' is True

@@ -44,8 +44,8 @@ class TwoDSearchRun(SearchRun):
                             default=1, help=f'Additional number of APL knots.')
 
         if is_deepspline is True:
-            parser.add_argument('--spline_size', metavar='LIST[INT>0]', nargs='+',
-                                type=ArgCheck.p_odd_int, default=[21],
+            parser.add_argument('--spline_size', metavar='INT>0',
+                                type=ArgCheck.p_odd_int, default=21,
                                 help='Number of activation coefficients.')
             parser.add_argument('--spline_range', metavar='FLOAT,>0', default=1,
                                 type=ArgCheck.p_float, help='one-sided deepspline range.')
@@ -62,7 +62,7 @@ class TwoDSearchRun(SearchRun):
         """ Return default params, common to deepspline and standard gridsearch.
         """
         assert activation_type in ['deepBspline', 'deepBspline_explicit_linear', \
-                                    'hybrid_deepspline', 'deepBspline_superposition', \
+                                    'hybrid_deepspline', \
                                     'apl', 'relu', 'leaky_relu', 'prelu']
 
         milestones = [440, 480] if self.args.num_epochs == 500 else [830, 950]

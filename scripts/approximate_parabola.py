@@ -11,7 +11,6 @@ import time
 
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
-from models.deepBspline_superposition import DeepBSplineSuperposition
 from models.deepRelu import DeepReLU
 from models.hybrid_deepspline import HybridDeepSpline
 from models.basemodel import MultiResScheduler
@@ -43,10 +42,10 @@ if __name__ == "__main__":
 
     parser.add_argument('--activation_type', type=str,
                         choices={'deepBspline', 'deepRelu', 'deepBspline_explicit_linear',
-                                'deepBspline_superposition', 'hybrid_deepspline'},
+                                'hybrid_deepspline'},
                         default='deepBspline_explicit_linear', help=' ')
-    parser.add_argument('--spline_size', metavar='LIST[INT>0]', nargs='+',
-                        type=ArgCheck.p_odd_int, default=[51],
+    parser.add_argument('--spline_size', metavar='INT>0',
+                        type=ArgCheck.p_odd_int, default=51,
                         help='Number of b-spline/relu + linear coefficients.')
     parser.add_argument('--lmbda', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
                     default=1e-4, help='TV(2) regularization.')
@@ -88,17 +87,7 @@ if __name__ == "__main__":
     print('\nCmd args : ', cmd_args, sep='\n')
 
     size = args.spline_size
-    grid = [0.] * len(size)
-    for i in range(len(size)):
-        grid[i] = spline_grid_from_range(size[i], args.spline_range)
-
-    if len(size) > 1:
-        if self.activation_type != 'deepBspline_superposition':
-            raise ValueError(f'Found sizes of length {len(size)}. '
-                            'Multiple sizes are not allowed for this activation.')
-    else:
-        size = size[0]
-        grid = grid[0]
+    grid = spline_grid_from_range(size, args.spline_range)
 
     parab_range = 1
     args_dict = {'mode': 'linear', 'num_activations': 1,
@@ -110,8 +99,6 @@ if __name__ == "__main__":
         activation = DeepBSpline(**args_dict)
     elif args.activation_type == 'deepBspline_explicit_linear':
         activation = DeepBSplineExplicitLinear(**args_dict)
-    elif args.activation_type == 'deepBspline_superposition':
-        activation = DeepBSplineSuperposition(**args_dict)
     elif args.activation_type == 'deepRelu':
         activation = DeepReLU(**args_dict)
     elif args.activation_type == 'hybrid_deepspline':
@@ -185,20 +172,6 @@ if __name__ == "__main__":
         if args.lipschitz:
             tv_bv_loss = tv_bv_loss + args.lmbda * activ.fZerofOneAbs().sum()
         tv_bv_loss.backward()
-
-        # if not isinstance(activ, DeepReLU):
-        #     activ.reset_first_coefficients_grad()
-        #     assert len(optim.param_groups) == 1
-        #     p = optim.param_groups[0]['params'][0]
-        #     assert p.size() == (size,)
-        #     if p.size() == (size,):
-        #         zeros = torch.zeros_like(p[0:2])
-        #         assert p.grad[0:2].allclose(zeros)
-        #     if isinstance(optim, torch.optim.Adam):
-        #         state = optim.state[p]
-        #         if len(state) > 0:
-        #             state['exp_avg'][0:2] = torch.zeros_like(p[0:2])
-        #             state['exp_avg_sq'][0:2] = torch.zeros_like(p[0:2])
 
         optim.step()
         if isinstance(activ, HybridDeepSpline):

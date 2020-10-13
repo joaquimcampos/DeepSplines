@@ -17,7 +17,7 @@ if __name__ == "__main__" :
 
     parser = TorchDatasetSearchRun.add_default_args(parser, is_deepspline=True)
     activation_choices = {'deepBspline_explicit_linear',
-                        'hybrid_deepspline', 'deepBspline_superposition'}
+                        'hybrid_deepspline'}
     parser.add_argument('activation_type', metavar='activation_type[STR]',
             type=str, choices=activation_choices, help=f'{activation_choices}.')
 
@@ -34,7 +34,7 @@ if __name__ == "__main__" :
         multires_miles = '_'.join(str(i) for i in params["multires_milestones"])
         multires_str = f'_multires_{multires_miles}'
 
-    size_str = '_'.join(str(i) for i in params["spline_size"])
+    size_str = str(params["spline_size"])
 
     base_model_name = (f'{params["net"]}_{params["activation_type"]}_size{size_str}_' +
                         'weight_decay_{:.1E}_'.format(params["weight_decay"]) +
