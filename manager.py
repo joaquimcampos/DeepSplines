@@ -382,7 +382,6 @@ class Manager(Project):
         self.main_optimizer.zero_grad()
         if self.aux_optimizer is not None:
             self.aux_optimizer.zero_grad()
-        self.net.extra_zero_grad_ops()
 
 
 
@@ -391,7 +390,6 @@ class Manager(Project):
         self.main_optimizer.step()
         if self.aux_optimizer is not None:
             self.aux_optimizer.step()
-        self.net.extra_parameter_update_ops()
 
 
 

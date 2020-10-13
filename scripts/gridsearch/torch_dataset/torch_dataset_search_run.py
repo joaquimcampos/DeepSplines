@@ -77,7 +77,6 @@ class TorchDatasetSearchRun(SearchRun):
         """ Return default params, common to deepspline and standard gridsearch.
         """
         assert activation_type in ['deepBspline', 'deepRelu', 'deepBspline_explicit_linear', \
-                                'hybrid_deepspline', \
                                 'apl', 'relu', 'leaky_relu', 'prelu']
 
         if self.args.dataset.startswith('cifar'):

@@ -16,8 +16,7 @@ if __name__ == "__main__" :
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser = TorchDatasetSearchRun.add_default_args(parser, is_deepspline=True)
-    activation_choices = {'deepBspline_explicit_linear',
-                        'hybrid_deepspline'}
+    activation_choices = {'deepBspline_explicit_linear'}
     parser.add_argument('activation_type', metavar='activation_type[STR]',
             type=str, choices=activation_choices, help=f'{activation_choices}.')
 

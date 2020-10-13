@@ -5,7 +5,6 @@ from torch import Tensor
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
 from models.deepRelu import DeepReLU
-from models.hybrid_deepspline import HybridDeepSpline
 from models.apl import APL
 from ds_utils import spline_grid_from_range
 
@@ -80,8 +79,6 @@ class BaseModel(nn.Module):
         self.deepspline = None
         if self.activation_type == 'deepRelu':
             self.deepspline = DeepReLU
-        if self.activation_type == 'hybrid_deepspline':
-            self.deepspline = HybridDeepSpline
         elif self.activation_type == 'deepBspline':
             self.deepspline = DeepBSpline
         elif self.activation_type == 'deepBspline_explicit_linear':
@@ -279,9 +276,8 @@ class BaseModel(nn.Module):
                 deepspline_param = False
                 apl_param = False
                 # get all deepspline parameters
-                # (which='optimizer' != which='all' only for hybrid_deepspline)
                 if self.deepspline is not None:
-                    for param_name in self.deepspline.parameter_names(which='all'):
+                    for param_name in self.deepspline.parameter_names():
                         if name.endswith(param_name):
                             deepspline_param = True
 
@@ -305,9 +301,7 @@ class BaseModel(nn.Module):
         try:
             for name, param in self.named_parameters(recurse=recurse):
                 deepspline_param = False
-                # get parameters which are used in optimizer
-                # (which='optimizer' != which='all' only for hybrid_deepspline)
-                for param_name in self.deepspline.parameter_names(which='optimizer'):
+                for param_name in self.deepspline.parameter_names():
                     if name.endswith(param_name):
                         deepspline_param = True
 
@@ -326,7 +320,6 @@ class BaseModel(nn.Module):
         try:
             for name, param in self.named_parameters(recurse=recurse):
                 apl_param = False
-                # get parameters which are used in optimizer
                 for param_name in self.apl.parameter_names():
                     if name.endswith(param_name):
                         apl_param = True
@@ -361,44 +354,12 @@ class BaseModel(nn.Module):
 
 
 
-    def extra_zero_grad_ops(self):
-        """ Set coefficients of deepBspline representation to
-        zero if deepspline is instance of HybridDeepSpline.
-        """
-        if self.activation_type == 'hybrid_deepspline':
-            for module in self.modules():
-                if isinstance(module, self.deepspline):
-                    module.zero_grad_coefficients()
-
-
-
-    def extra_data_grad_ops(self):
-        """ Update deepreLU formulation gradients using deep B-spline
-        gradients if deepspline is instance of HybridDeepSpline.
-        """
-        if self.activation_type == 'hybrid_deepspline':
-            for module in self.modules():
-                if isinstance(module, self.deepspline):
-                    module.update_deepRelu_grad()
-
-
-
-    def extra_parameter_update_ops(self):
-        """ Update deep B-spline coefficients using deep deeprelu
-        coefficients if deepspline is instance of HybridDeepSpline.
-        """
-        if self.activation_type == 'hybrid_deepspline':
-            for module in self.modules():
-                if isinstance(module, self.deepspline):
-                    module.update_deepBspline_coefficients()
-
-
-
     def parameters_batch_norm(self):
         """ """
         for module in self.modules():
             if isinstance(module, nn.BatchNorm2d):
                 yield module.weight, module.bias
+
 
 
     def freeze_parameters(self):

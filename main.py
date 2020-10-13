@@ -35,7 +35,6 @@ def get_arg_parser():
 
     # model parameters
     activation_type_choices = {'deepBspline', 'deepRelu', 'deepBspline_explicit_linear', \
-                                'hybrid_deepspline', \
                                 'apl', 'relu', 'leaky_relu', 'prelu'}
     parser.add_argument('--activation_type', choices=activation_type_choices, type=str,
                         help=f'Default: {default_values["activation_type"]}.')

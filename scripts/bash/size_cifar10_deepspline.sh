@@ -6,7 +6,6 @@ mkdir -p "$new_path"
 
 # create code copy with date/time stamp
 log_dir="$orig_path"/experiments/cifar10/resnet32/deepBspline_explicit_linear_bias_False_wd
-# hybrid_deepspline/leaky_relu_init_bias
 cp -r "$orig_path"/deepsplines "$new_path"
 
 echo "BASH ARGS:"
@@ -22,6 +21,6 @@ do
     echo "$c_dir"
     eval CUDA_VISIBLE_DEVICES="$1" taskset --cpu-list "$2" python3 \
     "$orig_path"/deepsplines/scripts/gridsearch/torch_dataset/deepspline_torch_dataset.py \
-    "$c_dir" cifar10 deepBspline_explicit_linear --spline_size "$size" \ # hybrid_deepspline
+    "$c_dir" cifar10 deepBspline_explicit_linear --spline_size "$size" \ 
     --spline_range 4 --net resnet32 --aux_lr 1e-3
 done

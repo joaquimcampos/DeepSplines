@@ -62,7 +62,6 @@ class TwoDSearchRun(SearchRun):
         """ Return default params, common to deepspline and standard gridsearch.
         """
         assert activation_type in ['deepBspline', 'deepBspline_explicit_linear', \
-                                    'hybrid_deepspline', \
                                     'apl', 'relu', 'leaky_relu', 'prelu']
 
         milestones = [440, 480] if self.args.num_epochs == 500 else [830, 950]

@@ -12,7 +12,6 @@ import time
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
 from models.deepRelu import DeepReLU
-from models.hybrid_deepspline import HybridDeepSpline
 from models.basemodel import MultiResScheduler
 from ds_utils import ArgCheck, spline_grid_from_range
 
@@ -41,8 +40,7 @@ if __name__ == "__main__":
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--activation_type', type=str,
-                        choices={'deepBspline', 'deepRelu', 'deepBspline_explicit_linear',
-                                'hybrid_deepspline'},
+                        choices={'deepBspline', 'deepRelu', 'deepBspline_explicit_linear'}
                         default='deepBspline_explicit_linear', help=' ')
     parser.add_argument('--spline_size', metavar='INT>0',
                         type=ArgCheck.p_odd_int, default=51,
@@ -101,8 +99,6 @@ if __name__ == "__main__":
         activation = DeepBSplineExplicitLinear(**args_dict)
     elif args.activation_type == 'deepRelu':
         activation = DeepReLU(**args_dict)
-    elif args.activation_type == 'hybrid_deepspline':
-        activation = HybridDeepSpline(**args_dict)
     else:
         raise ValueError(f'Activation {args.activation_type} not available...')
 
@@ -125,10 +121,7 @@ if __name__ == "__main__":
     activ = activation.to(args.device)
     optim_class = torch.optim.Adam # torch.optim.SGD
     optim_params = {'lr' : args.lr} #, 'momentum': 0.9, 'nesterov': True}
-    if isinstance(activ, HybridDeepSpline):
-        optim = optim_class(parameters_deepRelu(activ), **optim_params)
-    else:
-        optim = optim_class(activ.parameters(), **optim_params)
+    optim = optim_class(activ.parameters(), **optim_params)
     print('Optimizer :', optim)
 
     num_epochs = args.num_epochs
@@ -159,14 +152,9 @@ if __name__ == "__main__":
     for i in range(num_epochs):
 
         optim.zero_grad()
-        if isinstance(activ, HybridDeepSpline):
-            activ.zero_grad_coefficients()
         pred = activ(train_x)
         df_loss = criterion(pred, train_y) # data fidelity
         df_loss.backward()
-
-        if isinstance(activ, HybridDeepSpline):
-            activ.update_deepRelu_grad()
 
         tv_bv_loss = args.lmbda * activ.totalVariation().sum()
         if args.lipschitz:
@@ -174,8 +162,6 @@ if __name__ == "__main__":
         tv_bv_loss.backward()
 
         optim.step()
-        if isinstance(activ, HybridDeepSpline):
-            activ.update_deepBspline_coefficients()
         scheduler.step()
 
         if multires_scheduler is not None:
