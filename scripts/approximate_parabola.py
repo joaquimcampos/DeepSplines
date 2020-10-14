@@ -117,8 +117,8 @@ if __name__ == "__main__":
     criterion = nn.MSELoss().to(args.device)
 
     activ = activation.to(args.device)
-    optim_class = torch.optim.Adam # torch.optim.SGD
-    optim_params = {'lr' : args.lr} #, 'momentum': 0.9, 'nesterov': True}
+    optim_class = torch.optim.Adam
+    optim_params = {'lr' : args.lr} 
     optim = optim_class(activ.parameters(), **optim_params)
     print('Optimizer :', optim)
 
@@ -126,12 +126,6 @@ if __name__ == "__main__":
     milestones = [int(6*num_epochs/10),
                 int(8*num_epochs/10),
                 int(9*num_epochs/10)]
-                # int(4*num_epochs/10),
-                # int(5*num_epochs/10),
-                # int(6*num_epochs/10),
-                # int(7*num_epochs/10),
-                # int(8*num_epochs/10)]
-                # int(9*num_epochs/10)]
 
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optim, milestones, gamma=0.1)
 
