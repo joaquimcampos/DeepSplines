@@ -532,13 +532,15 @@ class BaseModel(nn.Module):
 
                 if isinstance(module, self.deepspline):
                     grid_tensor = module.grid_tensor # (num_activations, size)
+                    input = grid_tensor.transpose(0,1) # (size, num_activations)
                     if module.mode == 'conv':
-                        input = grid_tensor.transpose(0,1).unsqueeze(-1).unsqueeze(-1) # 4D
+                        input = input.unsqueeze(-1).unsqueeze(-1) # 4D
 
                     output = module(input)
+                    output = output.transpose(0, 1)
                     if module.mode == 'conv':
                         # (num_activations, size)
-                        output = output.transpose(0,1).squeeze(-1).squeeze(-1)
+                        output = output.squeeze(-1).squeeze(-1)
 
                     _, threshold_sparsity_mask = module.get_threshold_sparsity(self.slope_diff_threshold)
                     activations_list.append({'name': '_'.join([name, module.mode]),
