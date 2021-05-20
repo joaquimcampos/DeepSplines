@@ -17,7 +17,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     ckpt = Project.get_loaded_ckpt(args.ckpt_filename)
-    net  = Manager.build_model(ckpt['params'], 'cuda:0')
+
+    device = ckpt['params']['device']
+    if device == 'cuda:0' and not torch.cuda.is_available():
+        raise OSError('cuda not available...')
+
+    net  = Manager.build_model(ckpt['params'], device=device)
     net.load_state_dict(ckpt['model_state'], strict=True)
     net.eval()
 
