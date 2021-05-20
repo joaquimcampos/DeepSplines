@@ -4,6 +4,7 @@ data/mnist/
 ckpt*/
 linear_experiments/
 ckpt_lewis/
+output*/
 experiments/
 parabola/
 paper_experiments/

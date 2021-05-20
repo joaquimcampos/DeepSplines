@@ -231,7 +231,6 @@ class Manager(Project):
 
         if self.net.training is True:
             data_fidelity.backward()
-            self.net.extra_data_grad_ops()
 
         losses = [data_fidelity]
 
