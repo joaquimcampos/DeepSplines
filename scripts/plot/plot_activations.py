@@ -11,7 +11,6 @@ from project import Project
 from manager import Manager
 from models import *
 from ds_utils import ArgCheck
-from scripts.get_activation_input_statistics import get_input_statistics
 
 
 def plot_activations(params):
@@ -21,7 +20,11 @@ def plot_activations(params):
 
     ckpt = Project.get_loaded_ckpt(params['ckpt_filename'])
 
-    net  = Manager.build_model(ckpt['params'], 'cuda:0')
+    device = ckpt['params']['device']
+    if device == 'cuda:0' and not torch.cuda.is_available():
+        raise OSError('cuda not available...')
+
+    net  = Manager.build_model(ckpt['params'], device=device)
     net.load_state_dict(ckpt['model_state'], strict=True)
     net.eval()
 
@@ -29,6 +32,7 @@ def plot_activations(params):
     num_activation_layers = len(activations_list)
     nrows = int(np.floor(np.sqrt(num_activation_layers)))
     ncols = num_activation_layers // nrows + 1
+    num_activ_per_plot = params['num_activations_per_plot']
 
     print(f'\nNumber of activation layers: {len(activations_list)}.')
 
@@ -48,58 +52,66 @@ def plot_activations(params):
 
         threshold_sparsity_mask = activation_layer['threshold_sparsity_mask'].numpy()
         num_units, size = activation_layer['x'].size()
+        print(f'--- plotting {i}th layer: {num_units} activations.')
+
         x = activation_layer['x'][0].numpy()
         x_slopes = x[1:-1]
         activ = activation_layer['y'].numpy()
 
-        assert activ.shape[0] % 2 == 0
-        for i in range(activ.shape[0]):
+        div = activ.shape[0] / num_activ_per_plot
+        # number of plots for this activation layer
+        total = int(np.ceil(div))
+        # number of plots with params['num_activation_layers'] activations
+        quotient = int(np.floor(div))
+        # number of plots with less than params['num_activation_layers']
+        remainder = activ.shape[0] - quotient * num_activ_per_plot
+
+        for j in range(total):
             # plot half dashed and half full
-            if i % 2 == 0:
-                fig = plt.figure()
-                ax = plt.gca()
-                ax.grid()
-                first_col = 'blue'
-                sec_col = 'lightsteelblue'
-                ax.plot(x, activ[i, :], linewidth=1.0, c=first_col)
-            else:
-                first_col = 'orange'
-                sec_col = 'moccasin'
-                ax.plot(x, activ[i, :], linewidth=1.0, linestyle='--', c=first_col)
+            fig = plt.figure()
+            ax = plt.gca()
+            ax.grid()
 
-            if params['plot_sparsity']:
-                ls = matplotlib.rcParams['lines.markersize']
-                non_sparse_slopes = (threshold_sparsity_mask[i, :] == True)
-                ax.scatter(x_slopes[non_sparse_slopes], activ[i, 1:-1][non_sparse_slopes], s = 2 * (ls ** 2))
+            # start/end indexes of activations to plot in this layer
+            start_k = j*num_activ_per_plot
+            end_k = start_k + num_activ_per_plot
+            if remainder != 0 and j >= total-1:
+                end_k = start_k + remainder
 
-                sparse_slopes = (threshold_sparsity_mask[i, :] == False)
-                ax.scatter(x_slopes[sparse_slopes], activ[i, 1:-1][sparse_slopes], color=sec_col, s = 2 * (ls ** 2))
+            for k in range(start_k, end_k):
+                ax.plot(x, activ[k, :], linewidth=1.0)
 
-            if i % 2 == 1:
+                if params['plot_sparsity']:
+                    ls = matplotlib.rcParams['lines.markersize']
+                    non_sparse_slopes = (threshold_sparsity_mask[k, :] == True)
+                    ax.scatter(x_slopes[non_sparse_slopes], activ[k, 1:-1][non_sparse_slopes], s = 2 * (ls ** 2))
 
-                if params['yrange'] is not None:
-                    y_range = params['yrange'][0:2] if (i <= 1) else params['yrange'][2:]
-                    ax.set_ylim([*y_range])
-                    if params['square']:
-                        ax.set_xlim([*y_range])
+                    sparse_slopes = (threshold_sparsity_mask[k, :] == False)
+                    ax.scatter(x_slopes[sparse_slopes], activ[k, 1:-1][sparse_slopes], s = 2 * (ls ** 2))
 
-                ax.set_xlabel(r"$x$", fontsize=20)
-                ax.set_ylabel(r"$\sigma(x)$", fontsize=20)
+            if params['yrange'] is not None:
+                y_range = params['yrange']
+                ax.set_ylim([*y_range])
+                if params['square']:
+                    ax.set_xlim([*y_range])
 
-                fig_save_title = ''
-                if params['fig_save_title'] != '':
-                    fig_save_title = params['fig_save_title'] + '_'
+            ax.set_xlabel(r"$x$", fontsize=20)
+            ax.set_ylabel(r"$\sigma(x)$", fontsize=20)
 
-                if params['savefig']:
-                    plt.savefig(os.path.join(params['output'],
-                            fig_save_title + activ_name + f'_neuron_pair_{i//2}') + '.pdf')
+            fig_save_title = ''
+            if params['fig_save_title'] != '':
+                fig_save_title = params['fig_save_title'] + '_'
 
-                plt.subplots_adjust(hspace = 0.4)
+            if params['savefig']:
+                plt.savefig(os.path.join(params['output'],
+                        fig_save_title + activ_name + f'_neurons_{start_k}_{end_k}') + '.pdf')
 
-                if not params['no_plot']:
-                    plt.show()
+            plt.subplots_adjust(hspace = 0.4)
 
-                plt.close()
+            if not params['no_plot']:
+                plt.show()
+
+            plt.close()
 
 
 
@@ -111,8 +123,9 @@ if __name__ == "__main__":
     parser.add_argument('ckpt_filename', metavar='CKPT_FILENAME', type=str, help='')
     parser.add_argument('--savefig', action='store_true', help='')
     parser.add_argument('--output', metavar='output folder', type=str, help='')
+    parser.add_argument('--num_activations_per_plot', '-napp', metavar='INT,>=0', default=4, type=ArgCheck.p_int, help='Number of activations per plot.')
     parser.add_argument('--layer', metavar='INT,>=0', type=ArgCheck.p_int, help='Plot activations of this specific layer.')
-    parser.add_argument('--yrange', metavar='FLOAT,>0', type=ArgCheck.p_float, nargs=4, help='Set y axis limit')
+    parser.add_argument('--yrange', metavar='FLOAT,>0', type=ArgCheck.p_float, nargs=2, help='Set y axis limit')
     parser.add_argument('--square', action='store_true', help='If axis shoul have same size')
     parser.add_argument('--plot_sparsity', action='store_true', help='Plot sparse/nonsparse knots')
     parser.add_argument('--no_plot', action='store_true', help='Only save figures')
