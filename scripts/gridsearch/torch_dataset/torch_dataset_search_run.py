@@ -100,7 +100,7 @@ class TorchDatasetSearchRun(SearchRun):
                 'log_step': log_step, 'valid_log_step': valid_log_step,
                 'seed': 15,
                 'dataset_name': self.args.dataset, 'batch_size': batch_size,
-                'num_workers': 4, 'tensorboard': True}
+                'num_workers': 4}
 
         if 'deep' in activation_type:
             params['spline_init'] = self.args.spline_init

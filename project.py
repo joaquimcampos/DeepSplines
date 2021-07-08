@@ -1,6 +1,5 @@
 import torch
 
-from tensorboardX import SummaryWriter
 import os
 import glob
 import math
@@ -32,16 +31,11 @@ class Project():
     def init_log(self):
         """ Create Log directory for training the model as :
             self.params["log_dir"]/self.params["model_name"]/
-            Initialize the self.writer as a SummaryWriter (tensorboard)
         """
         self.log_dir_model = os.path.join(self.params["log_dir"],
                                             self.params["model_name"])
         if not os.path.isdir(self.log_dir_model):
             os.makedirs(self.log_dir_model)
-
-        if self.params['tensorboard']:
-            # init summary writer
-            self.writer = SummaryWriter(self.log_dir_model)
 
         repo = git.Repo(search_parent_directories=True)
         commit_sha = repo.head.object.hexsha
@@ -369,12 +363,6 @@ class Project():
 
         print('train acc: {:7.3f}%'.format(train_acc))
 
-        if self.params['tensorboard']:
-            for key, value in losses_dict.items():
-                self.writer.add_scalar("train/" + key, losses_dict[key], epoch+1)
-
-            self.writer.add_scalar("train/error", (100.0 - train_acc), epoch+1)
-
         self.update_json('latest_train_loss', losses_dict)
         self.update_json('latest_train_acc', train_acc)
 
@@ -394,10 +382,6 @@ class Project():
             print('{}: {:7.3f} | '.format(key, value), end='')
 
         print('valid acc: {:7.3f}%'.format(valid_acc), '\n')
-
-        if self.params['tensorboard']:
-            self.writer.add_scalar("validation/df_loss", losses_dict['df_loss'], epoch+1)
-            self.writer.add_scalar("validation/error", (100.0 - valid_acc), epoch+1)
 
         self.update_json('latest_valid_loss', losses_dict)
         self.update_json('latest_valid_acc', valid_acc)

@@ -112,7 +112,7 @@ def get_arg_parser():
                             '--model_name and --log_dir where the model is saved.')
 
     parser.add_argument('--log_dir', metavar='STR', type=str,
-                        help=f'Directory for saving checkpoints and tensorboard events. Default: {default_values["log_dir"]}.')
+                        help=f'Directory for saving checkpoints. Default: {default_values["log_dir"]}.')
 
     parser.add_argument('--log_step', metavar='INT,>0', type=ArgCheck.p_int,
                         help=f'Train log step in batch_size. Default: {default_values["log_step"]}.')
@@ -145,7 +145,6 @@ def get_arg_parser():
     parser.add_argument('--save_title', metavar='STR', type=str,
                         help='Title for saving images. Predefined titles are used if not set.')
 
-    parser.add_argument('--tensorboard', action='store_true', help='Use tensorboard logs.')
     parser.add_argument('--verbose', '-v', action='store_true', help='Print more info.')
 
     additional_info_choices = {'sparsity', 'lipschitz_bound'}
