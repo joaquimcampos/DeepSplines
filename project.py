@@ -4,7 +4,6 @@ import os
 import glob
 import math
 import sys
-import git
 import collections
 import itertools
 
@@ -37,22 +36,6 @@ class Project():
         if not os.path.isdir(self.log_dir_model):
             os.makedirs(self.log_dir_model)
 
-        repo = git.Repo(search_parent_directories=True)
-        commit_sha = repo.head.object.hexsha
-
-        cmd_args = ' '.join(sys.argv)
-
-        # save commit sha and cmd line arguments corresponding to this model
-        save_str = '\n'.join(['Git commit sha: ', str(commit_sha)])
-        save_str += '\n\n'
-        save_str += '\n'.join(['Cmd args : ', cmd_args])
-
-        cmd_args_git_commit_filename = os.path.join(self.log_dir_model,
-                                                    'cmd_args_git_commit.txt')
-
-        with open(cmd_args_git_commit_filename, 'w') as text_file:
-            print(save_str, file=text_file)
-
 
 
     def init_device(self):
@@ -67,6 +50,7 @@ class Project():
         else:
             self.device = 'cpu'
             print('\nUsing CPU.')
+
 
 
     @property
@@ -85,6 +69,7 @@ class Project():
             return self.train_sorting_key
         else:
             return self.test_sorting_key
+
 
 
     def init_json(self):
