@@ -53,35 +53,18 @@ class DeepReLU(DeepSplineBase):
         # by default, there is no knot discovery. If it is desired to
         # have knot discovery, set knot_loc as a nn.Parameter.
         self.knot_loc = knot_loc # knot locations are not parameters
-
-
-        if self.init == 'relu':
-            zero_knot_idx = self.num_relus // 2
-            relu_coefficients[:, zero_knot_idx].fill_(1.)
-
-        elif self.init == 'leaky_relu':
+        
+        if self.init == 'leaky_relu':
             spline_weight.fill_(0.01) # b1 = 0.01
             zero_knot_idx = self.num_relus // 2
             relu_coefficients[:, zero_knot_idx].fill_(1.-0.01)
 
-        elif self.init == 'softplus':
-            coefficients = F.softplus(self.grid_tensor, beta=3, threshold=10)
-            deepRelu_coefficients = \
-                self.coefficients_to_deeprelu_coefficients(coefficients)
-            spline_bias = deepRelu_coefficients[:, 0]
-            spline_weight = deepRelu_coefficients[:, 1]
-            relu_coefficients = deepRelu_coefficients[:, 2::]
+        elif self.init == 'relu':
+            zero_knot_idx = self.num_relus // 2
+            relu_coefficients[:, zero_knot_idx].fill_(1.)
 
-        elif self.init == 'random':
-            relu_coefficients.normal_()
-            spline_weight.normal_()
-
-        elif self.init == 'identity':
-            spline_weight.fill_(1.) # b0=0, b1=1
-
-        elif self.init != 'zero':
-            raise ValueError('init should be relu/leaky_relu/softplus/'
-                            'random/identity/zero...')
+        else:
+            raise ValueError('init should be in [leaky_relu, relu].')
 
         self.relu_coefficients = nn.Parameter(relu_coefficients) # size: (num_activations, num_relus)
         self.spline_weight = nn.Parameter(spline_weight) # size: (num_activations,)

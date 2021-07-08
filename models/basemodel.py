@@ -90,7 +90,7 @@ class BaseModel(nn.Module):
         """ Initialize non-spline activations and puts them in nn.ModuleList()
 
         Args:
-            activation_type : 'relu', 'leaky_relu', 'prelu'.
+            activation_type : 'relu', 'leaky_relu'.
             activation_specs : list of pairs ('layer_type', num_channels/neurons);
                                 len(activation_specs) = number of activation layers.
         """
@@ -106,10 +106,6 @@ class BaseModel(nn.Module):
             for i in range(len(activation_specs)):
                 activations.append(leaky_relu)
 
-        elif self.activation_type == 'prelu':
-            for _, num_channels in activation_specs:
-                activations.append(nn.PReLU(num_parameters=num_channels))
-
         else:
             raise ValueError(f'{self.activation_type} is not in relu family...')
 
@@ -117,65 +113,34 @@ class BaseModel(nn.Module):
 
 
 
-    def initialization(self, control='backprop', init_type='He'):
+    def initialization(self, init_type='He'):
         """ """
-        assert control in ['forward', 'backprop'], ('Can either control variance of'
-                                                    'forward pass or backprop')
         assert init_type in ['He', 'Xavier', 'custom_normal']
 
-        if init_type == 'Xavier':
-            print('\nUsing Xavier init...')
-            nonlinearity = 'random' # init for random activation = Xavier init
+        if init_type == 'He':
+            if self.activation_type in ['leaky_relu', 'relu']:
+                nonlinearity = self.activation_type
+                slope_init = 0.01 if nonlinearity == 'leaky_relu' else 0.
 
-        elif init_type == 'custom_normal':
-            print('\nUsing custom Gauss(0, 0.05) weight initialization...')
-            nonlinearity = 'custom_normal'
-
-        elif self.activation_type == 'prelu':
-            nonlinearity = 'leaky_relu'
-            slope_init = 0.25 # default nn.PReLU slope
-
-        elif self.activation_type == 'leaky_relu':
-            nonlinearity = 'leaky_relu'
-            slope_init = 0.01 # default nn.LeakyReLU slope
-
-        elif self.deepspline is not None:
-
-            if self.spline_init == 'prelu':
-                nonlinearity = 'leaky_relu'
-                slope_init = 0.25
-
-            elif self.spline_init == 'leaky_relu':
-                nonlinearity = 'leaky_relu'
-                slope_init = 0.01
-
-            else:
+            elif self.deepspline is not None and self.spline_init in ['leaky_relu', 'relu']:
                 nonlinearity = self.spline_init
-                slope_init = 0.
-
-        else:
-            nonlinearity = self.activation_type
-            slope_init = 0.
-
-        nonlinearities = ['random', 'custom_normal', 'even_odd', 'identity', 'softplus', 'relu', 'leaky_relu']
-        assert nonlinearity in nonlinearities, ('nonlinearity should be in '
-                                                '[random, custom_normal, even_odd, identity, softplus, relu, leaky_relu].')
+                slope_init = 0.01 if nonlinearity == 'leaky_relu' else 0.
+            else:
+                init_type = 'Xavier' # overwrite init_type
 
 
         for module in self.modules():
 
             if isinstance(module, nn.Conv2d):
-                if nonlinearity in ['random', 'even_odd', 'identity', 'softplus']:
+                if init_type == 'Xavier':
                     nn.init.xavier_normal_(module.weight)
 
-                elif nonlinearity == 'custom_normal':
+                elif init_type == 'custom_normal':
+                    # custom Gauss(0, 0.05) weight initialization
                     module.weight.data.normal_(0, 0.05)
                     module.bias.data.zero_()
 
-                elif control == 'forward':
-                    nn.init.kaiming_normal_(module.weight, a=slope_init, mode='fan_in',
-                                            nonlinearity=nonlinearity)
-                else:
+                else: # He initialization
                     nn.init.kaiming_normal_(module.weight, a=slope_init, mode='fan_out',
                                             nonlinearity=nonlinearity)
 

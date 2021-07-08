@@ -47,9 +47,6 @@ class TorchDatasetSearchRun(SearchRun):
 
 
         if is_deepspline is True:
-            spline_init_choices = {'leaky_relu', 'softplus'}
-            parser.add_argument('--spline_init', choices=spline_init_choices, type=str, default='leaky_relu',
-                                help='Initialize the b-spline coefficients according to this function. ')
             parser.add_argument('--spline_size', metavar='INT>0',
                                 type=ArgCheck.p_odd_int, default=51,
                                 help='Number of activation coefficients.')
@@ -99,7 +96,6 @@ class TorchDatasetSearchRun(SearchRun):
                 'num_workers': 4}
 
         if 'deep' in activation_type:
-            params['spline_init'] = self.args.spline_init
             params['spline_size'] = self.args.spline_size
             params['spline_range'] = self.args.spline_range
 

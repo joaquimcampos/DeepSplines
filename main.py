@@ -24,7 +24,8 @@ def get_arg_parser():
     net_choices = {'twoDnet_onehidden', 'twoDnet_onehidden', \
                     'resnet32_cifar', 'nin_cifar', 'convnet_mnist'}
     parser.add_argument('--net', metavar='STR', type=str,
-                        help=f'Network to train. Available networks: {str(net_choices)}. Default: {default_values["net"]}.')
+                        help=f'Network to train. Available networks: {str(net_choices)}.'
+                            'Default: {default_values["net"]}.')
     parser.add_argument('--model_name', metavar='STR', type=str,
                         help=f'Default: {default_values["model_name"]}.')
     parser.add_argument('--device', choices=['cuda:0', 'cpu'], type=str,
@@ -35,11 +36,11 @@ def get_arg_parser():
 
     # model parameters
     activation_type_choices = {'deepBspline', 'deepRelu', 'deepBspline_explicit_linear', \
-                                'relu', 'leaky_relu', 'prelu'}
+                                'relu', 'leaky_relu'}
     parser.add_argument('--activation_type', choices=activation_type_choices, type=str,
                         help=f'Default: {default_values["activation_type"]}.')
 
-    spline_init_choices = {'relu', 'leaky_relu', 'softplus', 'even_odd', 'random', 'identity', 'zero'}
+    spline_init_choices = {'leaky_relu', 'relu', 'even_odd'}
     parser.add_argument('--spline_init', choices=spline_init_choices, type=str,
                         help='Initialize the b-spline coefficients according to this function. '
                             f'Default: {default_values["spline_init"]}.')

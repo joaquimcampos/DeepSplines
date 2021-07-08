@@ -52,8 +52,8 @@ if __name__ == "__main__":
                         help=f'Learning rate for optimizer.')
     parser.add_argument('--num_train_samples', metavar='INT,>0', type=ArgCheck.p_int,
                         default=10000, help=' ')
-    parser.add_argument('--init', choices=['even_odd', 'relu', 'leaky_relu', 'softplus', \
-                        'zero', 'random', 'identity'], type=str, default='leaky_relu',
+    parser.add_argument('--init', choices=['leaky_relu', 'relu', 'even_odd'],
+                        type=str, default='leaky_relu',
                         help=f'Initialize the b-spline coefficients according to this function.')
     parser.add_argument('--spline_range', metavar='FLOAT,>0', type=ArgCheck.p_float,
                         default=1., help=f'One-sided range of deepspline coefficients.')
@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
     activ = activation.to(args.device)
     optim_class = torch.optim.Adam
-    optim_params = {'lr' : args.lr} 
+    optim_params = {'lr' : args.lr}
     optim = optim_class(activ.parameters(), **optim_params)
     print('Optimizer :', optim)
 

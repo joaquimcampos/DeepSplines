@@ -45,6 +45,14 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
 
             spline_bias, spline_weight, coefficients = self.init
 
+        if self.init == 'leaky_relu':
+            spline_weight.fill_(0.01) # b1 = 0.01
+            coefficients = F.leaky_relu(grid_tensor, negative_slope=0.01) \
+                            - (0.01 * grid_tensor)
+
+        elif self.init == 'relu':
+            coefficients = F.relu(grid_tensor)
+
         elif self.init == 'even_odd':
             # initalize half of the activations with an even function (abs) and
             # and the other half with an odd function (soft threshold).
@@ -58,25 +66,8 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
             spline_bias[half::].fill_(0.5)
             coefficients[half::, :] = F.softshrink(grid_tensor[half::, :], lambd=0.5) \
                                         - (1. * grid_tensor[half::, :] + 0.5)
-
-        elif self.init == 'relu':
-            coefficients = F.relu(grid_tensor)
-
-        elif self.init == 'leaky_relu':
-            spline_weight.fill_(0.01) # b1 = 0.01
-            coefficients = F.leaky_relu(grid_tensor, negative_slope=0.01) \
-                            - (0.01 * grid_tensor)
-
-        elif self.init == 'random':
-            coefficients.normal_()
-            spline_weight.normal_()
-
-        elif self.init == 'identity':
-            spline_weight.fill_(1.)
-
-        elif self.init != 'zero':
-            raise ValueError('init should be a 3-tensor-tuple or '
-                    'even_odd/relu/leaky_relu/random/identity/zero...')
+        else:
+            raise ValueError('init should be a 3-tensor-tuple or in [leaky_relu, relu, even_odd].')
 
         # Need to vectorize coefficients to perform specific operations
         self.coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
