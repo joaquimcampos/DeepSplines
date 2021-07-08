@@ -53,18 +53,10 @@ def get_arg_parser():
                         help=f'Number of hidden neurons in each layer (for twoDnet). Default: {default_values["hidden"]}.')
 
     # regularization
-    parser.add_argument('--hyperparam_tuning', action='store_true',
-                        help='Tune TV/BV(2) and weight decay hyperparameters according to '
-                        'a tuning constant (--lmbda).')
     parser.add_argument('--lipschitz', action='store_true',
                         help='Perform lipschitz BV(2) regularization; the hyperparameter is set by --lmbda.')
     parser.add_argument('--lmbda', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
-                        help='if --hyperparam_tuning is set, it is used tune TV/BV(2) and weight decay '
-                            'hyperparameters; otherwise, it is the TV/BV(2) hyperparameter.'
-                            f'Default: {default_values["lmbda"]}.')
-    parser.add_argument('--outer_norm', metavar='INT,>0', choices=[1,2], type=ArgCheck.p_int,
-                        help='Outer norm for TV(2)/BV(2). Choices: {1,2}. '
-                            f'Default: {default_values["outer_norm"]}.')
+                        help=f'TV/BV(2) hyperparameter. Default: {default_values["lmbda"]}.')
 
     # optimizer
     optimizer_choices={'Adam', 'SGD'}
@@ -80,10 +72,7 @@ def get_arg_parser():
     parser.add_argument('--aux_lr', metavar='FLOAT,>0', type=ArgCheck.p_float,
                         help=f'Learning rate for aux optimizer (for deepspline parameters). Default: {default_values["aux_lr"]}.')
     parser.add_argument('--weight_decay', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
-                        help=f'L2 penalty on parameters. If --hyperparam_tuning is set, '
-                            'then a custom weight decay is applied to the weights of the network '
-                            'and --weight_decay is applied to the remaining parameters (e.g. BatchNorm). '
-                            'Default: {default_values["weight_decay"]}.')
+                        help=f'L2 penalty on parameters. Default: {default_values["weight_decay"]}.')
 
     # multistep scheduler
     parser.add_argument('--gamma', metavar='FLOAT,[0,1]', type=ArgCheck.frac_float,

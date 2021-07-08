@@ -21,8 +21,6 @@ class BaseModel(nn.Module):
         # deepspline
         self.set_attributes('spline_init', 'spline_size',
                             'spline_range', 'slope_diff_threshold')
-        # regularization
-        self.set_attributes('hyperparam_tuning', 'outer_norm')
 
         self.spline_grid = spline_grid_from_range(self.spline_size,
                                                     self.spline_range)
@@ -242,56 +240,13 @@ class BaseModel(nn.Module):
     @property
     def weight_decay_regularization(self):
         """ boolean """
-        return ((self.hyperparam_tuning is True and self.params['lmbda'] > 0) or \
-                (self.params['weight_decay'] > 0))
+        return (self.params['weight_decay'] > 0)
 
 
     @property
     def tv_bv_regularization(self):
         """ boolean """
         return (self.deepspline is not None and self.params['lmbda'] > 0)
-
-
-    def init_hyperparams(self):
-        """ Initialize per layer hyperparameters based on constant lmbda,
-        and the hyperparameter relationship for global minimizer. In this
-        case, lmbda becomes a constant from which the TV/BV(2) and weight decay
-        regularization weights are computed for each layer, and not the TV/BV(2)
-        regularization weight directly.
-
-        For more information, see Theorem 3 and 4 in the deep spline networks paper.
-        """
-        self.wd_hyperparam = [] # weight decay hyperparameter list
-        self.tv_bv_hyperparam = [] # TV(2)/BV(2) hyperparameter list
-
-        with torch.no_grad():
-
-            for module in self.modules():
-                if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
-                    if self.deepspline is None or self.hyperparam_tuning is False:
-                        # in this case, the hyperparameters will be the same for all layers.
-                        self.wd_hyperparam.append(self.params['weight_decay']/2)
-                    else:
-                        weight_norm_sq = module.weight.data.pow(2).sum().item()
-                        self.wd_hyperparam.append(self.params['lmbda']/(2.0*weight_norm_sq))
-
-                elif self.deepspline is not None and isinstance(module, self.deepspline):
-                    if self.hyperparam_tuning is False:
-                        # in this case, the hyperparameters will be the same for all layers.
-                        self.tv_bv_hyperparam.append(self.params['lmbda'])
-                    else:
-                        module_tv_bv = module.totalVariation()
-                        if self.params['lipschitz'] is True:
-                            module_tv_bv = module_tv_bv + module.fZerofOneAbs()
-
-                        module_tv_bv_l1 = module_tv_bv.norm(p=1).item()
-                        self.tv_bv_hyperparam.append(self.params['lmbda']/module_tv_bv_l1)
-
-
-        if self.params['verbose']:
-            print('\n\nHyperparameters:')
-            print('\nwd hyperparam :', self.wd_hyperparam, sep='\n')
-            print('\ntv/bv hyperparam :', self.tv_bv_hyperparam, sep='\n')
 
 
 
@@ -305,19 +260,12 @@ class BaseModel(nn.Module):
         """
         wd = Tensor([0.]).to(self.device)
 
-        i = 0
         for module in self.modules():
             if hasattr(module, 'weight') and isinstance(module.weight, nn.Parameter):
-                if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
-                    wd = wd + self.wd_hyperparam[i] * module.weight.pow(2).sum()
-                    i += 1
-                else:
-                    wd = wd + self.params['weight_decay']/2 * module.weight.pow(2).sum()
+                wd = wd + self.params['weight_decay']/2 * module.weight.pow(2).sum()
 
             if hasattr(module, 'bias') and isinstance(module.bias, nn.Parameter):
                 wd = wd + self.params['weight_decay']/2 * module.bias.pow(2).sum()
-
-        assert i == len(self.wd_hyperparam)
 
         return wd[0] # 1-element 1d tensor -> 0d tensor
 
@@ -333,19 +281,15 @@ class BaseModel(nn.Module):
         tv_bv = Tensor([0.]).to(self.device)
         tv_bv_unweighted = Tensor([0.]).to(self.device) # for printing loss without weighting
 
-        i = 0
         for module in self.modules():
             if isinstance(module, self.deepspline):
                 module_tv_bv = module.totalVariation(mode='additive')
                 if self.params['lipschitz'] is True:
                     module_tv_bv = module_tv_bv + module.fZerofOneAbs(mode='additive')
 
-                tv_bv = tv_bv + self.tv_bv_hyperparam[i] * module_tv_bv.norm(p=self.outer_norm)
+                tv_bv = tv_bv + self.params['lmbda'] * module_tv_bv.norm(p=1)
                 with torch.no_grad():
-                    tv_bv_unweighted = tv_bv_unweighted + module_tv_bv.norm(p=self.outer_norm)
-                i += 1
-
-        assert i == len(self.tv_bv_hyperparam)
+                    tv_bv_unweighted = tv_bv_unweighted + module_tv_bv.norm(p=1)
 
         return tv_bv[0], tv_bv_unweighted[0] # 1-element 1d tensor -> 0d tensor
 

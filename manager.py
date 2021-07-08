@@ -182,8 +182,6 @@ class Manager(Project):
 
         self.save_train_info()
 
-        self.net.init_hyperparams()
-
         self.losses_names = ['loss', 'df_loss'] # total loss and data fidelity loss
         if self.net.tv_bv_regularization is True:
             self.losses_names.append('tv_bv_loss')

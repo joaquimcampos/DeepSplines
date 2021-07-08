@@ -54,10 +54,6 @@ class TorchDatasetSearchRun(SearchRun):
                                 type=ArgCheck.p_float, help='one-sided deepspline range.')
             parser.add_argument('--lipschitz', action='store_true',
                                 help='Perform lipschitz BV(2) regularization.')
-            parser.add_argument('--hyperparam_tuning', action='store_true',
-                                help='Tune hyperparameters.')
-            parser.add_argument('--outer_norm', metavar='INT,>0', type=ArgCheck.p_int,
-                                choices=[1,2], default=1, help='Outer tv/bv norm. Choices: {1,2}.')
 
         return parser
 
@@ -98,10 +94,7 @@ class TorchDatasetSearchRun(SearchRun):
         if 'deep' in activation_type:
             params['spline_size'] = self.args.spline_size
             params['spline_range'] = self.args.spline_range
-
-            params['hyperparam_tuning'] = self.args.hyperparam_tuning
             params['lipschitz'] = self.args.lipschitz
-            params['outer_norm'] = self.args.outer_norm
         else:
             params['lmbda'] = 0
 

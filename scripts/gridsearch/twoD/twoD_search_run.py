@@ -47,8 +47,6 @@ class TwoDSearchRun(SearchRun):
                                 type=ArgCheck.p_float, help='one-sided deepspline range.')
             parser.add_argument('--lipschitz', action='store_true',
                                 help='Perform lipschitz BV(2) regularization.')
-            parser.add_argument('--outer_norm', metavar='INT,>0', type=ArgCheck.p_int,
-                                choices=[1,2], default=1, help='Outer tv/bv norm. Choices: {1,2}.')
 
         return parser
 
@@ -80,10 +78,8 @@ class TwoDSearchRun(SearchRun):
             params['spline_init'] = 'even_odd'
             params['spline_size'] = self.args.spline_size
             params['spline_range'] = self.args.spline_range
-            params['hyperparam_tuning'] = True
             params['lipschitz'] = self.args.lipschitz
             params['weight_decay'] = 0 # tuned weight decay. Don't penalize non-weight parameters.
-            params['outer_norm'] = self.args.outer_norm
         else:
             params['lmbda'] = 0
 

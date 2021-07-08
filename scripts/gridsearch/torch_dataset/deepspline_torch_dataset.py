@@ -27,15 +27,12 @@ if __name__ == "__main__" :
     params['verbose'] = True # for debugging
 
     lipschitz_str = '_lipschitz' if params['lipschitz'] is True else ''
-    hyperparam_tuning_str = '_hyperparam_tuning' if params['hyperparam_tuning'] is True else ''
-
     size_str = str(params["spline_size"])
 
     base_model_name = (f'{params["net"]}_{params["activation_type"]}_size{size_str}_' +
                         'weight_decay_{:.1E}_'.format(params["weight_decay"]) +
                         f'range{params["spline_range"]}_' +
-                        f'lr_{params["lr"]}_aux_lr_{params["aux_lr"]}' +
-                        f'{lipschitz_str}{hyperparam_tuning_str}')
+                        f'lr_{params["lr"]}_aux_lr_{params["aux_lr"]}{lipschitz_str}')
 
     # change gridsearch values as desired
     lmbda_list = [1e-5, 1e-4, 1e-3, 5e-5, 5e-4]

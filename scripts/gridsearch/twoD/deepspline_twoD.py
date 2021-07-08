@@ -31,13 +31,12 @@ if __name__ == "__main__" :
     cmd_args = ' '.join(sys.argv)
     print('\nCmd args : ', cmd_args, sep='\n')
 
-    lipschitz_str = 'lipschitz_' if params['lipschitz'] is True else ''
+    lipschitz_str = '_lipschitz' if params['lipschitz'] is True else ''
     size_str = str(params["spline_size"])
 
     base_model_name = (f'{params["net"]}_{params["activation_type"]}_' +
                         f'hidden{params["hidden"]}_size{size_str}_' +
-                        f'range{params["spline_range"]}_' +
-                        f'{lipschitz_str}' + 'hyperparam_tuning')
+                        f'range{params["spline_range"]}{lipschitz_str}')
 
     # change gridsearch values as desired
     lmbda_list = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
