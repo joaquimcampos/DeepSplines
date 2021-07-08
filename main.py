@@ -183,6 +183,9 @@ def verify_params(params):
         raise ValueError('Need to provide either log_dir and model_name, '
                         'if resuming training from best or latest checkpoint.')
 
+    if params['activation_type'] == 'deepRelu' and params['spline_init'] == 'even_odd':
+        raise ValueError('Cannot use even_odd spline initialization with deeprelu.')
+
     return params, user_params
 
 
