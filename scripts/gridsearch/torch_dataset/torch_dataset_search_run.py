@@ -28,9 +28,9 @@ class TorchDatasetSearchRun(SearchRun):
         dataset_choices = {'cifar10', 'cifar100', 'mnist'}
         parser.add_argument('dataset', metavar=f'dataset[STR]', type=str,
                     choices=dataset_choices, help=f'{str(dataset_choices)}')
-        net_choices = {'simplenet', 'resnet20', 'resnet32', 'resnet32_linear', 'nin', 'nin_linear'}
-        parser.add_argument('--net', metavar=f'STR', type=str, default='resnet32',
-                            choices=net_choices,
+        net_choices = {'resnet32_cifar', 'nin_cifar'}
+        parser.add_argument('--net', metavar=f'STR', type=str,
+                            default='resnet32_cifar', choices=net_choices,
                             help=f'Network (for cifar). Choices: {str(net_choices)}')
         parser.add_argument('--lr', metavar='FLOAT,>0', type=ArgCheck.p_float,
                             help=f'lr for main optimizer (network parameters).')
@@ -80,7 +80,7 @@ class TorchDatasetSearchRun(SearchRun):
             net = self.args.net
             batch_size = 128
             log_step, valid_log_step = 50, 352
-            if net.startswith('nin'):
+            if net == 'nin_cifar':
                 milestones = [80, 160, 240]
                 num_epochs = 320
             else:
@@ -88,7 +88,7 @@ class TorchDatasetSearchRun(SearchRun):
                 num_epochs = 300
         else:
             # mnist
-            net = 'simplestnet'
+            net = 'convnet_mnist'
             batch_size = 64
             log_step, valid_log_step = 100, 844
             milestones = [22, 31, 36]
@@ -121,9 +121,9 @@ class TorchDatasetSearchRun(SearchRun):
         if 'apl' in activation_type or 'deep' in activation_type:
             params['weight_decay'] = self.args.weight_decay
 
-        if net in ['simplenet', 'simplestnet']:
+        if net == 'convnet_mnist':
 
-            default_lr = 1e-2 if net == 'simplestnet' else 1e-3
+            default_lr = 1e-2
             params['optimizer'] = ['Adam']
             params['lr'] = default_lr
             if self.args.lr is not None:

@@ -1,17 +1,14 @@
-#!/usr/bin/env python3
-
 import torch
-from torch import Tensor
 import torch.nn as nn
-import torch.nn.functional as F
 
 from models.basemodel import BaseModel
+
+__all__ = ['TwoDNet_TwoHidden']
 
 
 class TwoDNet_TwoHidden(BaseModel):
     """
-    input size :
-    N x 2 (2d data points)
+    Input size: N x 2 (2D data points)
 
     Output size of each layer:
     fc1 -> N x h

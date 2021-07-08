@@ -21,8 +21,8 @@ def get_arg_parser():
                         help=f'Train or test mode. Default: {default_values["mode"]}.')
 
     # add other networks here, in the models/ directory and in Manager.build_model()
-    net_choices = {'twoDnet_onehidden', 'twoDnet_onehidden', 'simplenet', 'simplestnet', \
-                    'resnet20', 'resnet32', 'resnet32_linear', 'nin', 'nin_linear'}
+    net_choices = {'twoDnet_onehidden', 'twoDnet_onehidden', \
+                    'resnet32_cifar', 'nin_cifar', 'convnet_mnist'}
     parser.add_argument('--net', metavar='STR', type=str,
                         help=f'Network to train. Available networks: {str(net_choices)}. Default: {default_values["net"]}.')
     parser.add_argument('--model_name', metavar='STR', type=str,

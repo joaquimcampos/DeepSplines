@@ -85,13 +85,9 @@ class Manager(Project):
 
         models_dict = { 'twoDnet_onehidden' : TwoDNet_OneHidden,
                         'twoDnet_twohidden' : TwoDNet_TwoHidden,
-                        'simplenet'         : SimpleNet,
-                        'simplestnet'       : SimplestNet,
-                        'resnet20'          : ResNet20,
-                        'resnet32'          : ResNet32,
-                        'resnet32_linear'   : ResNet32Linear,
-                        'nin'               : NIN,
-                        'nin_linear'        : NINLinear}
+                        'resnet32_cifar'    : ResNet32Cifar,
+                        'nin_cifar'         : NiNCifar,
+                        'convnet_mnist'     : ConvNetMnist}
 
         assert params['net'] in models_dict.keys(), 'network not found: please add net to models_dict.'
         net = models_dict[params['net']](**params['model'], device=device)

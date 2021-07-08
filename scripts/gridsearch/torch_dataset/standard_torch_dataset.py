@@ -29,7 +29,7 @@ if __name__ == "__main__" :
                        f'lr_{params["lr"]}')
 
     # change gridsearch values as desired
-    if params["net"].startswith('nin'):
+    if params["net"] == 'nin_cifar':
         weight_decay_list = [1e-4]
     else:
         weight_decay_list = [5e-4]

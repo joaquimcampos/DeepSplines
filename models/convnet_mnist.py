@@ -1,19 +1,20 @@
-#!/usr/bin/env python3
+'''Simple convolutional network for MNIST. '''
 
 import torch
-from torch import Tensor
 import torch.nn as nn
-import torch.nn.functional as F
 
 from models.basemodel import BaseModel
 
+__all__ = ['ConvNetMnist']
 
-class SimplestNet(BaseModel):
+
+class ConvNetMnist(BaseModel):
     """
-    input size mnist:
-    N x 1 x 28 x 28
+    Simple convolutional network for MNIST digit classification.
 
-    Output size of each layer:
+    MNIST input size: N x 1 x 28 x 28.
+
+    Network (layer type -> output size):
     conv1   -> (N, c1, 24, 24)
     pool2d  -> (N, c1, 12, 12)
     conv2   -> (N, c1, 8, 8)
@@ -21,6 +22,7 @@ class SimplestNet(BaseModel):
     reshape -> (N, c1 * 4 * 4)
     fc1     -> N x 10
 
+    The convolutions are valid convolutions with filter size = 5.
     """
 
     def __init__(self, **params):
@@ -29,7 +31,7 @@ class SimplestNet(BaseModel):
 
 
         c1, self.c2 = 2, 2 # conv: number of channels
-        activation_specs = []        
+        activation_specs = []
 
         self.conv1 = nn.Conv2d(1, c1, 5) # (in_channels, out_channels, kernel_size)
         activation_specs.append(('conv', c1))

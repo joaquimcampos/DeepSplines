@@ -1,25 +1,21 @@
-#!/usr/bin/env python3
-
-'''ResNet in PyTorch.
+'''
+ResNet for CIFAR.
 
 Reference:
-[1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
-    Deep Residual Learning for Image Recognition. arXiv:1512.03385
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
+"Deep Residual Learning for Image Recognition". arXiv:1512.03385
 
 Based on:
-- Pytorch implementation
+- https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 - https://github.com/akamaster/pytorch_resnet_cifar10
 '''
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import sys
 
 from models.basemodel import BaseModel
 
-
-__all__ = ['ResNet20', 'ResNet32', 'ResNet44']
+__all__ = ['ResNet32Cifar']
 
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1):
@@ -47,7 +43,8 @@ class BasicBlock(BaseModel):
         super().__init__(**params)
 
         self.dropout_rate = 0 # change if needed
-        activation_specs = [] # stores layer type ('conv'/'linear') and number of channels for each activation layer
+        # stores layer type ('conv'/'linear') and number of channels for each activation layer
+        activation_specs = []
 
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv3x3(in_planes, planes, stride)
@@ -87,66 +84,13 @@ class BasicBlock(BaseModel):
         return out
 
 
-
-class Bottleneck(BaseModel):
-    expansion = 4
-
-    def __init__(self, in_planes, planes, stride=1, downsample=None, **params):
-        """
-        Args:
-            in_planes : number of input in_channels
-            planes : number of output channels after first convolution
-            downsample : None or downsample/channel_augmentation strategy
-        """
-        super().__init__(**params)
-
-        # stores layer type ('conv'/'linear') and number of channels/neurons for each layer
-        activation_specs = []
-
-        self.conv1 = conv1x1(in_planes, planes)
-        self.bn1 = nn.BatchNorm2d(planes)
-        activation_specs.append(('conv', planes))
-
-        # Both self.conv2 and self.downsample layers downsample the input when stride != 1
-        self.conv2 = conv3x3(planes, planes, stride)
-        self.bn2 = nn.BatchNorm2d(planes)
-        activation_specs.append(('conv', planes))
-
-        self.conv3 = conv1x1(planes, self.expansion * planes)
-        self.bn3 = nn.BatchNorm2d(self.expansion * planes)
-        activation_specs.append(('conv', self.expansion * planes))
-
-        self.downsample = downsample
-        self.stride = stride
-        self.activations = self.init_activation_list(activation_specs, bias=False)
-
-
-    def forward(self, x):
-        """ """
-        identity = x
-
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.activations[0](out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.activations[1](out)
-
-        out = self.conv3(out)
-        out = self.bn3(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-        out = self.activations[2](out)
-
-        return out
-
-
-
 class ResNet(BaseModel):
+    '''
+    ResNet for CIFAR classification.
+
+    CIFAR input size: N x 3 x 32 x 32.
+    '''
+
     def __init__(self, block, num_blocks, in_planes=64, **params):
         """ """
         super().__init__(**params)
@@ -216,18 +160,18 @@ class ResNet(BaseModel):
 
     def forward(self, x):
         """ """
-        # cifar size: 32x32
+        # cifar input size: N x 3 x 32 x 32
         out = self.layer0(x)
-        # cifar size: 32x32
+        # size: N x 3 x 32 x 32
         out = self.layer1(out)
-        # cifar size: 32x32
+        # size: N x 3 x 32 x 32
         out = self.layer2(out)
-        # cifar size: 16x16
+        # size: N x 3 x 16 x 16
         out = self.layer3(out)
-        # cifar size: 8x8
+        # size: N x 3 x 8 x 8
         if self.layer4 is not None:
             out = self.layer4(out)
-            # cifar size: 4x4
+            # size: N x 3 x 4 x 4
 
         out = self.avgpool2d(out) # global avg pool of kernel_size HxW
         out = self.linear(out.view(out.size(0), -1))
@@ -235,13 +179,6 @@ class ResNet(BaseModel):
         return out
 
 
-################################################################################
 
-def ResNet20(**params):
-    return ResNet(BasicBlock, [3, 3, 3], in_planes=16, **params)
-
-def ResNet32(**params):
+def ResNet32Cifar(**params):
     return ResNet(BasicBlock, [5, 5, 5], in_planes=16, **params)
-
-def ResNet44(**params):
-    return ResNet(BasicBlock, [7, 7, 7], in_planes=16, **params)

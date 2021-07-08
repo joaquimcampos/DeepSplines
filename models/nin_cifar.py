@@ -1,20 +1,30 @@
-#!/usr/bin/env python3
-# Based on:
-# https://github.com/jiecaoyu/pytorch-nin-cifar10/blob/master/original.py
+'''
+Network-in-Network for CIFAR.
+
+Reference:
+Min Lin, Qiang Chen, Shuicheng Yan
+"Network In Network", ICLR, 2014.
+
+Based on:
+- https://github.com/jiecaoyu/pytorch-nin-cifar10/blob/master/original.py
+- https://github.com/forestagostinelli/Learned-Activation-Functions-Source/
+blob/master/examples/cifar100/NIN/baseline/train_test1.prototxt
+'''
 
 import torch
-from torch import Tensor
 import torch.nn as nn
-import torch.nn.functional as F
 
 from models.basemodel import BaseModel
 
+__all__ = ['NiNCifar']
 
-class NIN(BaseModel):
-    """
-    input size cifar:
-    N x 3 x 32 x 32
-    """
+
+class NiNCifar(BaseModel):
+    '''
+    Network-in-Network for CIFAR classification.
+
+    CIFAR input size: N x 3 x 32 x 32.
+    '''
 
     def __init__(self, **params):
 
@@ -49,7 +59,6 @@ class NIN(BaseModel):
 
                 )
 
-        # self.initialization(init_type='Xavier')
         self.initialization(init_type='custom_normal')
         self.num_params = self.get_num_params()
 

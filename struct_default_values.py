@@ -1,5 +1,5 @@
 default_values = {'mode' : 'train',
-                  'net' : 'resnet32',
+                  'net' : 'resnet32_cifar',
                   'model_name' : 'deepspline',
                   'device' : 'cuda:0',
                   'num_epochs' : 300,
