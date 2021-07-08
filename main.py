@@ -35,7 +35,7 @@ def get_arg_parser():
 
     # model parameters
     activation_type_choices = {'deepBspline', 'deepRelu', 'deepBspline_explicit_linear', \
-                                'apl', 'relu', 'leaky_relu', 'prelu'}
+                                'relu', 'leaky_relu', 'prelu'}
     parser.add_argument('--activation_type', choices=activation_type_choices, type=str,
                         help=f'Default: {default_values["activation_type"]}.')
 
@@ -47,9 +47,6 @@ def get_arg_parser():
                         help='Number of spline coefficients. Default: {default_values["spline_size"]}.')
     parser.add_argument('--spline_range', metavar='FLOAT,>0', type=ArgCheck.p_float,
                         help=f'Range of spline representation. Default: {default_values["spline_range"]}.')
-
-    parser.add_argument('--S_apl', metavar='INT,>0', type=ArgCheck.p_int,
-                        help=f'Additional number of APL knots. Default: {default_values["S_apl"]}.')
 
     parser.add_argument('--hidden', metavar='INT,>0', type=ArgCheck.p_int,
                         help=f'Number of hidden neurons in each layer (for twoDnet). Default: {default_values["hidden"]}.')
@@ -67,10 +64,6 @@ def get_arg_parser():
     parser.add_argument('--outer_norm', metavar='INT,>0', choices=[1,2], type=ArgCheck.p_int,
                         help='Outer norm for TV(2)/BV(2). Choices: {1,2}. '
                             f'Default: {default_values["outer_norm"]}.')
-
-    parser.add_argument('--beta', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
-                        help='Weight decay on APL parameters. '
-                            f'Default: {default_values["beta"]}.')
 
     # optimizer
     optimizer_choices={'Adam', 'SGD'}

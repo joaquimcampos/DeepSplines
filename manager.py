@@ -111,7 +111,7 @@ class Manager(Project):
         if len(self.optim_names) == 2:
             try:
                 # main optimizer only for network parameters
-                main_params_iter = self.net.parameters_no_deepspline_apl()
+                main_params_iter = self.net.parameters_no_deepspline()
             except AttributeError:
                 print('Cannot use aux optimizer.')
                 raise
@@ -126,12 +126,10 @@ class Manager(Project):
         self.aux_optimizer, self.aux_scheduler = None, None
 
         if len(self.optim_names) == 2:
-            # aux optimizer/scheduler for deepspline/apl parameters
+            # aux optimizer/scheduler for deepspline parameters
             try:
                 if self.net.deepspline is not None:
                     aux_params_iter = self.net.parameters_deepspline()
-                elif self.net.apl is not None:
-                    aux_params_iter = self.net.parameters_apl()
             except AttributeError:
                 print('Cannot use aux optimizer.')
                 raise
@@ -234,9 +232,6 @@ class Manager(Project):
         if self.net.weight_decay_regularization is True:
             # the regularization weight is multiplied inside weight_decay()
             regularization = regularization + self.net.weight_decay()
-
-        if self.net.apl_weight_decay_regularization is True:
-            regularization = regularization + self.net.apl_weight_decay()
 
         if self.net.tv_bv_regularization is True:
             # the regularization weight is multiplied inside TV_BV()

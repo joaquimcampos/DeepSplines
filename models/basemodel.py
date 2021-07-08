@@ -5,7 +5,6 @@ from torch import Tensor
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
 from models.deepRelu import DeepReLU
-from models.apl import APL
 from ds_utils import spline_grid_from_range
 
 
@@ -21,7 +20,7 @@ class BaseModel(nn.Module):
                             'num_classes', 'device')
         # deepspline
         self.set_attributes('spline_init', 'spline_size',
-                            'spline_range', 'S_apl', 'slope_diff_threshold')
+                            'spline_range', 'slope_diff_threshold')
         # regularization
         self.set_attributes('hyperparam_tuning', 'outer_norm')
 
@@ -35,10 +34,6 @@ class BaseModel(nn.Module):
             self.deepspline = DeepBSpline
         elif self.activation_type == 'deepBspline_explicit_linear':
             self.deepspline = DeepBSplineExplicitLinear
-
-        self.apl = None
-        if self.activation_type == 'apl':
-            self.apl = APL
 
 
     def set_attributes(self, *names):
@@ -70,13 +65,6 @@ class BaseModel(nn.Module):
             for mode, num_activations in activation_specs:
                 activations.append(self.deepspline(size=size, grid=grid, init=self.spline_init,
                                             bias=False, mode=mode, num_activations=num_activations, #bias=bias
-                                            device=self.device))
-        elif self.apl is not None:
-            activations = nn.ModuleList()
-            for mode, num_activations in activation_specs:
-                activations.append(self.apl(mode=mode,
-                                            num_activations=num_activations,
-                                            S_apl=self.S_apl,
                                             device=self.device))
         else:
             activations = self.init_standard_activations(activation_specs)
@@ -151,10 +139,6 @@ class BaseModel(nn.Module):
             nonlinearity = 'leaky_relu'
             slope_init = 0.01 # default nn.LeakyReLU slope
 
-        elif self.apl is not None:
-            nonlinearity = 'relu' # or 'random'
-            slope_init = 0.
-
         elif self.deepspline is not None:
 
             if self.spline_init == 'prelu':
@@ -220,29 +204,23 @@ class BaseModel(nn.Module):
                 yield module
 
 
-    def named_parameters_no_deepspline_apl(self, recurse=True):
+    def named_parameters_no_deepspline(self, recurse=True):
         """ Named parameters of network, excepting deepspline parameters.
         """
         try:
             for name, param in self.named_parameters(recurse=recurse):
                 deepspline_param = False
-                apl_param = False
                 # get all deepspline parameters
                 if self.deepspline is not None:
                     for param_name in self.deepspline.parameter_names():
                         if name.endswith(param_name):
                             deepspline_param = True
 
-                if self.apl is not None:
-                    for param_name in self.apl.parameter_names():
-                        if name.endswith(param_name):
-                            apl_param = True
-
-                if (deepspline_param is False) and (apl_param is False):
+                if deepspline_param is False:
                     yield name, param
 
         except AttributeError:
-            print('Not using deepspline or apl activations...')
+            print('Not using deepspline activations...')
             raise
 
 
@@ -266,28 +244,9 @@ class BaseModel(nn.Module):
 
 
 
-    def named_parameters_apl(self, recurse=True):
-        """ Named parameters (for optimizer) of apl activations.
-        """
-        try:
-            for name, param in self.named_parameters(recurse=recurse):
-                apl_param = False
-                for param_name in self.apl.parameter_names():
-                    if name.endswith(param_name):
-                        apl_param = True
-
-                if apl_param is True:
-                    yield name, param
-
-        except AttributeError:
-            print('Not using apl activations...')
-            raise
-
-
-
-    def parameters_no_deepspline_apl(self):
+    def parameters_no_deepspline(self):
         """ """
-        for name, param in self.named_parameters_no_deepspline_apl(recurse=True):
+        for name, param in self.named_parameters_no_deepspline(recurse=True):
             yield param
 
 
@@ -295,13 +254,6 @@ class BaseModel(nn.Module):
     def parameters_deepspline(self):
         """ """
         for name, param in self.named_parameters_deepspline(recurse=True):
-            yield param
-
-
-
-    def parameters_apl(self):
-        """ """
-        for name, param in self.named_parameters_apl(recurse=True):
             yield param
 
 
@@ -330,12 +282,6 @@ class BaseModel(nn.Module):
 
 
     @property
-    def apl_weight_decay_regularization(self):
-        """ boolean """
-        return (self.apl is not None and self.params['beta'] > 0)
-
-
-    @property
     def tv_bv_regularization(self):
         """ boolean """
         return (self.deepspline is not None and self.params['lmbda'] > 0)
@@ -351,7 +297,6 @@ class BaseModel(nn.Module):
         For more information, see Theorem 3 and 4 in the deep spline networks paper.
         """
         self.wd_hyperparam = [] # weight decay hyperparameter list
-        self.apl_wd_hyperparam = [] # apl weight decay hyperparameter list
         self.tv_bv_hyperparam = [] # TV(2)/BV(2) hyperparameter list
 
         with torch.no_grad():
@@ -364,9 +309,6 @@ class BaseModel(nn.Module):
                     else:
                         weight_norm_sq = module.weight.data.pow(2).sum().item()
                         self.wd_hyperparam.append(self.params['lmbda']/(2.0*weight_norm_sq))
-
-                elif self.apl is not None and isinstance(module, self.apl):
-                    self.apl_wd_hyperparam.append(self.params['beta']/2)
 
                 elif self.deepspline is not None and isinstance(module, self.deepspline):
                     if self.hyperparam_tuning is False:
@@ -413,25 +355,6 @@ class BaseModel(nn.Module):
         assert i == len(self.wd_hyperparam)
 
         return wd[0] # 1-element 1d tensor -> 0d tensor
-
-
-
-    def apl_weight_decay(self):
-        """ Computes the sum of the weight decay of all apl activations
-        """
-        apl_wd = Tensor([0.]).to(self.device)
-        tv_bv_unweighted = Tensor([0.]).to(self.device) # for printing loss without weighting
-
-        i = 0
-        for module in self.modules():
-            if isinstance(module, self.apl):
-                apl_wd = apl_wd + self.apl_wd_hyperparam[i] * module.a_apl.pow(2).sum()
-                apl_wd = apl_wd + self.apl_wd_hyperparam[i] * module.b_apl.pow(2).sum()
-                i += 1
-
-        assert i == len(self.apl_wd_hyperparam)
-
-        return apl_wd[0] # 1-element 1d tensor -> 0d tensor
 
 
 

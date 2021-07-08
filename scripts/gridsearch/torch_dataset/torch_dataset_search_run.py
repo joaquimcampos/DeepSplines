@@ -6,7 +6,7 @@ from scripts.search_run import SearchRun
 
 
 class TorchDatasetSearchRun(SearchRun):
-    """ Helper class for abstracting common operations in deepspline, apl,
+    """ Helper class for abstracting common operations in deepspline
     and standard grid searches with cifar/mnist dataset.
     """
 
@@ -17,7 +17,7 @@ class TorchDatasetSearchRun(SearchRun):
 
 
     @staticmethod
-    def add_default_args(parser, is_deepspline=False, is_apl=False):
+    def add_default_args(parser, is_deepspline=False):
         """ Add default args
 
         Args:
@@ -35,17 +35,13 @@ class TorchDatasetSearchRun(SearchRun):
         parser.add_argument('--lr', metavar='FLOAT,>0', type=ArgCheck.p_float,
                             help=f'lr for main optimizer (network parameters).')
 
-        if is_apl is True:
-            parser.add_argument('--S_apl', metavar='INT,>0', type=ArgCheck.p_int,
-                            default=1, help=f'Additional number of APL knots.')
-
-        if (is_apl is True) or (is_deepspline is True):
+        if is_deepspline is True:
             optim_choices = {'SGD', 'mixed', 'SGD_SGD'}
             parser.add_argument('--optimizer', metavar='STR', type=str, default='mixed',
                                 choices=optim_choices,
                                 help=f'{str(optim_choices)} (for resnet only).')
             parser.add_argument('--aux_lr', metavar='FLOAT,>0', type=ArgCheck.p_float,
-                                help=f'lr for aux optimizer (deepspline/apl parameters).')
+                                help=f'lr for aux optimizer (deepspline parameters).')
             parser.add_argument('--weight_decay', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
                         default=5e-4, help='L2 penalty on parameters.')
 
@@ -74,7 +70,7 @@ class TorchDatasetSearchRun(SearchRun):
         """ Return default params, common to deepspline and standard gridsearch.
         """
         assert activation_type in ['deepBspline', 'deepRelu', 'deepBspline_explicit_linear', \
-                                'apl', 'relu', 'leaky_relu', 'prelu']
+                                    'relu', 'leaky_relu', 'prelu']
 
         if self.args.dataset.startswith('cifar'):
             net = self.args.net
@@ -113,12 +109,7 @@ class TorchDatasetSearchRun(SearchRun):
         else:
             params['lmbda'] = 0
 
-        if 'apl' in activation_type:
-            params['S_apl'] = self.args.S_apl
-        else:
-            params['beta'] = 0
-
-        if 'apl' in activation_type or 'deep' in activation_type:
+        if 'deep' in activation_type:
             params['weight_decay'] = self.args.weight_decay
 
         if net == 'convnet_mnist':
@@ -140,7 +131,7 @@ class TorchDatasetSearchRun(SearchRun):
             if self.args.lr is not None:
                 params['lr'] = self.args.lr
 
-            if ('deep' in activation_type) or ('apl' in activation_type):
+            if 'deep' in activation_type:
                 if self.args.optimizer == 'mixed':
                     # SGD optimizer for network parameters, Adam for deepspline parameters
                     params['optimizer'] = ['SGD', 'Adam']
