@@ -201,10 +201,6 @@ class Manager(Project):
                 self.net.sparsify_activations()
                 self.net.freeze_parameters()
 
-            # optional string to print at each epoch given in params by external script to main_prog()
-            if self.params['combination_str'] is not None:
-                print(self.params['combination_str'])
-
             self.train_epoch(epoch)
 
             if self.dataset.is_user_dataset is True:

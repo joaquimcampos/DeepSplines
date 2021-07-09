@@ -36,7 +36,6 @@ default_values = {'mode' : 'train',
                   'save_imgs' : False,
                   'save_title' : None,
                   'verbose' : False,
-                  'combination_str' : None,
                   'additional_info' : [],
                   'num_classes' : None}
 
