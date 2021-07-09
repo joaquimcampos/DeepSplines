@@ -4,7 +4,6 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 import numpy as np
 from ds_utils import check_device, denormalize
 

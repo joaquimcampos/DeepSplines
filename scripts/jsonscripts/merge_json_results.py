@@ -2,7 +2,6 @@
 
 import argparse
 import os
-import sys
 from htv_utils import json_load, json_dump
 import collections
 

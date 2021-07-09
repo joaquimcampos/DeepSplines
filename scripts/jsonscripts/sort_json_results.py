@@ -2,7 +2,6 @@
 
 import argparse
 import os
-import sys
 from ds_utils import json_load, json_dump
 import collections
 
