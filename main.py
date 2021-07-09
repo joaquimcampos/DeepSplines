@@ -114,7 +114,7 @@ def get_arg_parser():
                         help='Train on full training data and evaluate model on test set in validation step.')
 
     # add other datasets here and create a corresponding Dataset class in datasets.py
-    dataset_choices = {'s_shape_1500', 'circle_1500', 'cifar10', 'cifar100', 'mnist'}
+    dataset_choices = {'cifar10', 'cifar100', 'mnist', 's_shape_1500', 'circle_1500'}
     parser.add_argument('--dataset_name', metavar='STR', type=str,
                         help=f'dataset to train/test on. Available datasets: {str(dataset_choices)}. '
                             f'Default: {default_values["dataset_name"]}.')

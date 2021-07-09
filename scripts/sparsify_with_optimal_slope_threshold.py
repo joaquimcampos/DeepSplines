@@ -5,6 +5,7 @@ import os
 import numpy as np
 import sys
 import copy
+import warnings
 import shutil
 
 from ds_utils import ArgCheck
@@ -52,10 +53,14 @@ if __name__ == "__main__":
         ckpt_filename = Project.get_ckpt_from_log_dir_model(log_dir_model)
         ckpt, params = Project.load_ckpt_params(ckpt_filename, flatten=True)
 
+        if params['sparsify_activations'] is True and \
+            ckpt['num_epochs_finished'] >= params['num_epochs']:
+            warnings.warn(f'Activations for model {model} were already sparsified.')
+
         # take the trained model, do one more epoch with a slope threshold
         # applied and the model frozen, and compute the train accuracy.
         params['resume'] = True
-        params['num_epochs'] = ckpt['num_epochs_finished'] + 1
+        params['num_epochs'] = ckpt['num_epochs_finished']
         params['valid_log_step'] = params['log_step'] # at each epoch
         params['log_dir'] = args.out_log_dir
         params['ckpt_filename'] = ckpt_filename

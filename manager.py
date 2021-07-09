@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
+import copy
 
 from dataloader import DataLoader
 from project import Project
@@ -186,13 +187,16 @@ class Manager(Project):
         if self.net.tv_bv_regularization is True:
             self.losses_names.append('tv_bv_loss')
 
+        num_epochs = copy.copy(self.params['num_epochs'])
+        if self.params['sparsify_activations']:
+            num_epochs += 1 # add one epoch to sparsify activations
+
         print('\n\n==>Starting training...')
 
-        for epoch in range(self.start_epoch, self.params['num_epochs']):
+        for epoch in range(self.start_epoch, num_epochs):
 
-            if epoch == (self.params['num_epochs']-1) and self.params['sparsify_activations']:
-                print('\nLast epoch: freezing network for sparsifying the activations '
-                    'and evaluating training accuracy.')
+            if epoch == (num_epochs-1) and self.params['sparsify_activations']:
+                print('\nFreezing network to sparsify activations and evaluate train accuracy.')
                 self.net.eval() # set network in evaluation mode
                 self.net.sparsify_activations()
                 self.net.freeze_parameters()
@@ -411,6 +415,7 @@ class Manager(Project):
             plot_dict = self.dataset.init_plot_dict()
 
         if self.params['sparsify_activations']:
+            # activations remain unchanged if they were already sparsified
             self.net.sparsify_activations()
 
 
