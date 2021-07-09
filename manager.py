@@ -177,6 +177,19 @@ class Manager(Project):
         """ """
         self.net.train()
 
+        if self.params['log_step'] is None: # default
+            # log at every epoch
+            self.params['log_step'] = self.num_batches['train']
+
+        if self.params['valid_log_step'] is None: # default
+            # validation done halfway and at the end of training
+            self.params['valid_log_step'] = \
+                int(self.num_batches['train'] * self.params['num_epochs']*1./2.)
+
+        elif self.params['valid_log_step'] < 0:
+            # validation at every epoch
+            self.params['valid_log_step'] = self.num_batches['train']
+
         print('\n==> Preparing data..')
         self.dataloader = DataLoader(self.dataset, mode='train', **self.params['dataloader'])
         self.trainloader, self.validloader = self.dataloader.get_train_valid_loader()
@@ -409,11 +422,6 @@ class Manager(Project):
 
         if self.dataset.get_plot:
             plot_dict = self.dataset.init_plot_dict()
-
-        if self.params['sparsify_activations']:
-            # activations remain unchanged if they were already sparsified
-            self.net.sparsify_activations()
-
 
         with torch.no_grad():
 

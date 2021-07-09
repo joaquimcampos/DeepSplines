@@ -98,9 +98,14 @@ def get_arg_parser():
                         help=f'Directory for saving checkpoints. Default: {default_values["log_dir"]}.')
 
     parser.add_argument('--log_step', metavar='INT,>0', type=ArgCheck.p_int,
-                        help=f'Train log step in batch_size. Default: {default_values["log_step"]}.')
-    parser.add_argument('--valid_log_step', metavar='INT,>0', type=ArgCheck.p_int,
-                        help=f'Validation step in epochs. Default: {default_values["valid_log_step"]}.')
+                            help='Train log step in number of batches. '
+                            'If None, done at every epoch. '
+                            f'Default: {default_values["log_step"]}.')
+    parser.add_argument('--valid_log_step', metavar='INT', type=ArgCheck.int,
+                        help='Validation log step in number of batches. '
+                            'If None, done halfway and at the end of training. '
+                            'If negative, done at every epoch. '
+                            f'Default: {default_values["valid_log_step"]}.')
 
     parser.add_argument('--sparsify_activations', action='store_true',
                         help='Sparsify activations by eliminating slopes changes below threshold.')

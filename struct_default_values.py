@@ -22,8 +22,8 @@ default_values = {'mode' : 'train',
                   'ckpt_nmax_files' : 3, # max number of saved *_net_*.ckpt
                                          # checkpoint files at a time. Set to -1 if not restricted. '
                   'log_dir' : './ckpt',
-                  'log_step' : 50,
-                  'valid_log_step' : 352,
+                  'log_step' : None,
+                  'valid_log_step' : None,
                   'sparsify_activations' : False,
                   'slope_diff_threshold' : 0.,
                   'seed' : (-1),
