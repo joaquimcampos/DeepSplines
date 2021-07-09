@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+'''
+This script is illustrative. It plots an example of a deepspline
+along with its B-spline and boundary basis elements.
+'''
+
 import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
