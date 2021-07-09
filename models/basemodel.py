@@ -16,26 +16,28 @@ class BaseModel(nn.Module):
 
         self.params = params
 
+        # general attributes
         self.set_attributes('activation_type', 'dataset_name',
                             'num_classes', 'device')
-        # deepspline
+        # deepspline attributes
         self.set_attributes('spline_init', 'spline_size',
                             'spline_range', 'slope_diff_threshold')
 
-        self.spline_grid = spline_grid_from_range(self.spline_size,
-                                                    self.spline_range)
+        self.spline_grid = \
+            spline_grid_from_range(self.spline_size, self.spline_range)
 
         self.deepspline = None
-        if self.activation_type == 'deepRelu':
-            self.deepspline = DeepReLU
-        elif self.activation_type == 'deepBspline':
+        if self.activation_type == 'deepBspline':
             self.deepspline = DeepBSpline
         elif self.activation_type == 'deepBspline_explicit_linear':
             self.deepspline = DeepBSplineExplicitLinear
+        elif self.activation_type == 'deepRelu':
+            self.deepspline = DeepReLU
 
 
     def set_attributes(self, *names):
         """ """
+        assert hasattr(self, 'params'), 'self.params does not exist.'
         for name in names:
             assert isinstance(name, str), f'{name} is not string.'
             if name in self.params:
@@ -46,14 +48,22 @@ class BaseModel(nn.Module):
     # Activation initialization
 
 
-    def init_activation_list(self, activation_specs, bias=True, **kwargs):
-        """ Initialize list of activations
+    def init_activation_list(self, activation_specs, bias=False, **kwargs):
+        """
+        Initialize list of activation modules.
 
         Args:
-            activation_specs : list of pairs ('layer_type', num_channels/neurons);
-                                len(activation_specs) = number of activation layers;
-                                e.g., [('conv', 64), ('linear', 100)].
-            bias : explicit bias; only relevant for explicit_linear activations.
+            activation_specs (list):
+                list of pairs ('layer_type', num_channels/neurons);
+                len(activation_specs) = number of activation layers;
+                e.g., [('conv', 64), ('linear', 100)].
+
+            bias (bool):
+                explicit bias;
+                only relevant if self.deepspline == DeepBSplineExplicitLinear.
+
+        Returns:
+            activations (nn.ModuleList)
         """
         assert isinstance(activation_specs, list)
 
@@ -62,7 +72,7 @@ class BaseModel(nn.Module):
             activations = nn.ModuleList()
             for mode, num_activations in activation_specs:
                 activations.append(self.deepspline(size=size, grid=grid, init=self.spline_init,
-                                            bias=False, mode=mode, num_activations=num_activations, #bias=bias
+                                            bias=bias, mode=mode, num_activations=num_activations,
                                             device=self.device))
         else:
             activations = self.init_standard_activations(activation_specs)
@@ -72,10 +82,14 @@ class BaseModel(nn.Module):
 
 
     def init_activation(self, activation_specs, **kwargs):
-        """ Initialize a single activation
+        """
+        Initialize a single activation module
 
         Args:
-            activation_specs: tuple, e.g., ('conv', 64)
+            activation_specs (tuple): e.g., ('conv', 64)
+
+        Returns:
+            activation (nn.Module)
         """
         assert isinstance(activation_specs, tuple)
         activation = self.init_activation_list([activation_specs], **kwargs)[0]
@@ -85,12 +99,20 @@ class BaseModel(nn.Module):
 
 
     def init_standard_activations(self, activation_specs, **kwargs):
-        """ Initialize non-spline activations and puts them in nn.ModuleList()
+        """
+        Initialize non-spline activation modules.
 
         Args:
-            activation_type : 'relu', 'leaky_relu'.
-            activation_specs : list of pairs ('layer_type', num_channels/neurons);
-                                len(activation_specs) = number of activation layers.
+            activation_type :
+                'relu', 'leaky_relu'.
+
+            activation_specs :
+                list of pairs ('layer_type', num_channels/neurons);
+                len(activation_specs) = number of activation layers.
+                e.g., [('conv', 64), ('linear', 100)].
+
+        Returns:
+            activations (nn.ModuleList)
         """
         activations = nn.ModuleList()
 
@@ -112,7 +134,10 @@ class BaseModel(nn.Module):
 
 
     def initialization(self, init_type='He'):
-        """ """
+        """
+        Initializes the network weights with 'He', 'Xavier', or a
+        custom gaussian initialization.
+        """
         assert init_type in ['He', 'Xavier', 'custom_normal']
 
         if init_type == 'He':
@@ -161,14 +186,18 @@ class BaseModel(nn.Module):
 
 
     def modules_deepspline(self):
-        """ """
+        """
+        Yields all deepspline modules in the network.
+        """
         for module in self.modules():
             if isinstance(module, self.deepspline):
                 yield module
 
 
     def named_parameters_no_deepspline(self, recurse=True):
-        """ Named parameters of network, excepting deepspline parameters.
+        """
+        Yields all named_parameters in the network,
+        excepting deepspline parameters.
         """
         try:
             for name, param in self.named_parameters(recurse=recurse):
@@ -189,7 +218,8 @@ class BaseModel(nn.Module):
 
 
     def named_parameters_deepspline(self, recurse=True):
-        """ Named parameters (for optimizer) of deepspline activations.
+        """
+        Yields all deepspline named_parameters in the network.
         """
         try:
             for name, param in self.named_parameters(recurse=recurse):
@@ -208,21 +238,28 @@ class BaseModel(nn.Module):
 
 
     def parameters_no_deepspline(self):
-        """ """
+        """
+        Yields all parameters in the network,
+        excepting deepspline parameters.
+        """
         for name, param in self.named_parameters_no_deepspline(recurse=True):
             yield param
 
 
 
     def parameters_deepspline(self):
-        """ """
+        """
+        Yields all deepspline parameters in the network.
+        """
         for name, param in self.named_parameters_deepspline(recurse=True):
             yield param
 
 
 
     def parameters_batch_norm(self):
-        """ """
+        """
+        Yields all batch_norm parameters in the network.
+        """
         for module in self.modules():
             if isinstance(module, nn.BatchNorm2d):
                 yield module.weight, module.bias
@@ -230,6 +267,9 @@ class BaseModel(nn.Module):
 
 
     def freeze_parameters(self):
+        """
+        Freezes the network (no gradient computations).
+        """
         for param in self.parameters():
             param.requires_grad = False
 
@@ -239,24 +279,28 @@ class BaseModel(nn.Module):
 
     @property
     def weight_decay_regularization(self):
-        """ boolean """
+        """
+        Flag indicating whether weight_decay is applied.
+        """
         return (self.params['weight_decay'] > 0)
 
 
     @property
     def tv_bv_regularization(self):
-        """ boolean """
+        """
+        Flag indicating whether TV2/BV2 regularization is applied.
+        """
         return (self.deepspline is not None and self.params['lmbda'] > 0)
 
 
 
     def weight_decay(self):
-        """ Computes the total weight decay of the network.
+        """
+        Computes the total weight decay of the network.
 
-        For the resnet, also apply weight decay with a fixed
-        value to the batchnorm weights and biases.
-        Note: Fixed weight decay is also applied to the explicit linear
-        parameters, if using DeepBSplineExplicitLinear activation.
+        Returns:
+            wd (float):
+                = mu/2 * (sum(weights^2) + sum(biases^2))
         """
         wd = Tensor([0.]).to(self.device)
 
@@ -267,19 +311,24 @@ class BaseModel(nn.Module):
             if hasattr(module, 'bias') and isinstance(module.bias, nn.Parameter):
                 wd = wd + self.params['weight_decay']/2 * module.bias.pow(2).sum()
 
-        return wd[0] # 1-element 1d tensor -> 0d tensor
+        return wd[0] # 1-tap 1d tensor -> 0d tensor
 
 
 
     def TV_BV(self):
-        """ Computes the sum of the TV(2)/BV(2) norm of all activations
+        """
+        Computes the sum of the TV(2)/BV(2) norm of all
+        deepspline activations in the network.
 
         Returns:
-            BV(2), if lipschitz is True;
-            TV(2), if lipschitz is False.
+            tv_bv (float):
+                = lambda*sum(BV(2)) if lipschitz is True, otherwise = lambda*sum(TV(2))
+            tv_bv_unweighted (float):
+                = sum(BV(2)) if lipschitz is True, otherwise = sum(TV(2))
         """
         tv_bv = Tensor([0.]).to(self.device)
-        tv_bv_unweighted = Tensor([0.]).to(self.device) # for printing loss without weighting
+        # for printing loss without weighting
+        tv_bv_unweighted = Tensor([0.]).to(self.device)
 
         for module in self.modules():
             if isinstance(module, self.deepspline):
@@ -291,15 +340,16 @@ class BaseModel(nn.Module):
                 with torch.no_grad():
                     tv_bv_unweighted = tv_bv_unweighted + module_tv_bv.norm(p=1)
 
-        return tv_bv[0], tv_bv_unweighted[0] # 1-element 1d tensor -> 0d tensor
+        return tv_bv[0], tv_bv_unweighted[0] # 1-tap 1d tensor -> 0d tensor
 
 
 
     def lipschitz_bound(self):
-        """ Returns the lipschitz bound of the network
+        """
+        Computes the lipschitz bound of the network
 
         The lipschitz bound associated with C is:
-        ||f_deep(x_1) - f_deep(x_2)||_1 <= C ||x_1 - x_2||_1,
+        ||f_net(x_1) - f_net(x_2)||_1 <= C ||x_1 - x_2||_1,
         for all x_1, x_2 \in R^{N_0}.
 
         For l \in {1, ..., L}, n \in {1,..., N_l}:
@@ -307,10 +357,11 @@ class BaseModel(nn.Module):
         s_{n, l} is the activation function of layer l, neuron n.
 
         C = (prod_{l=1}^{L} [max_{n,l} w_{n,l}]) * (prod_{l=1}^{L} ||s_l||_{BV(2)}),
-        where ||s_l||_{BV(2)} = sum_{n=1}^{N_l} {TV(2)(s_{n,l}) + |s_{n,l}(0)| + |s_{n,l}(1)|}.
+        where ||s_l||_{BV(2)} = sum_{n=1}^{N_l} {BV(2)(s_{n,l})}.
 
-        For details, please see https://arxiv.org/pdf/2001.06263v1.pdf
-        (Theorem 1, with p=1, q=\infty).
+        Returns:
+            lip_bound (float):
+                global lipschitz bound of the network
         """
         bv_product = Tensor([1.]).to(self.device)
         max_weights_product = Tensor([1.]).to(self.device)
@@ -326,13 +377,14 @@ class BaseModel(nn.Module):
 
         lip_bound = max_weights_product * bv_product
 
-        return lip_bound[0] # 1-element 1d tensor -> 0d tensor
+        return lip_bound[0] # 1-tap 1d tensor -> 0d tensor
 
 
 
     def sparsify_activations(self):
-        """ Sparsifies the deepspline activations, eliminating the slope
-        changes smaller than a threshold.
+        """
+        Sparsifies the deepspline activations, eliminating slope
+        changes (a_k) smaller than a threshold.
 
         Note that deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
         This function sets a_k to zero if |a_k| < slope_diff_threshold.
@@ -343,7 +395,12 @@ class BaseModel(nn.Module):
 
 
     def compute_sparsity(self):
-        """ Returns the sparsity of the activations (see deepspline.py)
+        """
+        Returns the sparsity of the activations,
+        i.e. the number of activation knots (see deepspline.py).
+
+        Returns:
+            sparsity (int)
         """
         sparsity = 0
         for module in self.modules():
@@ -356,7 +413,17 @@ class BaseModel(nn.Module):
 
 
     def get_deepspline_activations(self):
-        """ Returns a list of activation parameters for each deepspline activation layer.
+        """
+        Get information of deepspline activations (e.g. for plotting).
+
+        Returns:
+            activations_list (list):
+                Length = number of deepspline activations.
+                Each entry is a  dictionary of the form
+                {'name': activation name,
+                  'x': position of the coefficients,
+                  'y': deepspline coefficients,
+                  'threshold_sparsity_mask': mask indicating (non-zero) knots}
         """
         with torch.no_grad():
             activations_list = []
