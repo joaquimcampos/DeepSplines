@@ -201,14 +201,17 @@ class Manager(Project):
             self.losses_names.append('tv_bv_loss')
 
         num_epochs = copy.copy(self.params['num_epochs'])
-        if self.params['sparsify_activations']:
+
+        self.sparsify_activations = False
+        if self.params['knot_threshold'] > 0.:
+            self.sparsify_activations = True
             num_epochs += 1 # add one epoch to sparsify activations
 
         print('\n\n==>Starting training...')
 
         for epoch in range(self.start_epoch, num_epochs):
 
-            if epoch == (num_epochs-1) and self.params['sparsify_activations']:
+            if epoch == (num_epochs-1) and self.sparsify_activations is True:
                 print('\nFreezing network to sparsify activations and evaluate train accuracy.')
                 self.net.eval() # set network in evaluation mode
                 self.net.sparsify_activations()

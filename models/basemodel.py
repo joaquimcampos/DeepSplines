@@ -21,7 +21,7 @@ class BaseModel(nn.Module):
                             'num_classes', 'device')
         # deepspline attributes
         self.set_attributes('spline_init', 'spline_size',
-                            'spline_range', 'slope_diff_threshold')
+                            'spline_range', 'knot_threshold')
 
         self.spline_grid = \
             spline_grid_from_range(self.spline_size, self.spline_range)
@@ -387,11 +387,11 @@ class BaseModel(nn.Module):
         changes (a_k) smaller than a threshold.
 
         Note that deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
-        This function sets a_k to zero if |a_k| < slope_diff_threshold.
+        This function sets a_k to zero if |a_k| < knot_threshold.
         """
         for module in self.modules():
             if isinstance(module, self.deepspline):
-                module.apply_threshold(self.slope_diff_threshold)
+                module.apply_threshold(self.knot_threshold)
 
 
     def compute_sparsity(self):
@@ -405,7 +405,7 @@ class BaseModel(nn.Module):
         sparsity = 0
         for module in self.modules():
             if isinstance(module, self.deepspline):
-                module_sparsity, _ = module.get_threshold_sparsity(self.slope_diff_threshold)
+                module_sparsity, _ = module.get_threshold_sparsity(self.knot_threshold)
                 sparsity += module_sparsity.sum().item()
 
         return sparsity
@@ -421,8 +421,8 @@ class BaseModel(nn.Module):
                 Length = number of deepspline activations.
                 Each entry is a  dictionary of the form
                 {'name': activation name,
-                  'x': position of the coefficients,
-                  'y': deepspline coefficients,
+                  'locations': position of the B-spline basis,
+                  'coefficients': deepspline coefficients,
                   'threshold_sparsity_mask': mask indicating (non-zero) knots}
         """
         with torch.no_grad():
@@ -430,21 +430,21 @@ class BaseModel(nn.Module):
             for name, module in self.named_modules():
 
                 if isinstance(module, self.deepspline):
-                    grid_tensor = module.grid_tensor # (num_activations, size)
-                    input = grid_tensor.transpose(0,1) # (size, num_activations)
+                    locations = module.grid_tensor # (num_activations, size)
+                    input = locations.transpose(0,1) # (size, num_activations)
                     if module.mode == 'conv':
-                        input = input.unsqueeze(-1).unsqueeze(-1) # 4D
+                        input = input.unsqueeze(-1).unsqueeze(-1) # to 4D
 
                     output = module(input)
-                    output = output.transpose(0, 1)
+                    coefficients = output.transpose(0, 1)
                     if module.mode == 'conv':
-                        # (num_activations, size)
-                        output = output.squeeze(-1).squeeze(-1)
+                        coefficients = coefficients.squeeze(-1).squeeze(-1) # to 2D
+                    # coefficients: (num_activations, size)
 
-                    _, threshold_sparsity_mask = module.get_threshold_sparsity(self.slope_diff_threshold)
+                    _, threshold_sparsity_mask = module.get_threshold_sparsity(self.knot_threshold)
                     activations_list.append({'name': '_'.join([name, module.mode]),
-                                            'x': grid_tensor.clone().detach().cpu(),
-                                            'y': output.clone().detach().cpu(),
-                                            'threshold_sparsity_mask' : threshold_sparsity_mask.cpu()})
+                                            'locations': locations.clone().detach().cpu(),
+                                            'coefficients': coefficients.clone().detach().cpu(),
+                                            'sparsity_mask' : threshold_sparsity_mask.cpu()})
 
         return activations_list

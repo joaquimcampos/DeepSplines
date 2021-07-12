@@ -236,6 +236,7 @@ class Project():
         """ Returns a loaded checkpoint from ckpt_filename, if it exists.
         """
         try:
+            # TODO: Check if model is always loaded on cpu. Use net.to(device) after.
             ckpt = torch.load(ckpt_filename, map_location = lambda storage, loc: storage)
 
         except FileNotFoundError:

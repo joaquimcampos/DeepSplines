@@ -3,10 +3,10 @@
 '''
 This script sparsifies the deepspline activations in a network.
 
-It takes a trained model from a pytorch checkpoint (.pth)
+It takes a trained model from a checkpoint (.pth)
 and a tolerance "acc_drop_threshold" (in (-1, 0)) corresponding to the
 training accuracy drop w.r.t. the original model that is tolerated.
-The script then looks for the highest slope_diff_threshold
+The script then looks for the highest knot_threshold
 (higher => sparser activations) that is allowed by the specifications.
 '''
 
@@ -46,6 +46,7 @@ if __name__ == "__main__":
                         help='Output log directory for sparsified model.')
     parser.add_argument('acc_drop_threshold', metavar='FLOAT(-1, 0)', type=ArgCheck.n_float, default=-0.25,
                         help='Maximum train accuracy percentage drop allowed for sparsification.')
+
     args = parser.parse_args()
 
     if not os.path.isdir(args.out_log_dir):
@@ -68,7 +69,6 @@ if __name__ == "__main__":
     # applied and the model frozen, and compute the train accuracy.
     params['resume'] = True
     params['num_epochs'] = ckpt['num_epochs_finished']
-    params['sparsify_activations'] = True
     params['log_step'] = None # at every epoch
     params['valid_log_step'] = -1 # at every epoch
     params['log_dir'] = args.out_log_dir
@@ -96,8 +96,8 @@ if __name__ == "__main__":
     for k in range(threshold_list.shape[0]):
 
         threshold = threshold_list[k]
-        params['model_name'] = base_model_name + '_slope_diff_threshold_{:.4f}'.format(threshold)
-        params['slope_diff_threshold'] = threshold
+        params['model_name'] = base_model_name + '_knot_threshold_{:.4f}'.format(threshold)
+        params['knot_threshold'] = threshold
 
         sys.stdout = open(os.devnull, "w")
         main_prog(copy.deepcopy(params), isloaded_params=True)
@@ -127,7 +127,7 @@ if __name__ == "__main__":
                 delete_model(args.out_log_dir, prev_model_name)
 
             chosen_model = {params['model_name']: model_dict}
-            chosen_threshold = params['slope_diff_threshold']
+            chosen_threshold = params['knot_threshold']
             prev_model_name = params['model_name']
 
 

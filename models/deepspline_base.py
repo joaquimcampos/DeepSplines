@@ -205,7 +205,7 @@ class DeepSplineBase(ABC, nn.Module):
         smaller than a threshold.
 
         deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
-        This function sets a_k to zero if |a_k| < slope_diff_threshold.
+        This function sets a_k to zero if |a_k| < knot_threshold.
 
         When converting from a to c, we need to use the additional information
         that the first two B1 spline coefficients remain the same, i.e.,

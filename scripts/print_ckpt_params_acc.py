@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 '''
-This script prints the parameters and validation accuracy
-saved in the checkpoint (.pth) given as argument.
-If sparsify_activations is True, it also prints:
-- slope_diff_threshold
+This script prints the parameters and validation accuracy of a model.
+The model is fetched from a checkpoint file (.pth) given as input.
+If params['knot_threshold'] > 0., it also prints:
+- knot threshold
 - sparsity (int)
 - lipschitz_bound
 '''
@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     print('ckpt validation accuracy : {:.3f}%'.format(ckpt['valid_acc']))
 
-    if params['sparsify_activations'] is True:
+    if params['knot_threshold'] > 0.:
         device = ckpt['params']['device']
         if device == 'cuda:0' and not torch.cuda.is_available():
             # TODO: Test how to load model on cpu trained on gpu
@@ -40,10 +40,10 @@ if __name__ == "__main__":
         net.load_state_dict(ckpt['model_state'], strict=True)
         net.eval()
 
-        slope_diff_threshold = net.slope_diff_threshold
-        sparsity = net.compute_sparsity()
-        lipschitz_bound = net.lipschitz_bound()
+        print('knot_threshold : {:.4f}'.format(params['knot_threshold']))
 
-        print('slope_diff_threshold : {:.4f}'.format(slope_diff_threshold))
+        sparsity = net.compute_sparsity()
         print('sparsity : {:d}'.format(sparsity))
+
+        lipschitz_bound = net.lipschitz_bound()
         print('lipschitz_bound : {:.3f}'.format(lipschitz_bound))

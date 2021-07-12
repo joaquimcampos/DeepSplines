@@ -101,16 +101,15 @@ def get_arg_parser():
                             help='Train log step in number of batches. '
                             'If None, done at every epoch. '
                             f'Default: {default_values["log_step"]}.')
-    parser.add_argument('--valid_log_step', metavar='INT', type=ArgCheck.int,
+    parser.add_argument('--valid_log_step', metavar='INT', type=int,
                         help='Validation log step in number of batches. '
                             'If None, done halfway and at the end of training. '
                             'If negative, done at every epoch. '
                             f'Default: {default_values["valid_log_step"]}.')
 
-    parser.add_argument('--sparsify_activations', action='store_true',
-                        help='Sparsify activations by eliminating slopes changes below threshold.')
-    parser.add_argument('--slope_diff_threshold', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
-                        help=f'Activation slopes diff threshold. Default: {default_values["slope_diff_threshold"]}.')
+    parser.add_argument('--knot_threshold', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
+                        help='If nonzero, sparsify activations by eliminating knots whose slope '
+                            f'change is below this value. Default: {default_values["knot_threshold"]}.')
 
     # dataloader
     parser.add_argument('--seed', metavar='INT,>0', type=ArgCheck.nn_int,
@@ -190,6 +189,9 @@ def verify_params(params):
 
     if params['activation_type'] == 'deepRelu' and params['spline_init'] == 'even_odd':
         raise ValueError('Cannot use even_odd spline initialization with deeprelu.')
+
+    if params['knot_threshold'] > 0. and 'deep' not in params['activation_type']:
+        raise ValueError('--knot_threshold can only be set when using deepsplines.')
 
     return params, user_params
 
