@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+'''
+This script generates and saves a 2D circle or s_shape dataset
+with a given number of training and validation samples.
+'''
+
 import argparse
 import os
 import torch
@@ -10,8 +15,7 @@ from ds_utils import ArgCheck
 if __name__ == "__main__":
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Generate and save --num_datasets '
-                                                    'twoD (2D) datasets with --num_samples samples each.',
+    parser = argparse.ArgumentParser(description='Generate and save twoD (2D) datasets.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     dataset_choices = {'s_shape', 'circle'}
@@ -38,13 +42,13 @@ if __name__ == "__main__":
 
     dataset = init_dataset(**params)
 
-    print(f'\nGenerating {args.dataset} train/validation dataset...')
+    print(f'\nGenerating {args.dataset} dataset...')
 
     for mode in ['train', 'valid']:
         num_samples = args.num_train_samples if mode == 'train' else args.num_valid_samples
         inputs, labels = dataset.generate_set(num_samples)
 
-        if mode == 'train' and dataset.get_plot:
+        if mode == 'train':
             dataset.save_title = 'Training set'
             dataset.plot_train_imgs(inputs, labels) # save training images
 
@@ -53,12 +57,10 @@ if __name__ == "__main__":
 
 
     print('\nSaving test dataset...')
-    dataset.save_title = 'Test set'
 
     inputs, labels = dataset.get_test_set()
-
-    if dataset.get_plot:
-        dataset.plot_test_imgs(inputs, labels) # save training images
+    dataset.save_title = 'Test set'
+    dataset.plot_test_imgs(inputs, labels) # save test images
 
     save_dict = {'inputs': inputs, 'labels': labels}
     torch.save(save_dict, os.path.join(dataset.log_dir_model, 'test_data.pth'))
