@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+'''
+This script prints the parameters and validation accuracy
+saved in the checkpoint (.pth) given as argument.
+If sparsify_activations is True, it also prints:
+- slope_diff_threshold
+- sparsity (int)
+- lipschitz_bound
+'''
+
 import argparse
 from project import Project
 from manager import Manager
