@@ -9,7 +9,7 @@ import argparse
 import os
 import torch
 from datasets import init_dataset
-from ds_utils import ArgCheck
+from ds_utils import ArgCheck, init_sub_dir
 
 
 if __name__ == "__main__":
@@ -32,10 +32,7 @@ if __name__ == "__main__":
         raise OSError(f'Directory {args.data_dir} not found.')
 
     dataset_name = '_'.join([args.dataset, str(args.num_train_samples)])
-
-    dataset_dir = os.path.join(args.data_dir, dataset_name)
-    if not os.path.isdir(dataset_dir):
-        os.makedirs(dataset_dir)
+    dataset_dir = init_sub_dir(args.data_dir, dataset_name)
 
     params = {'dataset_name' : dataset_name, 'log_dir': dataset_dir,
                 'plot_imgs' : False, 'save_imgs' : True}

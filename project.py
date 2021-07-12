@@ -23,15 +23,16 @@ class Project():
         self.params = params
         self.user_params = user_params
         self.training = (self.params["mode"]=='train')
+        self.log_dir_model = os.path.join(self.params["log_dir"],
+                                            self.params["model_name"])
 
 
 
     def init_log(self):
-        """ Create Log directory for training the model as :
-            self.params["log_dir"]/self.params["model_name"]/
         """
-        self.log_dir_model = os.path.join(self.params["log_dir"],
-                                            self.params["model_name"])
+        Create Log directory for training the model as
+        self.params["log_dir"]/self.params["model_name"].
+        """
         if not os.path.isdir(self.log_dir_model):
             os.makedirs(self.log_dir_model)
 
@@ -54,6 +55,9 @@ class Project():
 
     @property
     def results_json_filename(self):
+        """
+        Name of json file with logged results.
+        """
         if self.training is True:
             return self.train_results_json_filename
         else:
@@ -62,7 +66,8 @@ class Project():
 
     @property
     def sorting_key(self):
-        """ Key for sorting models in json file.
+        """
+        Key for sorting models in json file.
         """
         if self.training:
             return self.train_sorting_key
@@ -72,7 +77,8 @@ class Project():
 
 
     def init_json(self):
-        """ Init json file for train/test results.
+        """
+        Init json file for train/test results.
         """
         # initialize/verify json log file
         self.results_json = os.path.join(self.params['log_dir'],
@@ -98,11 +104,15 @@ class Project():
 
 
     def update_json(self, info, value):
-        """ Update json file with latest/best validation/test accuracy/loss, if training,
-        and with test accuracy otherwise
+        """
+        Update json file with latest/best validation/test accuracy/loss,
+        if training, and with test accuracy otherwise.
 
         Args:
-            info: e.g. 'latest_valid_loss'
+            info (str):
+                e.g. 'latest_valid_loss', 'best_train_acc'.
+            value (float):
+                value for the given info.
         """
         assert info in self.info_list, f'{info} should be in {self.info_list}...'
 
@@ -125,7 +135,8 @@ class Project():
 
 
     def restore_ckpt_params(self):
-        """ Restore the parameters from a previously saved checkpoint
+        """
+        Restore the parameters from a previously saved checkpoint
         (either provided via --ckpt_filename or saved in log_dir/model_name)
 
         Returns:
@@ -178,19 +189,26 @@ class Project():
 
 
     def load_merge_params(self, ckpt_filename):
-        """ Load and merge the parameters from ckpt_filename into self.params
+        """
+        Load and merge the parameters from ckpt_filename into self.params
+        and save the loaded checkpoint (dictionary).
 
         The parameters introduced by the user (via command-line arguments)
         override the corresponding saved parameters. The ones not specified
         by the user, are loaded from the checkpoint.
+
+        Args:
+            ckpt_filename (str): Name of checkpoint (.pth) file.
         """
         torch.load(ckpt_filename, map_location = lambda storage, loc: storage)
         ckpt = self.get_loaded_ckpt(ckpt_filename)
         self.loaded_ckpt = ckpt # save loaded_ckpt for restore_model
 
         saved_params = ckpt['params']
-        self.params = dict_recursive_merge(self.params, saved_params) # merge w/ saved params
-        self.params = dict_recursive_merge(self.params, self.user_params)  # merge w/ user params (precedence over saved)
+        # merge w/ saved params
+        self.params = dict_recursive_merge(self.params, saved_params)
+        # merge w/ user params (precedence over saved)
+        self.params = dict_recursive_merge(self.params, self.user_params)
 
 
 
@@ -206,8 +224,12 @@ class Project():
 
 
     def load_model(self, ckpt):
-        """ """
-        # Load checkpoint.
+        """
+        Load model from a loaded checkpoint.
+
+        Args:
+            ckpt (dictionary): loaded checkpoint.
+        """
         print('\n==> Resuming from checkpoint...')
 
         self.net.load_state_dict(ckpt['model_state'], strict=(self.training is True))
@@ -233,7 +255,12 @@ class Project():
 
     @staticmethod
     def get_loaded_ckpt(ckpt_filename):
-        """ Returns a loaded checkpoint from ckpt_filename, if it exists.
+        """
+        Returns a loaded checkpoint (ckpt dictionary)
+        from ckpt_filename, if it exists.
+
+        Args:
+            ckpt_filename (str): Name of checkpoint (.pth) file.
         """
         try:
             # TODO: Check if model is always loaded on cpu. Use net.to(device) after.
@@ -252,11 +279,16 @@ class Project():
 
     @classmethod
     def load_ckpt_params(cls, ckpt_filename, flatten=False):
-        """ Returns the parameters saved in a checkpoint.
+        """
+        Returns the ckpt dictionary and the parameters saved
+        in a checkpoint file.
 
         Args:
-            flatten - whether to flatten the structure of the parameters dictionary
-            into a single level (see structure in struct_default_values.py)
+            ckpt_filename (str):
+                Name of checkpoint (.pth) file.
+            flatten (bool):
+                whether to flatten the structure of the parameters dictionary
+                into a single level (see structure in struct_default_values.py).
         """
         ckpt = cls.get_loaded_ckpt(ckpt_filename)
         params = ckpt['params']
@@ -270,7 +302,8 @@ class Project():
 
     @staticmethod
     def get_ckpt_from_log_dir_model(log_dir_model):
-        """ Get last ckpt from log_dir_model (log_dir/model_name)
+        """
+        Get last ckpt from log_dir_model (log_dir/model_name).
         """
         regexp_ckpt = os.path.join(log_dir_model, '*_net_*.pth')
 
@@ -289,8 +322,18 @@ class Project():
 
     @classmethod
     def load_results_dict(cls, log_dir, mode='train'):
-        """ Load results dictionary from json file corresponding to the
-        train or test results in log_dir.
+        """
+        Load train or test results from the corresponding
+        json file in log_dir.
+
+        Args:
+            log_dir (str):
+                log directory where results json file is located.
+            mode (str):
+                'train' or 'test'.
+
+        Returns:
+            results_dict (dict): dictionary with train/test results.
         """
         assert mode in ['train', 'test'], 'mode should be "train" or "test"...'
         if mode == 'train':
@@ -307,8 +350,17 @@ class Project():
 
     @classmethod
     def dump_results_dict(cls, results_dict, log_dir, mode='train'):
-        """ Dump results dictionary in json file corresponding to the
-        train or test results in log_dir.
+        """
+        Dump results dictionary in the train or test results json file
+        in log_dir.
+
+        Args:
+            results_dict (dict):
+                dictionary with train/test results.
+            log_dir (str):
+                log directory where results json file is located.
+            mode (str):
+                'train' or 'test'.
         """
         assert mode in ['train', 'test'], 'mode should be "train" or "test"...'
         if mode == 'train':
@@ -323,8 +375,15 @@ class Project():
 
     @classmethod
     def get_best_model(cls, log_dir, mode='train'):
-        """ Get the name and checkpoint of the best model (best validation/test)
-        from the train/test results (saved in log_dir/[mode]_results.json).
+        """
+        Get the name and checkpoint filename of the best model
+        (best validation/test) from the train/test results json file.
+
+        Args:
+            log_dir (str):
+                log directory where results json file is located.
+            mode (str):
+                'train' or 'test'.
         """
         results_dict = cls.load_results_dict(log_dir, mode)
 
@@ -339,10 +398,20 @@ class Project():
 
     def train_log_step(self, epoch, batch_idx, train_acc, losses_dict):
         """
+        Log the training.
+
         Args:
-            losses_dict - a dictionary {loss name : loss value}
+            epoch (int):
+                current epoch.
+            batch_idx (int):
+                current batch.
+            train_acc (float):
+                computed train accuracy.
+            losses_dict (dict):
+                A dictionary of the form {loss name (str) : loss value (float)}
         """
-        print('[{:3d}, {:6d} / {:6d}] '.format(epoch + 1, batch_idx + 1, self.num_train_batches), end='')
+        print('[{:3d}, {:6d} / {:6d}] '.format(epoch + 1, batch_idx + 1,
+                                            self.num_train_batches), end='')
         for key, value in losses_dict.items():
             print('{}: {:7.3f} | '.format(key, value), end='')
 
@@ -359,8 +428,15 @@ class Project():
 
     def valid_log_step(self, epoch, valid_acc, losses_dict):
         """
+        Log the validation.
+
         Args:
-            losses_dict - a dictionary {loss name : loss value}
+            epoch (int):
+                current epoch.
+            valid_acc (float):
+                computed validation accuracy.
+            losses_dict (dict):
+                A dictionary of the form {loss name (str) : loss value (float)}
         """
         print('\nvalidation_step : ', end='')
         for key, value in losses_dict.items():
@@ -378,32 +454,49 @@ class Project():
 
 
     def ckpt_log_step(self, epoch, valid_acc):
-        """ """
-        base_ckpt_filename = os.path.join(self.log_dir_model, self.params["model_name"] + '_net_{:04d}'.format(epoch+1))
+        """
+        Save the model in a checkpoint.
+
+        Only allow at most params['ckpt_nmax_files'] checkpoints.
+        Delete the oldest checkpoint, if necessary.
+        Also log the best results so far in a separate checkpoint.
+
+        Args:
+            epoch (int):
+                current epoch.
+            valid_acc (float):
+                computed validation accuracy.
+        """
+        base_ckpt_filename = os.path.join(self.log_dir_model, self.params["model_name"] + \
+                                        '_net_{:04d}'.format(epoch+1))
         regexp_ckpt = os.path.join(self.log_dir_model, "*_net_*.pth")
         regexp_best_valid_acc_ckpt = os.path.join(self.log_dir_model, "*_best_valid_acc.pth")
 
         # save checkpoint as *_net_{epoch+1}.pth
         ckpt_filename = base_ckpt_filename + '.pth'
 
-        files = list(set(glob.glob(regexp_ckpt)) - set(glob.glob(regexp_best_valid_acc_ckpt))) # remove best_valid_acc ckpt from files
+        # remove best_valid_acc ckpt from files
+        files = list(set(glob.glob(regexp_ckpt)) - set(glob.glob(regexp_best_valid_acc_ckpt)))
         files.sort(key=os.path.getmtime, reverse=True) # sort from newest to oldest
 
-        if (not self.params["ckpt_nmax_files"] < 0) and (len(files) >= self.params["ckpt_nmax_files"]):
-            assert len(files) == (self.params["ckpt_nmax_files"]), 'There are more than (ckpt_nmax_files+1) *_net_*.pth checkpoints.'
+        if (not self.params["ckpt_nmax_files"] < 0) and \
+                (len(files) >= self.params["ckpt_nmax_files"]):
+            assert len(files) == (self.params["ckpt_nmax_files"]), \
+                'There are more than (ckpt_nmax_files+1) *_net_*.pth checkpoints.'
             filename = files[-1]
             os.remove(filename)
 
         self.save_network(ckpt_filename, epoch, valid_acc)
 
         if valid_acc == self.best_valid_acc:
-            # if valid_acc = best_valid_acc, also save checkpoint as *_net_{global_step}_best_valid_acc.pth
+            # if valid_acc = best_valid_acc, also save checkpoint as
+            # *_net_{global_step}_best_valid_acc.pth
             # and delete previous best_valid_acc checkpoint
             best_valid_acc_ckpt_filename = base_ckpt_filename + '_best_valid_acc.pth'
             files = glob.glob(regexp_best_valid_acc_ckpt)
 
             if len(files) > 0:
-                assert len(files) == 1, 'There is more than one *_best_valid_acc.pth checkpoint.'
+                assert len(files) == 1, 'More than one *_best_valid_acc.pth checkpoint.'
                 os.remove(files[0])
 
             self.save_network(best_valid_acc_ckpt_filename, epoch, valid_acc)
@@ -415,10 +508,15 @@ class Project():
 
     def save_network(self, ckpt_filename, epoch, valid_acc):
         """
+        Save the network in a checkpoint.
 
-        ckpt_filename: where model is saved
-        valid_acc:  accuracy
-        epofch: current epoch
+        Args:
+            ckpt_filename (str):
+                Name of checkpoint (.pth) file.
+            epoch (int):
+                current epoch.
+            valid_acc (float):
+                computed validation accuracy.
         """
         state = {
             'model_state'          : self.net.state_dict(),
@@ -447,55 +545,61 @@ class Project():
 
     def save_train_info(self):
         """ """
-        assert (self.trainloader is not None) and (self.validloader is not None)
+        assert (self.trainloader is not None)
+        if self.dataset.is_user_dataset is True:
+            self.num_train_samples = \
+                sum(inputs.size(0) for inputs,_ in self.trainloader)
+        else:
+            self.num_train_samples = len(self.trainloader.sampler)
+
+        self.num_train_batches = \
+            math.ceil(self.num_train_samples / self.dataloader.batch_size)
+
+
+
+    def print_train_info(self):
+        """ """
+        assert (self.validloader is not None)
+        assert hasattr(self, 'num_train_samples')
+        assert hasattr(self, 'num_train_batches')
 
         if self.dataset.is_user_dataset is True:
-            num_train_samples = sum(inputs.size(0) for inputs,_ in self.trainloader)
             num_valid_samples = sum(inputs.size(0) for inputs,_ in self.validloader)
+            sample_data, sample_target = self.trainloader[0]
         else:
-            num_train_samples = len(self.trainloader.sampler)
             num_valid_samples = len(self.validloader.sampler)
+            # dataloader iterator to get next sample
+            dataiter = iter(self.trainloader)
+            sample_data, sample_target = dataiter.next()
 
-        self.num_train_batches = math.ceil(num_train_samples / self.dataloader.batch_size)
         num_valid_batches = math.ceil(num_valid_samples / self.dataloader.batch_size)
 
-        if self.params['verbose']:
-            if self.dataset.is_user_dataset is True:
-                sample_data, sample_target = self.trainloader[0]
-            else:
-                # dataloader iterator to get next sample
-                dataiter = iter(self.trainloader)
-                sample_data, sample_target = dataiter.next()
-
-            print('\n==> Training info:')
-            print(f'batch (data, target) size : ({size_str(sample_data)}, {size_str(sample_target)})')
-            print(f'no. of (train, valid) samples : ({num_train_samples}, {num_valid_samples})')
-            print(f'no. of (train, valid) batches : ({self.num_train_batches}, {num_valid_batches})')
+        print('\n==> Train info:')
+        print(f'batch (data, target) size : ({size_str(sample_data)}, {size_str(sample_target)}).')
+        print(f'no. of (train, valid) samples : ({self.num_train_samples}, {num_valid_samples}).')
+        print(f'no. of (train, valid) batches : ({self.num_train_batches}, {num_valid_batches}).')
 
 
 
-    def save_test_info(self):
+    def print_test_info(self):
         """ """
         assert (self.testloader is not None)
 
         if self.dataset.is_user_dataset is True:
             num_test_samples = sum(inputs.size(0) for inputs,_ in self.testloader)
+            sample_data, sample_target = self.testloader[0]
         else:
             num_test_samples = len(self.testloader.dataset)
+            # dataloader iterator to get next sample
+            dataiter = iter(self.testloader)
+            sample_data, sample_target = dataiter.next()
 
         num_test_batches = math.ceil(num_test_samples / self.dataloader.batch_size)
 
-        if self.params['verbose']:
-            if self.dataset.is_user_dataset is True:
-                sample_data, sample_target = self.testloader[0]
-            else:
-                # dataloader iterator to get next sample
-                dataiter = iter(self.testloader)
-                sample_data, sample_target = dataiter.next()
-
-            print('\n==> Test info:')
-            print(f'batch (data, target) size : ({size_str(sample_data)}, {size_str(sample_target)})')
-            print(f'no. of test (samples, batches) : ({num_test_samples}, {num_test_batches})')
+        print('\n==> Test info:')
+        print(f'batch (data, target) size : ({size_str(sample_data)}, {size_str(sample_target)}).')
+        print(f'no. of test samples : {num_test_samples}.')
+        print(f'no. of test batches : {num_test_batches}.')
 
 
 

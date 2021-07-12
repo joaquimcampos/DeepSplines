@@ -195,6 +195,8 @@ class Manager(Project):
         self.trainloader, self.validloader = self.dataloader.get_train_valid_loader()
 
         self.save_train_info()
+        if self.params['verbose']:
+            self.print_train_info()
 
         self.losses_names = ['loss', 'df_loss'] # total loss and data fidelity loss
         if self.net.tv_bv_regularization is True:
@@ -409,7 +411,8 @@ class Manager(Project):
         self.dataloader = DataLoader(self.dataset, mode='test', **self.params['dataloader'])
         self.testloader = self.dataloader.get_test_loader()
 
-        self.save_test_info()
+        if self.params['verbose']:
+            self.print_test_info()
 
         self.forward_test()
         print('\nFinished testing.')
