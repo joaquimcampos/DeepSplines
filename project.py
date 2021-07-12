@@ -236,7 +236,7 @@ class Project():
         """ Returns a loaded checkpoint from ckpt_filename, if it exists.
         """
         try:
-            ckpt = torch.load(ckpt_filename) # raises an exception if file does not exist
+            ckpt = torch.load(ckpt_filename, map_location = lambda storage, loc: storage)
 
         except FileNotFoundError:
             print('\nCheckpoint file not found... Unable to load checkpoint.\n')
