@@ -10,7 +10,9 @@ from project import Project
 from ds_utils import json_load
 
 '''
-This script plots sparsity
+This script plots sparsity, error_rate and lipschitz_bound vs lambda.
+It takes a results_json file as input which should be located
+in the same folder as the logged models.
 '''
 
 
