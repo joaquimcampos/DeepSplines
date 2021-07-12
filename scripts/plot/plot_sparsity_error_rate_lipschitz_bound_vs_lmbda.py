@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # parse arguments
     parser = argparse.ArgumentParser(description='Plot sparsity, error rate and lipschitz '
-                                        'vs TV(2) regularization weight.'),
+                                        'vs TV2/BV2 regularization weight.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--sparsified_log_dir', type=str, help='')
     parser.add_argument('--savefig', action='store_true', help='')

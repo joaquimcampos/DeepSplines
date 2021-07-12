@@ -3,17 +3,29 @@
 '''
 This script is illustrative. It plots an example of a deepspline
 along with its B-spline and boundary basis elements.
+Please run script with --help for argument details.
 '''
 
 import os
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import numpy as np
 from scipy.interpolate import interp1d
 import argparse
 
 
-def triangle(x, center=0, grid=1, coeff=1, mode='both'):
+def Bspline(x, center=0, grid=1, coeff=1, mode='both'):
+    """
+    Evaluates a B-spline basis element at x.
+
+    Args:
+        x (np.array): input locations.
+        center (float): center of the basis function.
+        grid (float): grid spacing (determines width of B-spline).
+        coeff (float): coefficient of the B-spline (height).
+
+    Returns:
+        y (np.array): of the same size as x.
+    """
     assert mode in ['both', 'left', 'right']
     y = np.zeros(x.shape)
 
@@ -25,7 +37,7 @@ def triangle(x, center=0, grid=1, coeff=1, mode='both'):
         right_idx = (x < (center+grid)) * (x >= center)
         y[right_idx] = ((center+grid) - x[right_idx])  / grid
 
-    return y*coeff
+    return y * coeff  # basis * coefficient
 
 
 if __name__ == "__main__":
@@ -33,42 +45,61 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(description='Plot finite spline representation.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--savefig', action='store_true', help='')
-    parser.add_argument('--output', metavar='output folder', type=str, help='')
+
+    parser.add_argument('--save_dir', metavar='STR', type=str,
+                        help='directory for saving plots. If not given, plots are not saved.')
+
     args = parser.parse_args()
+
+    if args.save_dir is not None and not os.path.isdir(args.save_dir):
+        raise OSError(f'Save directory {save_dir} does not exist.')
 
     fig = plt.figure()
     ax = plt.gca()
 
-    range_, grid, nb_points, extrap = 4, 1, 10001, 1
+    # (B-spline expansion range, grid spacing, # plot points, extrapolation range)
+    range_, grid, nb_points, extrap = 3, 1, 10001, 2
+    # the total plot x axis range is then [-5, 5] = [-(range_+extrap), (range+extrap)]
 
-    x_middle = np.linspace(-range_+1, range_-1, nb_points)
-    x_left = np.linspace(-(range_ + extrap), -range_+1, nb_points)
-    x_right = np.linspace(range_-1, (range_ + extrap), nb_points)
+    # for B-spline expansion
+    x_middle = np.linspace(-range_, range_, nb_points)
+    # for linear extrapolations outside B-spline range
+    x_left = np.linspace(-(range_+extrap), -range_, nb_points)
+    x_right = np.linspace(range_, (range_+extrap), nb_points)
 
-    grid_points = np.arange(-range_, range_ + 1, grid)
-    left_grid_points = np.arange(-(range_ + extrap), -range_+2, grid)
-    right_grid_points = np.arange(range_-1, range_ + extrap + 1, grid)
+    # grid for plotting B-spline elements in [-3, 3]
+    grid_points = np.arange(-range_-1, range_+2, grid)
+    # grid for plotting boundary elements in [-5, -3] and [3, 5]
+    left_grid_points = np.arange(-(range_+extrap), -range_+1, grid)
+    right_grid_points = np.arange(range_, range_+extrap+1, grid)
 
+    # B-spline coefficients
     coeff = np.array([4.5, 3.3, 5.3, 2.3, 3.3, 1.3, 4.5, 3.5, 3.1])
-    left_extrap = (coeff[0] - coeff[1]) * np.array(list(range(0, extrap+2)))[::-1] + coeff[1]
-    right_extrap = (coeff[-1] - coeff[-2]) * np.array(list(range(0, extrap+2))) + coeff[-2]
 
-    right_straight = np.ones(extrap + 2) * coeff[-2]
-    left_straight = np.ones(extrap + 2) * coeff[1]
-    left_relu = (coeff[0] - coeff[1]) * np.array(list(range(0, extrap+2)))[::-1]
-    right_relu = (coeff[-1] - coeff[-2]) * np.array(list(range(0, extrap+2)))
+    # left and right linear extrapolations at grid locations in [-5, -3] and [3, 5]
+    left_extrap = (coeff[0] - coeff[1]) * np.array(list(range(0, extrap+1)))[::-1] + coeff[1]
+    right_extrap = (coeff[-1] - coeff[-2]) * np.array(list(range(0, extrap+1))) + coeff[-2]
 
-    f_left = interp1d(left_grid_points, left_extrap)
+    # values of boundary basis at grid locations in [-5, -3] and [3, 5]
+    right_straight = np.ones(extrap+1) * coeff[-2]
+    left_straight = np.ones(extrap+1) * coeff[1]
+    left_relu = (coeff[0] - coeff[1]) * np.array(list(range(0, extrap+1)))[::-1]
+    right_relu = (coeff[-1] - coeff[-2]) * np.array(list(range(0, extrap+1)))
+
+    # B-spline expansion function
     f = interp1d(grid_points, coeff)
+    
+    # extrapolation functions
+    f_left = interp1d(left_grid_points, left_extrap)
     f_right = interp1d(right_grid_points, right_extrap)
 
+    # boundary functions
     f_left_straight = interp1d(left_grid_points, left_straight)
     f_right_straight = interp1d(right_grid_points, right_straight)
     f_left_relu = interp1d(left_grid_points, left_relu)
     f_right_relu = interp1d(right_grid_points, right_relu)
 
-    # Move left y-axis and bottim x-axis to centre, passing through (0,0)
+    # Move left y-axis and bottom x-axis to centre, passing through (0,0)
     ax.spines['left'].set_position('center')
     ax.spines['bottom'].set_position('zero')
 
@@ -86,42 +117,52 @@ if __name__ == "__main__":
     ax.tick_params(axis='both', which='major', labelsize=10)
     ax.tick_params(axis='both', which='minor', labelsize=10)
 
+    # draw B-spline (triangular-shaped) basis elements
     for i, center in enumerate(grid_points):
         mode = 'both'
         if i == 0 or i == (grid_points.shape[0] - 1):
+            # skip (boundaries)
             continue
         elif i == 1:
+            # first B-spline basis: only right part is drawn
             mode = 'right'
         elif i == (grid_points.shape[0] - 2):
+            # last B-spline basis: only left part is drawn
             mode = 'left'
 
-        x = np.linspace(-(range_+1) + i * grid, -(range_+1) + (i + 2) * grid, nb_points)
-        y = triangle(x, center, grid, coeff[i], mode=mode)
+        # evaluate B-spline basis element on a grid
+        bspline_x = np.linspace(-(range_+2) + i * grid, -(range_+2) + (i+2) * grid, nb_points)
+        bspline_y = Bspline(bspline_x, center, grid, coeff[i], mode=mode)
 
         if mode =='left':
-            center_idx = x.shape[0]//2
-            plt.plot(x[:center_idx:], y[:center_idx:], color='lightsteelblue', ls='--')
+            center_idx = bspline_x.shape[0]//2
+            # draws right part of first B-spline basis elemnt
+            plt.plot(bspline_x[:center_idx:], bspline_y[:center_idx:], color='lightsteelblue', ls='--')
         elif mode == 'right':
-            center_idx = x.shape[0]//2
-            plt.plot(x[center_idx::], y[center_idx::], color='lightsteelblue', ls='--')
+            center_idx = bspline_x.shape[0]//2
+            # draws left part of first B-spline basis elemnt
+            plt.plot(bspline_x[center_idx::], bspline_y[center_idx::], color='lightsteelblue', ls='--')
         else:
-            plt.plot(x, y, color='crimson', ls='--')
+            # draws full B-spline basis elemnt
+            plt.plot(bspline_x, bspline_y, color='crimson', ls='--')
 
 
+    # plot B-spline expansion
     plt.plot(x_middle, f(x_middle), color='black')
+    # plot linear extrapolations
     plt.plot(x_left, f_left(x_left), color='black')
     plt.plot(x_right, f_right(x_right), color='black')
 
+    # plot boundary elements
     plt.plot(x_left, f_left_straight(x_left), color='lightsteelblue', ls='--')
     plt.plot(x_right, f_right_straight(x_right), color='lightsteelblue', ls='--')
-
     plt.plot(x_left, f_left_relu(x_left), color='lightsteelblue', ls='--')
     plt.plot(x_right, f_right_relu(x_right), color='lightsteelblue', ls='--')
 
     plt.xlim(-(range_+extrap-0.2), (range_+extrap-0.2))
     plt.ylim(-0.8, 5.5)
 
-    if args.savefig:
-        plt.savefig(os.path.join(args.output, 'finite_spline_representation') + '.pdf')
+    if args.save_dir is not None:
+        plt.savefig(os.path.join(args.save_dir, 'deepspline_basis.pdf'))
 
     plt.show()
