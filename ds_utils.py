@@ -258,8 +258,3 @@ def json_dump(results_dict, json_filename):
     except FileNotFoundError:
         print(f'File {json_filename} not found...')
         raise
-
-
-
-def isPowerOfTwo(n):
-    return (math.ceil(np.log2(n)) == math.floor(np.log2(n)))
