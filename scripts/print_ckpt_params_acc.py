@@ -22,21 +22,20 @@ if __name__ == "__main__":
     parser.add_argument('ckpt_filename', metavar='NAME', type=str, help='')
     args = parser.parse_args()
 
-    ckpt = Project.get_loaded_ckpt(args.ckpt_filename)
-    print('\nLoading parameters from checkpoint :', args.ckpt_filename, sep='\n')
+    ckpt, params = Project.load_ckpt_params(args.ckpt_filename)
 
-    params = ckpt['params']
+    print('\nLoading checkpoint :', args.ckpt_filename, sep='\n')
     print('\nParameters : ', params, sep='\n')
 
     print('ckpt validation accuracy : {:.3f}%'.format(ckpt['valid_acc']))
 
     if params['knot_threshold'] > 0.:
-        device = ckpt['params']['device']
+        device = params['device']
         if device == 'cuda:0' and not torch.cuda.is_available():
             # TODO: Test how to load model on cpu trained on gpu
             raise OSError('cuda not available...')
 
-        net  = Manager.build_model(ckpt['params'], device=device)
+        net  = Manager.build_model(params, device=device)
         net.load_state_dict(ckpt['model_state'], strict=True)
         net.eval()
 

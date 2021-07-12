@@ -2,119 +2,117 @@
 
 import argparse
 import os
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
-from project import Project
-from manager import Manager
-from models import *
+from functools import partial
 
-import collections
+from project import Project
 from ds_utils import json_load
+
+'''
+This script plots sparsity
+'''
+
+
+def plot_lmbda_vs_y(lmbdas, y, y_title, file_title):
+    """  """
+    ## lmbda vs sparsity
+    fig = plt.figure()
+    ax = plt.gca()
+    ax.grid(True)
+
+    ax.set_xlabel(r"$\lambda$", fontsize=16)
+    ax.set_ylabel(y_title, fontsize=14)
+
+    ax.plot(lmbdas, y, '--o', linewidth=1.0)
+    ax.set_xscale('log')
+    ax.set_xlim([lmbdas.min()/10, lmbdas.max()*10])
+
+    if args.save_dir is not None:
+        plt.savefig(os.path.join(args.save_dir, file_title + '.pdf'))
+
+    plt.show()
+    plt.close()
 
 
 if __name__ == "__main__":
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Plot sparsity, error rate and lipschitz '
+    parser = argparse.ArgumentParser(description='Plot sparsity, error rate and lipschitz bound '
                                         'vs TV2/BV2 regularization weight.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--sparsified_log_dir', type=str, help='')
-    parser.add_argument('--savefig', action='store_true', help='')
-    parser.add_argument('--output', metavar='output folder', type=str, help='')
+    parser.add_argument('results_json', type=str, metavar='FILE[STR]',
+                        help='json file with train/test results.')
+    parser.add_argument('--save_dir', metavar='STR', type=str,
+                        help='directory for saving plots. If not given, plots are not saved.')
     args = parser.parse_args()
 
-    if args.sparsified_log_dir is None:
-        raise ValueError('Need to provide sparsified_log_dir')
+    if not os.path.isfile(args.results_json):
+        raise ValueError(f'File {args.results_json} does not exist.')
 
-    results_json = os.path.join(args.sparsified_log_dir, 'avg_results.json')
-    results_dict = json_load(results_json)
+    if args.save_dir is not None and not os.path.isdir(args.save_dir):
+        raise OSError(f'Save directory {save_dir} does not exist.')
+
+    log_dir = '/'.join(args.results_json.split('/')[:-1])
+    results_dict = json_load(args.results_json)
 
     models = results_dict.keys()
-    lmbdas = np.zeros(len(models))
-    error_rates = np.zeros(len(models))
-    sparsities = np.zeros(len(models))
-    lipschitz_bounds = np.zeros(len(models))
+    zeros_ = np.zeros(len(models))
+    lmbdas = zeros_.copy()
+    error_rates = zeros_.copy()
+    sparsities = zeros_.copy()
+    lipschitz_bounds = zeros_.copy()
 
     for i, model in enumerate(models):
-        model_name_split = model.split('_')
-        lmbda_idx = model_name_split.index('lmbda') + 1
-        lmbda = float(model_name_split[lmbda_idx])
+        # load model lmbda
+        log_dir_model = os.path.join(log_dir, model)
+        ckpt_filename = Project.get_ckpt_from_log_dir_model(log_dir_model)
+        ckpt, params = Project.load_ckpt_params(ckpt_filename)
 
-        lmbdas[i] = lmbda
-        error_rates[i] = 100. - eval(results_dict[model]['valid_acc']['median'])[0]
-        sparsities[i] = eval(results_dict[model]['sparsity']['median'])[0]
-        lipschitz_bounds[i] = eval(results_dict[model]['lipschitz_bound']['median'])[0]
+        net  = Manager.build_model(params, device=device)
+        net.load_state_dict(ckpt['model_state'], strict=True)
+        net.eval()
 
+        # save info of current model
+        lmbdas[i] = params['lmbda']
+        sparsities[i] = net.compute_sparsity()
+        error_rates[i] = 100. - ckpt['valid_acc']
+        lipschitz_bounds[i] = net.lipschitz_bound()
+
+        # # TODO: Alternative: Get info from json file
+        # try:
+        #     sparsities[i] = eval(results_dict[model]['sparsity'])
+        #     error_rates[i] = 100. - eval(results_dict[model][acc_str])
+        #     lipschitz_bounds[i] = eval(results_dict[model]['lipschitz_bound'])
+        # except KeyError:
+        #     print(f'Model {model} did not log "sparsity", "{acc_str}" '
+        #             'or "lipschitz_bound".')
+        #     raise
+
+
+    # sort according to lmbdas
     idx = np.argsort(lmbdas)
-
     lmbdas = lmbdas[idx]
-    error_rates = error_rates[idx]
     sparsities = sparsities[idx]
+    error_rates = error_rates[idx]
     lipschitz_bounds = lipschitz_bounds[idx]
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
 
-    lmbda_formula = (16/33)*(10 ** (-4))
+    plot_func = partial(plot_lmbda_vs_y, lmbdas)
 
     ## lmbda vs sparsity
-    fig = plt.figure()
-    ax = plt.gca()
-
-    ax.set_xlabel(r"$\lambda$", fontsize=16)
-    ax.set_ylabel("Number of non-sparse coefficients", fontsize=14)
-
-    ax.grid(True)
-
-    ax.plot(lmbdas, sparsities, '--o', linewidth=1.0)
-    ax.set_xscale('log')
-    ax.set_xlim([lmbdas.min()/10, lmbdas.max()*10])
-
-    if args.savefig:
-        plt.savefig(os.path.join(args.output, 'sparsity_vs_lmbda') + '.pdf')
-
-    plt.show()
-    plt.close()
-
-    plt.rc('text', usetex=True)
-    plt.rc('font', family='serif')
+    y_title = "Number of non-sparse coefficients"
+    file_title = 'sparsity_vs_lmbda'
+    plot_func(sparsities, y_title, file_title)
 
     ## lmbda vs error_rate
-    fig = plt.figure()
-    ax = plt.gca()
-
-    ax.set_xlabel(r"$\lambda$", fontsize=16)
-    ax.set_ylabel(r"Error$ \ $rate (\%)", fontsize=14)
-
-    ax.grid(True)
-    ax.plot(lmbdas, error_rates, '--o', linewidth=1.0)
-
-    ax.set_xscale('log')
-    ax.set_xlim([lmbdas.min()/10, lmbdas.max()*10])
-
-    if args.savefig:
-        plt.savefig(os.path.join(args.output, 'error_rate_vs_lmbda') + '.pdf')
-
-    plt.show()
-    plt.close()
-
+    y_title = r"Error$ \ $rate (\%)"
+    file_title = 'error_rate_vs_lmbda'
+    plot_func(error_rates, y_title, file_title)
 
     ## lmbda vs lipschitz_bound
-    fig = plt.figure()
-    ax = plt.gca()
-
-    ax.set_xlabel(r"$\lambda$", fontsize=16)
-    ax.set_ylabel(r"Lipschitz$ \ $bound", fontsize=14)
-
-    ax.grid(True)
-    ax.plot(lmbdas, np.absolute(lipschitz_bounds), '--o', linewidth=1.0)
-
-    ax.set_xscale('log')
-    ax.set_xlim([lmbdas.min()/10, lmbdas.max()*10])
-
-    if args.savefig:
-        plt.savefig(os.path.join(args.output, 'lipschitz_bound_vs_lmbda') + '.pdf')
-
-    plt.show()
-    plt.close()
+    y_title = r"Lipschitz$ \ $bound"
+    file_title = 'lipschitz_bound_vs_lmbda'
+    plot_func(np.absolute(lipschitz_bounds), y_title, file_title)

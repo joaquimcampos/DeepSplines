@@ -108,6 +108,7 @@ if __name__ == "__main__":
 
         if k == 0:
             assert np.allclose(threshold, 0)
+            # TODO: Abstract from 'latest_train_acc'
             base_train_acc = model_dict['latest_train_acc']
 
         acc_drop = np.clip((model_dict['latest_train_acc'] - base_train_acc),

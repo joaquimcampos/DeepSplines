@@ -102,7 +102,7 @@ class Project():
         and with test accuracy otherwise
 
         Args:
-            info: e.g. 'latest_validation_loss'
+            info: e.g. 'latest_valid_loss'
         """
         assert info in self.info_list, f'{info} should be in {self.info_list}...'
 
@@ -251,7 +251,7 @@ class Project():
 
 
     @classmethod
-    def load_ckpt_params(cls, ckpt_filename, flatten=True):
+    def load_ckpt_params(cls, ckpt_filename, flatten=False):
         """ Returns the parameters saved in a checkpoint.
 
         Args:
@@ -523,6 +523,7 @@ class Project():
     def log_additional_info(self):
         """ Log additional information to self.results_json
         """
+        # TODO: Review this
         if not self.params['additional_info']: # empty list
             return
 
