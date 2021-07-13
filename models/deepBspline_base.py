@@ -45,12 +45,16 @@ from models.deepspline_base import DeepSplineBase
 
 
 class DeepBSpline_Func(torch.autograd.Function):
-    """ Autograd function to only backpropagate through the triangles that were used
+    """
+    Autograd function to only backpropagate through the triangles that were used
     to calculate output = activation(input), for each element of the input.
+
+    Note: if save_memory=True, we use a memory efficient version, at the expense of
+    some additional running time.
     """
 
     @staticmethod
-    def forward(ctx, x, coefficients_vect, grid, zero_knot_indexes, size):
+    def forward(ctx, x, coefficients_vect, grid, zero_knot_indexes, size, save_memory):
 
         # First, we clamp the input to the range [leftmost coefficient, second righmost coefficient].
         # We have to clamp, on the right, to the second righmost coefficient, so that we always have
@@ -66,11 +70,32 @@ class DeepBSpline_Func(torch.autograd.Function):
 
         # This gives the indexes (in coefficients_vect) of the left coefficients
         indexes=(zero_knot_indexes.view(1, -1, 1, 1) + floored_x).long()
-        ctx.save_for_backward(fracs, coefficients_vect, indexes, grid)
 
-        # linear interpolation
+        # Only two B-spline basis functions are required to compute the output
+        # (through linear interpolation) for each input in the B-spline range.
         activation_output = coefficients_vect[indexes+1]*fracs + \
                             coefficients_vect[indexes]*(1-fracs)
+
+        if save_memory is False:
+            ctx.save_for_backward(save_memory, fracs, coefficients_vect, indexes, grid)
+        else:
+            ctx.save_for_backward(save_memory, x, coefficients_vect, grid, zero_knot_indexes, size)
+
+            # compute leftmost and rightmost slopes for linear extrapolations outside B-spline range
+            num_activations = x.size(1)
+            coefficients = coefficients_vect.view(num_activations, size)
+            leftmost_slope = (coefficients[:,1] - coefficients[:,0]).div(grid).view(1,-1,1,1)
+            rightmost_slope = (coefficients[:,-1] - coefficients[:,-2]).div(grid).view(1,-1,1,1)
+
+            # peform linear extrapolations outside B-spline range
+            leftExtrapolations  = (x.detach() + grid*(size//2)).clamp(max=0) * leftmost_slope
+            rightExtrapolations = (x.detach() - grid*(size//2-1)).clamp(min=0) * rightmost_slope
+            # linearExtrapolations is zero for inputs inside B-spline range
+            linearExtrapolations = leftExtrapolations + rightExtrapolations
+
+            # add linear extrapolations to B-spline expansion
+            activation_output = activation_output + linearExtrapolations
+
 
         return activation_output
 
@@ -78,7 +103,24 @@ class DeepBSpline_Func(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_out):
 
-        fracs, coefficients_vect, indexes, grid = ctx.saved_tensors
+        save_memory = ctx.saved_tensors[0]
+
+        if save_memory is False:
+            fracs, coefficients_vect, indexes, grid = ctx.saved_tensors[1:]
+        else:
+            x, coefficients_vect, grid, zero_knot_indexes, size = ctx.saved_tensors[1:]
+
+            # compute fracs and indexes again (do not save them in ctx) to save memory
+            x_clamped = x.clamp(min = -(grid.item() * (size//2)),
+                                max = (grid.item() * (size//2-1)))
+
+            floored_x = torch.floor(x_clamped/grid) # left coefficient
+            fracs = x_clamped/grid - floored_x # distance to left coefficient
+
+            # This gives the indexes (in coefficients_vect) of the left coefficients
+            indexes=(zero_knot_indexes.view(1, -1, 1, 1) + floored_x).long()
+
+
         grad_x = (coefficients_vect[indexes+1] - coefficients_vect[indexes]) / grid * grad_out
 
         # Next, add the gradients with respect to each coefficient, such that,
@@ -91,17 +133,34 @@ class DeepBSpline_Func(torch.autograd.Function):
         # left coefficients gradients
         grad_coefficients_vect.scatter_add_(0, indexes.view(-1), ((1-fracs)*grad_out).view(-1))
 
-        return grad_x, grad_coefficients_vect, None, None, None
+        if save_memory is True:
+            # Add gradients from the linear extrapolations
+            tmp1 = ((x.detach() + grid*(size//2)).clamp(max=0))/grid
+            grad_coefficients_vect.scatter_add_(0, indexes.view(-1), (-tmp1*grad_out).view(-1))
+            grad_coefficients_vect.scatter_add_(0, indexes.view(-1)+1, (tmp1*grad_out).view(-1))
+
+            tmp2 = ((x.detach() - grid*(size//2-1)).clamp(min=0))/grid
+            grad_coefficients_vect.scatter_add_(0, indexes.view(-1), (-tmp2*grad_out).view(-1))
+            grad_coefficients_vect.scatter_add_(0, indexes.view(-1)+1, (tmp2*grad_out).view(-1))
+
+
+        return grad_x, grad_coefficients_vect, None, None, None, None
 
 
 
 class DeepBSplineBase(DeepSplineBase):
     """ See deepspline_base.py
     """
-    def __init__(self, **kwargs):
+    def __init__(self, save_memory=False, **kwargs):
+        """
+        Args:
+            save_memory (bool):
+                weather to use a more memory efficient version (takes more time).
+        """
 
         super().__init__(**kwargs)
 
+        self.save_memory = save_memory
         self.init_zero_knot_indexes()
         self.init_derivative_filters()
 
@@ -195,24 +254,28 @@ class DeepBSplineBase(DeepSplineBase):
         x = self.reshape_forward(input)
         assert x.size(1) == self.num_activations, 'input.size(1) != num_activations.'
 
-        # Linear extrapolations:
-        # f(x_left) = leftmost coeff value + left_slope * (x - leftmost coeff)
-        # f(x_right) = second rightmost coeff value + right_slope * (x - second rightmost coeff)
-        # where the first components of the sums (leftmost/second rightmost coeff value)
-        # are taken into account in DeepBspline_Func() and linearExtrapolations adds the rest.
+        output = DeepBSpline_Func.apply(x, self.coefficients_vect_, self.grid,
+                                        self.zero_knot_indexes, self.size, self.save_memory)
 
-        coefficients = self.coefficients
-        leftmost_slope = (coefficients[:,1] - coefficients[:,0]).div(self.grid).view(1,-1,1,1)
-        rightmost_slope = (coefficients[:,-1] - coefficients[:,-2]).div(self.grid).view(1,-1,1,1)
+        if self.save_memory is False:
+            # Linear extrapolations:
+            # f(x_left) = leftmost coeff value + left_slope * (x - leftmost coeff)
+            # f(x_right) = second rightmost coeff value + right_slope * (x - second rightmost coeff)
+            # where the first components of the sums (leftmost/second rightmost coeff value)
+            # are taken into account in DeepBspline_Func() and linearExtrapolations adds the rest.
 
-        # x.detach(): gradient w/ respect to x is already tracked in DeepBSpline_Func
-        leftExtrapolations  = (x.detach() + self.grid*(self.size//2)).clamp(max=0) * leftmost_slope
-        rightExtrapolations = (x.detach() - self.grid*(self.size//2-1)).clamp(min=0) * rightmost_slope
-        # linearExtrapolations is zero for values inside range
-        linearExtrapolations = leftExtrapolations + rightExtrapolations
+            coefficients = self.coefficients
+            leftmost_slope = (coefficients[:,1] - coefficients[:,0]).div(self.grid).view(1,-1,1,1)
+            rightmost_slope = (coefficients[:,-1] - coefficients[:,-2]).div(self.grid).view(1,-1,1,1)
 
-        output = DeepBSpline_Func.apply(x, self.coefficients_vect_, self.grid, self.zero_knot_indexes, self.size) + \
-                linearExtrapolations
+            # x.detach(): gradient w/ respect to x is already tracked in DeepBSpline_Func
+            leftExtrapolations  = (x.detach() + self.grid*(self.size//2)).clamp(max=0) * leftmost_slope
+            rightExtrapolations = (x.detach() - self.grid*(self.size//2-1)).clamp(min=0) * rightmost_slope
+            # linearExtrapolations is zero for inputs inside B-spline range
+            linearExtrapolations = leftExtrapolations + rightExtrapolations
+
+            output = output + linearExtrapolations
+
 
         output = self.reshape_back(output, input_size)
 

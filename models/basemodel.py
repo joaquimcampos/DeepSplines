@@ -20,8 +20,8 @@ class BaseModel(nn.Module):
         self.set_attributes('activation_type', 'dataset_name',
                             'num_classes', 'device')
         # deepspline attributes
-        self.set_attributes('spline_init', 'spline_size',
-                            'spline_range', 'knot_threshold')
+        self.set_attributes('spline_init', 'spline_size', 'spline_range',
+                            'save_memory', 'knot_threshold')
 
         self.spline_grid = \
             spline_grid_from_range(self.spline_size, self.spline_range)
@@ -68,12 +68,12 @@ class BaseModel(nn.Module):
         assert isinstance(activation_specs, list)
 
         if self.deepspline is not None:
-            size, grid = self.spline_size, self.spline_grid
             activations = nn.ModuleList()
             for mode, num_activations in activation_specs:
-                activations.append(self.deepspline(size=size, grid=grid, init=self.spline_init,
-                                            bias=bias, mode=mode, num_activations=num_activations,
-                                            device=self.device))
+                activations.append(self.deepspline(size=self.spline_size, grid=self.spline_grid,
+                                                init=self.spline_init, bias=bias, mode=mode,
+                                                num_activations=num_activations,
+                                                save_memory=self.save_memory, device=self.device))
         else:
             activations = self.init_standard_activations(activation_specs)
 

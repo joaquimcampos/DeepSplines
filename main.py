@@ -48,7 +48,14 @@ def get_arg_parser():
                         help='Number of spline coefficients. Default: {default_values["spline_size"]}.')
     parser.add_argument('--spline_range', metavar='FLOAT,>0', type=ArgCheck.p_float,
                         help=f'Range of spline representation. Default: {default_values["spline_range"]}.')
+    parser.add_argument('--save_memory', action='store_true',
+                        help='Use a memory-efficient deepsplines version (for deepBsplines only), '
+                            'at the expense of additional running time.')
+    parser.add_argument('--knot_threshold', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
+                        help='If nonzero, sparsify activations by eliminating knots whose slope '
+                            f'change is below this value. Default: {default_values["knot_threshold"]}.')
 
+    # neural net
     parser.add_argument('--hidden', metavar='INT,>0', type=ArgCheck.p_int,
                         help=f'Number of hidden neurons in each layer (for twoDnet). Default: {default_values["hidden"]}.')
 
@@ -106,10 +113,6 @@ def get_arg_parser():
                             'If None, done halfway and at the end of training. '
                             'If negative, done at every epoch. '
                             f'Default: {default_values["valid_log_step"]}.')
-
-    parser.add_argument('--knot_threshold', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
-                        help='If nonzero, sparsify activations by eliminating knots whose slope '
-                            f'change is below this value. Default: {default_values["knot_threshold"]}.')
 
     # dataloader
     parser.add_argument('--seed', metavar='INT,>0', type=ArgCheck.nn_int,
@@ -189,6 +192,9 @@ def verify_params(params):
 
     if params['activation_type'] == 'deepRelu' and params['spline_init'] == 'even_odd':
         raise ValueError('Cannot use even_odd spline initialization with deeprelu.')
+
+    if params['save_memory'] is True and not params['activation_type'].startswith('deepBspline'):
+        raise ValueError('--save_memory can only be set when using deepBsplines.')
 
     if params['knot_threshold'] > 0. and 'deep' not in params['activation_type']:
         raise ValueError('--knot_threshold can only be set when using deepsplines.')

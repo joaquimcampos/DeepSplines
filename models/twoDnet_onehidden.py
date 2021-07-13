@@ -23,7 +23,7 @@ class TwoDNet_OneHidden(BaseModel):
         activation_specs = []
 
         bias = True
-        if 'deepBspline' in self.activation_type or 'deepRelu' in self.activation_type:
+        if self.activation_type.startswith('deep'):
             bias = False
 
         self.fc1 = nn.Linear(2, hidden, bias=bias)
