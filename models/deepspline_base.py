@@ -57,21 +57,23 @@ class DeepSplineBase(ABC, nn.Module):
 
 
     def totalVariation(self, **kwargs):
-        """ Computes the total variation regularization: l1 norm of ReLU coefficients
+        """
+        Computes the second-order total-variation regularization.
 
         deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
         The regularization term applied to this function is:
-        TV(2)(deepsline) = ||a||_1
+        TV(2)(deepsline) = ||a||_1.
         """
         return self.relu_slopes.norm(1, dim=1)
 
 
 
-    def get_epsilon_sparsity(self, eps=5e-4):
-        """ Computes the number of relus for which (|a_k| > eps).
+    def get_epsilon_sparsity(self, eps=1e-4):
+        """
+        Computes the number of relus for which |a_k| > eps.
 
-        This function acts as a sanity check on the sparsification:
-        after applying the threshold to the ReLU coefficients, we check that
+        This function acts as a sanity check on the sparsification.
+        After applying the threshold to the ReLU coefficients, we check that
         epsilon_sparsity = threshold_sparsity (check apply_threshold()).
         """
         sparsity_mask = ((self.relu_slopes.abs() - eps) > 0.)
@@ -82,7 +84,8 @@ class DeepSplineBase(ABC, nn.Module):
 
 
     def get_threshold_sparsity(self, threshold):
-        """ Computes the number of activated relus (|a_k| > threshold)
+        """
+        Computes the number of activated relus (|a_k| > threshold)
         """
         relu_slopes_abs = self.relu_slopes.abs()
         threshold_sparsity_mask = (relu_slopes_abs > threshold)
@@ -93,30 +96,29 @@ class DeepSplineBase(ABC, nn.Module):
 
 
     def apply_threshold(self, threshold):
-        """ Applies a threshold to the activations, eliminating the relu
+        """
+        Applies a threshold to the activations, eliminating the relu
         slopes smaller than a threshold.
 
         deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
         This function sets a_k to zero if |a_k| < knot_threshold.
 
-        When converting from a to c, we need to use the additional information
-        that the first two B1 spline coefficients remain the same, i.e.,
-        a = Lc, a -> sparsification -> a_hat, c_hat = f(a, c_{-L}, c_{-L+1}),
-        This additional information allows us to specify the linear term parameters
-        (b0, b1), whose information is in the nullspace of the second-finite-difference
-        matrix L and, therefore, is lost when doing a = Lc.
-        In other words, two sets of coefficients [c], [c'] which are related by
-        a linear term, give the same ReLU coefficients [a].
+        Operations performed:
+        . [a] = L[c], [a] -> sparsification -> [a_hat].
+
+        Args:
+            threshold (float)
         """
         with torch.no_grad():
             new_relu_slopes = self.relu_slopes
             threshold_sparsity, threshold_sparsity_mask = self.get_threshold_sparsity(threshold)
             new_relu_slopes[~threshold_sparsity_mask] = 0.
 
-            # sanity test - check that the relu slopes below threshold were
-            # indeed eliminated, i.e., are False in the epsilon_sparsity_mask.
-            eps = 5e-4
+            eps = 1e-4
             if threshold >= eps:
+                # sanity test: check that the relu slopes below threshold were
+                # indeed eliminated, i.e., smaller than epsilon, where
+                # 0 < epsilon <= threshold.
                 epsilon_sparsity, epsilon_sparsity_mask = self.get_epsilon_sparsity(eps)
                 assert epsilon_sparsity.sum() == threshold_sparsity.sum()
                 assert torch.all(~epsilon_sparsity_mask[~threshold_sparsity_mask])

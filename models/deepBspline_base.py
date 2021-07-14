@@ -307,7 +307,21 @@ class DeepBSplineBase(DeepSplineBase):
 
 
     def apply_threshold(self, threshold):
-        """ See DeepSplineBase.apply_threshold method
+        """
+        Applies a threshold to the activations, eliminating the relu
+        slopes smaller than a threshold and updates the B-spline coefficients.
+
+        Operations performed:
+        . [a] = L[c], [a] -> sparsification -> [a_hat];
+        . [c_hat] = f([a], c_{-L}, c_{-L+1}).
+
+        This uses a well-conditioned iterative method to convert from the
+        deeprelu representation to the B-spline representation
+        (see iterative_relu_slopes_to_coefficients()).
+        This is required so that we can do (b0,b1,[a])->[c]->[a']
+        while keeping the same zero slopes in [a] and [a'].
+        This is not the case if we compute [a'] = L(P(b0,b1,[a])), where
+        P is a matrix that maps (b0,b1,[a]) to [c], due to ill-conditioning.
         """
         with torch.no_grad():
             new_relu_slopes = super().apply_threshold(threshold)
@@ -318,12 +332,18 @@ class DeepBSplineBase(DeepSplineBase):
 
     def iterative_relu_slopes_to_coefficients(self, relu_slopes):
         """
-        Well-conditioned way to transform relu_slopes to coefficients.
+        Get the (B-spline) coefficients from relu coefficients in an
+        iterative and well-conditioned manner.
 
-        This way, if we set a slope to zero, we can do (b0,b1,a)->c->a'
-        and still have the same slope being practically equal to zero.
-        This might not be the case if we do: a' = L(P(b0,b1,a)), where
-        P and L are linear transformations, because LP is not well-conditioned.
+        Operations performed:
+        . [c_hat] = f([a], c_{-L}, c_{-L+1}).
+
+        When converting from a to c, we need to use the additional information
+        provided by the the first two B-spline coefficients, which are kept
+        fixed. This additional information determines the linear term parameters
+        (b0, b1), which are lost when doing a = Lc, since two sets of
+        coefficients ([c], [c']) that are related by a linear term give
+        the same ReLU coefficients [a].
         """
         coefficients = self.coefficients
         coefficients[:, 2::] = 0. # first two coefficients remain the same
