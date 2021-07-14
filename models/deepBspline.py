@@ -43,7 +43,8 @@ class DeepBSpline(DeepBSplineBase):
             raise ValueError('init should be in [leaky_relu, relu, even_odd].')
 
         # Need to vectorize coefficients to perform specific operations
-        self._coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
+        # size: (num_activations*size)
+        self._coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1))
 
 
 

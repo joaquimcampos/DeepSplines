@@ -39,7 +39,7 @@ class DeepReLU(DeepSplineBase):
         """
         Args:
             bias (bool):
-                if True, learn bias in the deeprelu expansion.
+                if True, learn bias in the linear term.
         """
 
         super().__init__(**kwargs)
@@ -60,7 +60,7 @@ class DeepReLU(DeepSplineBase):
         # size: (num_activations, num_relus)
         knot_loc = loc_linspace.view(1, -1).expand(self.num_activations, -1)
         # by default, there is no knot discovery. If it is desired to
-        # have knot discovery, set knot_loc as a nn.Parameter.
+        # have knot discovery, make knot_loc an nn.Parameter.
         self.knot_loc = knot_loc # knot locations are not parameters
 
         if self.init == 'leaky_relu':

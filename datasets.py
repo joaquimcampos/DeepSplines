@@ -5,10 +5,18 @@ import torchvision
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 import numpy as np
+from abc import ABC, abstractproperty, abstractmethod
+
 from ds_utils import check_device, denormalize
 
 
 def init_dataset(**params):
+    """
+    Initialize dataset.
+
+    Returns:
+        dataset (Dataset object).
+    """
 
     # add your datasets here and create a corresponding Dataset class
     dataset_dict = {'s_shape_1500' : S_shape, 'circle_1500' : Circle,
@@ -23,10 +31,21 @@ def init_dataset(**params):
 
 
 
-class Dataset():
+class Dataset(ABC):
+    """ Abstract class for datasets """
 
     def __init__(self, dataset_name=None, log_dir=None, model_name=None,
-                plot_imgs=False, save_imgs=False, save_title=None, **kwargs):
+                plot_imgs=False, save_imgs=False, **kwargs):
+        """
+        Args:
+            dataset_name (str):
+                s_shape_1500', 'circle_1500', 'cifar10', 'cifar100' or 'mnist'.
+            log_dir (str):
+                log_directory for saving images if model_name is None.
+            model_name (str):
+                If given, the log_directory for saving images is
+                'log_dir/model_name/'.
+        """
 
         self.name = dataset_name
 
@@ -38,26 +57,76 @@ class Dataset():
         self.plot_imgs = plot_imgs
         self.save_imgs = save_imgs
         self.get_plot = plot_imgs or save_imgs
-        self.save_title = save_title
 
 
+
+    @abstractproperty
+    def is_user_dataset(self):
+        """ True if the dataset is user-defined (bool) """
+        pass
+
+
+    @abstractproperty
+    def num_classes(self):
+        """ Number of classes in the dataset (int) """
+        pass
+
+
+    @abstractmethod
     def plot_train_imgs(self, *args, **kwargs):
-        """ """
-        raise NotImplementedError
+        """ Plots/saves train images """
+        pass
+
+
+    @property
+    def get_test_imgs(self):
+        """ True if plotting/saving validation/test images (bool) """
+
+        return self.get_plot and self.is_user_dataset
 
 
 
 class TorchDataset(Dataset):
+    """ Abstract class for Torchvision datasets """
 
     def __init__(self, **params):
         """ """
         super().__init__(**params)
-        self.is_user_dataset = False
+        self._is_user_dataset = False # torchvision dataset
         self.sample_batch = 4 # show 4 sample images
 
 
+
+    @property
+    def is_user_dataset(self):
+        """ """
+        return self._is_user_dataset
+
+
+    @abstractproperty
+    def norm_mean(self):
+        """ Mean for each channel in the training dataset (tuple). """
+        pass
+
+
+    @abstractproperty
+    def norm_std(self):
+        """ Standard deviation for each channel in the training dataset (tuple). """
+        pass
+
+
+    @abstractproperty
+    def classes(self):
+        """ Names of the classes (tuple). """
+        pass
+
+
+
     def get_minimal_transform_list(self):
-        """ Get minimal transform list (applied to train, validation and test sets)
+        """
+        Get minimal dataset transforms.
+
+        Applied to train, validation and test sets.
         """
         normalize = transforms.Normalize(self.norm_mean, self.norm_std)
         minimal_transform_list = [transforms.ToTensor(), normalize]
@@ -65,15 +134,21 @@ class TorchDataset(Dataset):
         return minimal_transform_list
 
 
+
+    @abstractmethod
     def get_augment_transform_list(self):
-        """ Gets list of training augmentation transforms
         """
-        raise NotImplementedError
+        Get training dataset augmentation transforms.
+
+        This is dataset-dependent.
+        """
+        pass
+
 
 
     def get_train_valid_transforms(self):
-        """ Get training and validation data transforms
-        """
+        """ Get training and validation dataset transforms. """
+
         # augment training data
         train_transform_list = self.get_augment_transform_list()
         minimal_transform_list = self.get_minimal_transform_list()
@@ -84,29 +159,52 @@ class TorchDataset(Dataset):
         return train_transform, valid_transform
 
 
+
     def get_test_transform(self):
-        """ """
+        """ Get training and validation dataset transforms. """
+
         minimal_transform_list = self.get_minimal_transform_list()
         test_transform = transforms.Compose(minimal_transform_list)
 
         return test_transform
 
 
+
+    @abstractmethod
     def get_torchvision_dataset(self):
-        """ """
-        raise NotImplementedError
+        """ Returns a torchvision dataset """
+        pass
+
 
 
     def plot_train_imgs(self, trainloader):
-        """ """
+        """
+        Plots a sample batch of training images/labels from a
+        torchvision dataset.
+
+        Args:
+            trainloader (iter):
+                iterator of input images-label pairs.
+        """
         data_iter = iter(trainloader)
-        images, labels = data_iter.next()
+        images, labels = data_iter.next() # get first batch
         images = denormalize(images, self.norm_mean, self.norm_std).clamp(min=0, max=1)
         self.plot_torch_dataset_samples(images[0:self.sample_batch], labels[0:self.sample_batch])
 
 
+
     def plot_torch_dataset_samples(self, images, true_labels, pred_labels=None):
-        """ Adapted from https://github.com/Hvass-Labs/TensorFlow-Tutorials/
+        """
+        Plot images/labels from a torchvision dataset.
+
+        Adapted from https://github.com/Hvass-Labs/TensorFlow-Tutorials/
+
+        Args:
+            images (np.array).
+            true_labels (list):
+                list of true labels.
+            pred_labels (list):
+                list of predicted labels.
         """
         assert math.sqrt(images.size(0)) % 1 == 0, 'plot_images expects a batch size which is a perfect power'
         H = int(math.sqrt(images.size(0)))
@@ -135,15 +233,39 @@ class TorchDataset(Dataset):
 
 
 class Cifar10(TorchDataset):
+    """ Class for CIFAR10 Dataset """
 
     def __init__(self, **params):
         """ """
         super().__init__(**params)
-        self.num_classes = 10
-        self.norm_mean = (0.4914, 0.4822, 0.4465)
-        self.norm_std  = (0.2470, 0.2435, 0.2616)
-        self.classes = ('airplane', 'automobile', 'bird', 'cat', 'deer',
+        self._num_classes = 10
+        self._norm_mean = (0.4914, 0.4822, 0.4465)
+        self._norm_std  = (0.2470, 0.2435, 0.2616)
+        self._classes = ('airplane', 'automobile', 'bird', 'cat', 'deer',
                         'dog', 'frog', 'horse', 'ship', 'truck')
+
+
+
+    @property
+    def num_classes(self):
+        """ """
+        return self._num_classes
+
+    @property
+    def norm_mean(self):
+        """ """
+        return self._norm_mean
+
+    @property
+    def norm_std(self):
+        """ """
+        return self._norm_std
+
+    @property
+    def classes(self):
+        """ """
+        return self._classes
+
 
 
     def get_augment_transform_list(self):
@@ -155,6 +277,7 @@ class Cifar10(TorchDataset):
         return train_transform_list
 
 
+
     def get_torchvision_dataset(self):
         """ """
         return torchvision.datasets.CIFAR10
@@ -162,14 +285,15 @@ class Cifar10(TorchDataset):
 
 
 class Cifar100(TorchDataset):
+    """ Class for CIFAR100 Dataset """
 
     def __init__(self, **params):
         """ """
         super().__init__(**params)
-        self.num_classes = 100
-        self.norm_mean = (0.5072, 0.4867, 0.4412)
-        self.norm_std  = (0.2673, 0.2564, 0.2762)
-        self.classes = ('apple', 'aquarium_fish', 'baby', 'bear', 'beaver',
+        self._num_classes = 100
+        self._norm_mean = (0.5072, 0.4867, 0.4412)
+        self._norm_std  = (0.2673, 0.2564, 0.2762)
+        self._classes = ('apple', 'aquarium_fish', 'baby', 'bear', 'beaver',
                         'bed', 'bee', 'beetle', 'bicycle', 'bottle',
                         'bowl', 'boy', 'bridge', 'bus', 'butterfly',
                         'camel', 'can', 'castle', 'caterpillar', 'cattle',
@@ -191,6 +315,29 @@ class Cifar100(TorchDataset):
                         'whale', 'willow_tree', 'wolf', 'woman', 'worm')
 
 
+
+    @property
+    def num_classes(self):
+        """ """
+        return self._num_classes
+
+    @property
+    def norm_mean(self):
+        """ """
+        return self._norm_mean
+
+    @property
+    def norm_std(self):
+        """ """
+        return self._norm_std
+
+    @property
+    def classes(self):
+        """ """
+        return self._classes
+
+
+
     def get_augment_transform_list(self):
         """ Gets list of training augmentation transforms
         """
@@ -198,6 +345,7 @@ class Cifar100(TorchDataset):
         train_transform_list += [transforms.RandomHorizontalFlip()]
 
         return train_transform_list
+
 
 
     def get_torchvision_dataset(self):
@@ -211,11 +359,32 @@ class MNIST(TorchDataset):
     def __init__(self, **params):
         """ """
         super().__init__(**params)
-        self.num_classes = 10
-        self.norm_mean = (0.1307,)
-        self.norm_std  = (0.3081,)
-        self.classes = ('0 - zero', '1 - one', '2 - two', '3 - three', '4 - four',
+        self._num_classes = 10
+        self._norm_mean = (0.1307,)
+        self._norm_std  = (0.3081,)
+        self._classes = ('0 - zero', '1 - one', '2 - two', '3 - three', '4 - four',
                         '5 - five', '6 - six', '7 - seven', '8 - eight', '9 - nine')
+
+
+    @property
+    def num_classes(self):
+        """ """
+        return self._num_classes
+
+    @property
+    def norm_mean(self):
+        """ """
+        return self._norm_mean
+
+    @property
+    def norm_std(self):
+        """ """
+        return self._norm_std
+
+    @property
+    def classes(self):
+        """ """
+        return self._classes
 
 
     def get_augment_transform_list(self):
@@ -230,35 +399,65 @@ class MNIST(TorchDataset):
 
 
 class twoD(Dataset):
-    """ This dataset can be fitted in memory and does not
+    """
+    Abstract class for 2D datasets that can be fitted in memory and do not
     require torchvision.
     """
 
     def __init__(self, **params):
         """ """
         super().__init__(**params)
-        self.is_user_dataset = True
-        self.num_classes = 2
+        self._is_user_dataset = True
+        self._num_classes = 2
         self.rect_side = 2
         self.test_grid = 0.01
         self.grid_arange = torch.arange(-1 + self.test_grid/2, 1, self.test_grid)
 
 
-    def get_labels(self, inputs):
+    @property
+    def is_user_dataset(self):
         """ """
-        raise NotImplementedError
+        return self._is_user_dataset
+
+
+    @property
+    def num_classes(self):
+        """ """
+        return self._num_classes
+
+
+
+    @abstractmethod
+    def get_labels(self, inputs):
+        """ 
+        Generate dataset labels for a set of inputs.
+
+        Args:
+            inputs (torch.Tensor).
+        Returns:
+            labels (torch.Tensor).
+        """
+        pass
+
 
 
     def generate_set(self, nb_samples):
-        """ """
+        """ 
+        Generate training or validation dataset.
+
+        Args:
+            num_samples (int).
+        """
         inputs = torch.empty(nb_samples, 2).uniform_(-self.rect_side/2, self.rect_side/2)
         labels = self.get_labels(inputs)
 
         return inputs, labels
 
 
+
     def get_test_set(self):
-        """ """
+        """ Generate test dataset """
+
         grid_x, grid_y = torch.meshgrid(self.grid_arange, self.grid_arange)
 
         inputs = torch.cat((grid_x.reshape(-1, 1), grid_y.reshape(-1, 1)), dim=1)
@@ -267,9 +466,12 @@ class twoD(Dataset):
         return inputs, labels
 
 
+
     def init_plot_dict(self, mode='test'):
-        """ """
+        """ Init plot dictionary """
+
         return {'inputs' : [], 'outputs' : []}
+
 
 
     def add_to_plot_dict(self, plot_dict, batch_data):
@@ -277,6 +479,7 @@ class twoD(Dataset):
 
         plot_dict['inputs'].append(batch_data[0])
         plot_dict['outputs'].append(batch_data[1])
+
 
 
     def concatenate_plot_dict(self, plot_dict):
@@ -288,9 +491,25 @@ class twoD(Dataset):
         return inputs, outputs
 
 
-    def plot_train_imgs(self, inputs, labels):
-        """ Plot train images (scatter plot)
+
+    @abstractmethod
+    def add_gtruth_contour(self, ax, mode):
+        """ 
+        Add contour of gtruth to plot.
+
+        Args:
+            ax (matplotlib.axes): 
+                plot axes.
+            mode (str):
+                'train' or 'test' (determines color).
         """
+        pass
+
+
+
+    def plot_train_imgs(self, inputs, labels):
+        """ Plot training images (scatter plot) """
+
         check_device(inputs, labels, dev='cpu')
 
         inputs, labels = inputs.numpy(), labels.numpy()
@@ -312,9 +531,10 @@ class twoD(Dataset):
         self.finalize_imgs(ax, 'train')
 
 
+
     def plot_test_imgs(self, inputs, probs):
-        """ Plot output probability map
-        """
+        """ Plot output test probability map """
+
         check_device(inputs, probs, dev='cpu')
 
         x_idx = (inputs[:, 0] + self.rect_side/2).div(self.test_grid).floor().to(torch.int64)
@@ -336,8 +556,9 @@ class twoD(Dataset):
         self.finalize_imgs(ax, 'test')
 
 
+
     def finalize_imgs(self, ax, mode):
-        """ """
+        """ Finalize image plotting """
         assert mode in ['train', 'test']
 
         cb = plt.colorbar(fraction=0.046, pad=0.04)
@@ -366,7 +587,7 @@ class twoD(Dataset):
 
 
 class Circle(twoD):
-    """ """
+    """ Class for a 2D circle dataset """
 
     def __init__(self, **params):
         """ """
@@ -374,16 +595,33 @@ class Circle(twoD):
         self.radius_sq = self.rect_side ** 2 / (2 * math.pi) # circle_area = rect_area/2
 
 
+
     def get_labels(self, inputs):
-        """ """
+        """ 
+        Generate dataset labels for a set of inputs.
+
+        Args:
+            inputs (torch.Tensor).
+        Returns:
+            labels (torch.Tensor).
+        """
         inputs_radius_sq = (inputs ** 2).sum(1)
         labels = (inputs_radius_sq < self.radius_sq).to(torch.float32)
 
         return labels
 
 
+
     def add_gtruth_contour(self, ax, mode):
-        """ """
+        """ 
+        Add contour of circle to plot.
+
+        Args:
+            ax (matplotlib.axes): 
+                plot axes.
+            mode (str):
+                'train' or 'test' (determines color).
+        """
         assert mode in ['train', 'test']
 
         color = 'black' if mode == 'train' else 'chocolate'
@@ -395,7 +633,7 @@ class Circle(twoD):
 
 
 class S_shape(twoD):
-    """ """
+    """ Class for a 2D circle dataset """
 
     def __init__(self, **params):
         """ """
@@ -406,7 +644,12 @@ class S_shape(twoD):
 
 
     def sin_func(self, t, type_):
-        """ """
+        """ Shifted sin_func for boundaries of s_shape.
+
+        Args:
+            t (torch.Tensor): input values.
+            type_ (str): 'upper' or 'lower'.
+        """
         assert type_ in ['upper', 'lower']
 
         if type_ == 'upper':
@@ -415,11 +658,20 @@ class S_shape(twoD):
             return self.base_sin(t) - self.sin_shift
 
 
+
     def get_labels(self, inputs):
-        """ """
+        """ 
+        Generate dataset labels for a set of inputs.
+
+        Args:
+            inputs (torch.Tensor).
+        Returns:
+            labels (torch.Tensor).
+        """
         x, y = inputs[:, 0].numpy(), inputs[:, 1].numpy()
 
-        in_sin = np.logical_and(x > self.sin_func(y, 'lower'), x < self.sin_func(y, 'upper')) # within the two sinusoids
+        # within the two sinusoids
+        in_sin = np.logical_and(x > self.sin_func(y, 'lower'), x < self.sin_func(y, 'upper'))
         in_boundaries = (np.abs(y) < self.y_cutoff)  # within y boundaries
 
         np_labels = np.logical_and(in_sin, in_boundaries).astype(np.float32)
@@ -427,8 +679,17 @@ class S_shape(twoD):
         return torch.from_numpy(np_labels)
 
 
+
     def add_gtruth_contour(self, ax, mode):
-        """ """
+        """ 
+        Add contour of s-shape to plot.
+
+        Args:
+            ax (matplotlib.axes): 
+                plot axes.
+            mode (str):
+                'train' or 'test' (determines color).
+        """
         assert mode in ['train', 'test']
 
         color = 'black' if mode == 'train' else 'chocolate'

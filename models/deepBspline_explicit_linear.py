@@ -22,17 +22,19 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
     def __init__(self, bias=True, **kwargs):
         """
         Args:
-            bias : (flag) learn bias (default: True)
+            bias (bool):
+                if True, learn bias in the linear term.
         """
         super().__init__(**kwargs)
-        self.learn_bias = bias # flag
+        self.learn_bias = bias
 
         # tensor with locations of spline coefficients
         grid_tensor = self.grid_tensor # size: (num_activations, size)
         coefficients = torch.zeros_like(grid_tensor) # spline coefficients
-        # linear coefficients
-        spline_bias = torch.zeros(self.num_activations).to(**self.device_type) # b0
-        spline_weight = torch.zeros_like(spline_bias) # b1
+
+        # linear term coefficients (b0, b1)
+        spline_bias = torch.zeros(self.num_activations).to(**self.device_type)
+        spline_weight = torch.zeros_like(spline_bias)
 
         if self.init == 'leaky_relu':
             spline_weight.fill_(0.01) # b1 = 0.01
@@ -59,7 +61,9 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
             raise ValueError('init should be in [leaky_relu, relu, even_odd].')
 
         # Need to vectorize coefficients to perform specific operations
-        self._coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
+        # size: (num_activations*size)
+        self._coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1))
+
         self.spline_weight = nn.Parameter(spline_weight) # size: (num_activations,)
 
         if self.learn_bias is True:
