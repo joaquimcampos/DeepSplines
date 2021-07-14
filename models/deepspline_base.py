@@ -127,26 +127,22 @@ class DeepSplineBase(ABC, nn.Module):
 
 
 
-    def fZerofOne(self):
-        """ Computes (f(0), f(1))"""
+    def fZerofOneAbs(self, **kwargs):
+        """
+        Computes |f(0)| + |f(1)| where f is a deepspline activation.
+
+        Required for the BV(2) regularization.
+        """
         zero_one_vec = torch.tensor([0, 1]).view(-1, 1).to(**self.device_type)
         zero_one_vec = zero_one_vec.expand((-1, self.num_activations))
 
         if self.mode == 'conv':
             zero_one_vec = zero_one_vec.unsqueeze(-1).unsqueeze(-1) # 4D
 
-        out_vec = self.forward(zero_one_vec)
+        fzero_fone = self.forward(zero_one_vec)
+
         if self.mode == 'conv':
-            out_vec = out_vec.squeeze(-1).squeeze(-1) # (2, num_activations)
-        assert out_vec.size() == (2, self.num_activations)
+            fzero_fone = fzero_fone.squeeze(-1).squeeze(-1) # (2, num_activations)
+        assert fzero_fone.size() == (2, self.num_activations)
 
-        return out_vec
-
-
-    def fZerofOneAbs(self, **kwargs):
-        """ Computes the lipschitz regularization: |f(0)| + |f(1)|
-        """
-        out_vec = self.fZerofOne()
-        lipschitz_vec = out_vec.abs().sum(0)
-
-        return lipschitz_vec
+        return fzero_fone.abs().sum(0)
