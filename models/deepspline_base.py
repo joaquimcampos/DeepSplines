@@ -1,14 +1,11 @@
 import torch
 from torch import nn
-from torch import Tensor
-import numpy as np
-from scipy.linalg import toeplitz
 from abc import ABC, abstractproperty
 
 
 class DeepSplineBase(ABC, nn.Module):
     """
-    Parent class for DeepSpline activations (deepReLU/deepBspline)
+    Abstract class for DeepSpline activations (deepReLU/deepBspline)
 
     Args:
         mode (str):
@@ -43,7 +40,7 @@ class DeepSplineBase(ABC, nn.Module):
         self.init = init
         self.device = device
         self.dtype = dtype
-        self.grid = Tensor([grid]).to(**self.device_type)
+        self.grid = torch.Tensor([grid]).to(**self.device_type)
 
 
 
