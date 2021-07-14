@@ -1,4 +1,4 @@
-'''
+"""
 ResNet for CIFAR.
 
 Reference:
@@ -8,7 +8,7 @@ Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
 Based on:
 - https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 - https://github.com/akamaster/pytorch_resnet_cifar10
-'''
+"""
 
 import torch
 import torch.nn as nn

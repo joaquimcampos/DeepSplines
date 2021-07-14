@@ -1,4 +1,4 @@
-'''
+"""
 Network-in-Network for CIFAR.
 
 Reference:
@@ -9,7 +9,7 @@ Based on:
 - https://github.com/jiecaoyu/pytorch-nin-cifar10/blob/master/original.py
 - https://github.com/forestagostinelli/Learned-Activation-Functions-Source/
 blob/master/examples/cifar100/NIN/baseline/train_test1.prototxt
-'''
+"""
 
 import torch
 import torch.nn as nn
@@ -20,11 +20,11 @@ __all__ = ['NiNCifar']
 
 
 class NiNCifar(BaseModel):
-    '''
+    """
     Network-in-Network for CIFAR classification.
 
     CIFAR input size: N x 3 x 32 x 32.
-    '''
+    """
 
     def __init__(self, **params):
 

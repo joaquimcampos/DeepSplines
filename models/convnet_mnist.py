@@ -1,4 +1,4 @@
-'''Simple convolutional network for MNIST. '''
+""" Simple convolutional network for MNIST. """
 
 import torch
 import torch.nn as nn

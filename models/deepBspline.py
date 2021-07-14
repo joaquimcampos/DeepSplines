@@ -1,4 +1,9 @@
-""" See deepBspline_base.py.
+"""
+This module implements deepBsplines with an added explicit linear term,
+giving more flexibility to the activations (might produce better results)
+in some contexts.
+
+(For more details, see deepBspline_base.py.)
 """
 
 import torch
@@ -9,8 +14,8 @@ from models.deepBspline_base import DeepBSplineBase
 
 
 class DeepBSpline(DeepBSplineBase):
-    """ See deepBspline_base.py
-    """
+    """ nn.Module for DeepBspline activation functions. """
+
     def __init__(self, **kwargs):
 
         super().__init__(**kwargs)
@@ -41,6 +46,7 @@ class DeepBSpline(DeepBSplineBase):
         self.coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
 
 
+
     @property
     def coefficients_vect_(self):
         return self.coefficients_vect
@@ -51,19 +57,26 @@ class DeepBSpline(DeepBSplineBase):
         yield 'coefficients_vect'
 
 
+
     def forward(self, input):
         """
         Args:
-            input : 2D/4D tensor
+            input (torch.Tensor):
+                2D or 4D, depending on weather the layer is
+                convolutional ('conv') or fully-connected ('fc')
+
+        Returns:
+            output (torch.Tensor)
         """
         output = super().forward(input)
 
         return output
 
 
+
     def extra_repr(self):
-        """ repr for print(model)
-        """
+        """ repr for print(model) """
+
         s = ('mode={mode}, num_activations={num_activations}, '
             'init={init}, size={size}, grid={grid[0]}.')
 

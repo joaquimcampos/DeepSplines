@@ -1,9 +1,9 @@
-""" See deepBspline_base.py.
+"""
+This module implements deepBsplines with an added explicit linear term,
+giving more flexibility to the activations (might produce better results)
+in some contexts.
 
-In practice, giving deepsplines extra flexibility --- by adding an explicit
-linear term to the activation --- helps.
-
-deepBspline_explicit_linear.py = deepBspline.py + explicit linear term
+(For more details, see deepBspline_base.py.)
 """
 
 import torch
@@ -14,14 +14,16 @@ from models.deepBspline_base import DeepBSplineBase
 
 
 class DeepBSplineExplicitLinear(DeepBSplineBase):
-    """ See deepBspline_base.py
-
-    Args:
-        bias : (flag) learn bias (default: True)
-        weight: (flag) learn weight (default: True)
     """
-    def __init__(self, bias=True, **kwargs):
+    nn.Module for DeepBspline activation functions with an added
+    linear term.
+    """
 
+    def __init__(self, bias=True, **kwargs):
+        """
+        Args:
+            bias : (flag) learn bias (default: True)
+        """
         super().__init__(**kwargs)
         self.learn_bias = bias # flag
         # used to save state
@@ -68,6 +70,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
             self.spline_bias = spline_bias
 
 
+
     @property
     def coefficients_vect_(self):
         return self.coefficients_vect
@@ -92,7 +95,12 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
     def forward(self, input):
         """
         Args:
-            input : 2D/4D tensor
+            input (torch.Tensor):
+                2D or 4D, depending on weather the layer is
+                convolutional ('conv') or fully-connected ('fc')
+
+        Returns:
+            output (torch.Tensor)
         """
         input_size = input.size()
         output = super().forward(input)
@@ -108,8 +116,8 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
 
 
     def extra_repr(self):
-        """ repr for print(model)
-        """
+        """ repr for print(model) """
+
         s = ('mode={mode}, num_activations={num_activations}, init={init}, '
             'size={size}, grid={grid[0]}, bias={learn_bias}.')
 

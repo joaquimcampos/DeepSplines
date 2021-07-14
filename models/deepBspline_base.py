@@ -1,15 +1,17 @@
-""" This code implements linear splines activation functions.
+"""
+This module provides the base class for deepBspline activation functions.
 
 A linear spline activation with parameters {a_k} and b1, b0, with knots placed
-on a grid of spacing T, is described as:
+on a grid of spacing T can be represented as:
 deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
 
 The ReLU representation is not well-conditioned and leads to an exponential growth
 with the number of coefficients of the computational and memory requirements for
 training the network.
-In this module, we use an alternative B1 spline representation for the activations.
-the number of b-spline coefficients exceed the number of ReLU coefficients by 2,
-such that len(a) + len((b1, b_0)) = len(c), so we have the same total amount of parameters.
+In this module, we use an alternative B1-spline representation for the activations.
+the number of B-spline coefficients exceeds the number of ReLU coefficients by 2,
+such that len(a) + len((b1, b_0)) = len(c), so as have the same total amount of
+parameters.
 
 The coefficients of the ReLU can be computed via:
 a = Lc, where L is a second finite difference matrix.
@@ -20,18 +22,11 @@ nullspace of the L second finite-difference matrix.
 In other words, two sets of coefficients [c], [c'] which are related by
 a linear term, give the same ReLU coefficients [a].
 Outside a region of interest, the activation is computed via left and right
-linear extrapolations using the two leftmost and rightmost coefficients, respectively.
+linear extrapolations using the two leftmost and rightmost coefficients,
+respectively.
 
 The regularization term applied to this function is:
 TV(2)(deepsline) = ||a||_1 = ||Lc||_1
-
-For the theoretical motivation and optimality results,
-please see https://arxiv.org/abs/1802.09210.
-
-For more information, please read the original deepspline network paper.
-For any queries email: joaquim.campos@epfl.ch or harshit.gupta@epfl.ch.
-Copyright 2020, Joaquim Campos & Harshit Gupta, All right reserved.
-The user is free to use and edit the code.
 """
 
 import torch
@@ -46,7 +41,7 @@ from models.deepspline_base import DeepSplineBase
 
 class DeepBSpline_Func(torch.autograd.Function):
     """
-    Autograd function to only backpropagate through the triangles that were used
+    Autograd function to only backpropagate through the B-splines that were used
     to calculate output = activation(input), for each element of the input.
 
     If save_memory=True, use a memory efficient version at the expense of
@@ -152,6 +147,7 @@ class DeepBSplineBase(DeepSplineBase):
     """
     Parent class for DeepBSpline activations (deepBspline/deepBspline_explicit_Linear)
     """
+
     def __init__(self, save_memory=False, **kwargs):
         """
         Args:

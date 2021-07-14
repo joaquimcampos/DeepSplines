@@ -1,5 +1,6 @@
-""" This code creates a linear spline activation function, parameterized by a
-ReLU expansion + linear term.
+"""
+This module implements deepReLU activation functions, which are
+given by a sum of ReLUs with learnable slopes and a learnable linear term.
 
 A linear spline activation with ReLU parameters {a_k},
 linear parameters b1, b0, and knot locations {z_k} is described as:
@@ -14,9 +15,9 @@ A linear spline activation with parameters {a_k} and b1, b0, with knots placed
 on a grid of spacing T, is described as:
 deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
 
-Preference should be given to Deepspline moydule which use
+Preference should be given to DeepBspline modules which use
 an alternative B-spline representation for the linear spline.
-For more details, see deepspline_base.py
+(For more details, see deepBspline_base.py)
 """
 
 import torch
@@ -27,12 +28,19 @@ from models.deepspline_base import DeepSplineBase
 
 
 class DeepReLU(DeepSplineBase):
-    """ See deepspline_base.py
-
-    Args:
-        bias : (flag) learn bias (default: True)
     """
+    Class for DeepReLU activation functions.
+
+    This activation is a sum of ReLUs with learnable slopes and
+    a learnable linear term.
+    """
+
     def __init__(self, bias=True, **kwargs):
+        """
+        Args:
+            bias (bool):
+                if True, learn bias in the deeprelu expansion.
+        """
 
         super().__init__(**kwargs)
         self.num_relus = self.size - 2
@@ -149,7 +157,7 @@ class DeepReLU(DeepSplineBase):
 
 
     def extra_repr(self):
-        """ repr for print(model)"""
+        """ repr for print(model) """
 
         s = ('mode={mode}, num_activations={num_activations}, init={init}, '
             'num_relus={num_relus}, grid={grid[0]}, {bias}: {learn_bias}.')
