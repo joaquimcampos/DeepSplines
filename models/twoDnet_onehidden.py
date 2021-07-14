@@ -27,7 +27,7 @@ class TwoDNet_OneHidden(BaseModel):
             bias = False
 
         self.fc1 = nn.Linear(2, hidden, bias=bias)
-        activation_specs.append(('linear', hidden))
+        activation_specs.append(('fc', hidden))
         self.fc2 = nn.Linear(hidden, 1)
         self.sigmoid = nn.Sigmoid()
 

@@ -49,7 +49,7 @@ class DeepBSpline_Func(torch.autograd.Function):
     Autograd function to only backpropagate through the triangles that were used
     to calculate output = activation(input), for each element of the input.
 
-    Note: if save_memory=True, we use a memory efficient version, at the expense of
+    If save_memory=True, use a memory efficient version at the expense of
     some additional running time.
     """
 
@@ -149,7 +149,8 @@ class DeepBSpline_Func(torch.autograd.Function):
 
 
 class DeepBSplineBase(DeepSplineBase):
-    """ See deepspline_base.py
+    """
+    Parent class for DeepBSpline activations (deepBspline/deepBspline_explicit_Linear)
     """
     def __init__(self, save_memory=False, **kwargs):
         """
@@ -180,6 +181,30 @@ class DeepBSplineBase(DeepSplineBase):
         # Derivative filters
         self.D1_filter = Tensor([-1,1]).view(1,1,2).to(**self.device_type).div(self.grid)
         self.D2_filter = Tensor([1,-2,1]).view(1,1,3).to(**self.device_type).div(self.grid)
+
+
+    @property
+    def grid_tensor(self):
+        """
+        Locations of B-spline coefficients.
+        """
+        return self.get_grid_tensor(self.size, self.grid)
+
+
+    def get_grid_tensor(self, size_, grid_):
+        """
+        Creates a 2D grid tensor of size (num_activations, size)
+        with the locations of the B-spline coefficients.
+
+        Args:
+            size (odd int): number of B-spline coefficients
+            grid (float): spacing between B-spline basis elements.
+        """
+        grid_arange = torch.arange(-(size_//2),
+                                    (size_//2)+1).to(**self.device_type).mul(grid_)
+        grid_tensor = grid_arange.expand((self.num_activations, size_))
+
+        return grid_tensor
 
 
     @abstractproperty
@@ -221,7 +246,7 @@ class DeepBSplineBase(DeepSplineBase):
     def reshape_forward(self, input):
         """ """
         input_size = input.size()
-        if self.mode == 'linear':
+        if self.mode == 'fc':
             if len(input_size) == 2:
                 # one activation per conv channel
                 x = input.view(*input_size, 1, 1) # transform to 4D size (N, num_units=num_activations, 1, 1)
@@ -239,7 +264,7 @@ class DeepBSplineBase(DeepSplineBase):
 
     def reshape_back(self, output, input_size):
         """ """
-        if self.mode == 'linear':
+        if self.mode == 'fc':
             output = output.view(*input_size) # transform back to 2D size (N, num_units)
 
         return output
@@ -283,20 +308,6 @@ class DeepBSplineBase(DeepSplineBase):
 
 
 
-    def reset_first_coefficients_grad(self):
-        """ """
-        first_knots_indexes = torch.cat((self.zero_knot_indexes - self.size//2,
-                                    self.zero_knot_indexes - self.size//2 + 1))
-        first_knots_indexes = first_knots_indexes.long()
-
-        zeros = torch.zeros_like(first_knots_indexes).float()
-        if not self.coefficients_vect_[first_knots_indexes].allclose(zeros):
-            raise AssertionError('First coefficients are not zero...')
-
-        self.coefficients_vect_.grad[first_knots_indexes] = zeros
-
-
-
     def apply_threshold(self, threshold):
         """ See DeepSplineBase.apply_threshold method
         """
@@ -304,3 +315,23 @@ class DeepBSplineBase(DeepSplineBase):
             new_slopes = super().apply_threshold(threshold)
             self.coefficients_vect_.data = \
                 self.iterative_slopes_to_coefficients(new_slopes).view(-1)
+
+
+
+    def iterative_slopes_to_coefficients(self, slopes):
+        """
+        Well-conditioned way to transform slopes to coefficients.
+
+        This way, if we set a slope to zero, we can do (b0,b1,a)->c->a'
+        and still have the same slope being practically equal to zero.
+        This might not be the case if we do: a' = L(P(b0,b1,a)), where
+        P and L are linear transformations, because LP is not well-conditioned.
+        """
+        coefficients = self.coefficients
+        coefficients[:, 2::] = 0. # first two coefficients remain the same
+
+        for i in range(2, self.size):
+            coefficients[:, i] = (coefficients[:, i-1] - coefficients[:, i-2]) + \
+                                    slopes[:, i-2].mul(self.grid) + coefficients[:, i-1]
+
+        return coefficients

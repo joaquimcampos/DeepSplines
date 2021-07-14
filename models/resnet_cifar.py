@@ -43,7 +43,7 @@ class BasicBlock(BaseModel):
         super().__init__(**params)
 
         self.dropout_rate = 0 # change if needed
-        # stores layer type ('conv'/'linear') and number of channels for each activation layer
+        # stores layer type ('conv'/'fc') and number of channels for each activation layer
         activation_specs = []
 
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1

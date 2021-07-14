@@ -56,7 +56,7 @@ class BaseModel(nn.Module):
             activation_specs (list):
                 list of pairs ('layer_type', num_channels/neurons);
                 len(activation_specs) = number of activation layers;
-                e.g., [('conv', 64), ('linear', 100)].
+                e.g., [('conv', 64), ('fc', 100)].
 
             bias (bool):
                 explicit bias;
@@ -109,7 +109,7 @@ class BaseModel(nn.Module):
             activation_specs :
                 list of pairs ('layer_type', num_channels/neurons);
                 len(activation_specs) = number of activation layers.
-                e.g., [('conv', 64), ('linear', 100)].
+                e.g., [('conv', 64), ('fc', 100)].
 
         Returns:
             activations (nn.ModuleList)

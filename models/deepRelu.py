@@ -53,7 +53,7 @@ class DeepReLU(DeepSplineBase):
         # by default, there is no knot discovery. If it is desired to
         # have knot discovery, set knot_loc as a nn.Parameter.
         self.knot_loc = knot_loc # knot locations are not parameters
-        
+
         if self.init == 'leaky_relu':
             spline_weight.fill_(0.01) # b1 = 0.01
             zero_knot_idx = self.num_relus // 2
@@ -75,6 +75,7 @@ class DeepReLU(DeepSplineBase):
             self.spline_bias = spline_bias
 
 
+
     @staticmethod
     def parameter_names(**kwargs):
         """ """
@@ -88,12 +89,6 @@ class DeepReLU(DeepSplineBase):
     @property
     def bias(self):
         return self.spline_bias
-
-    @property
-    def coefficients(self):
-        """ """
-        with torch.no_grad():
-            return (self.P @ self.deepRelu_coefficients.unsqueeze(-1)).squeeze(-1)
 
     @property
     def slopes(self):
@@ -119,7 +114,7 @@ class DeepReLU(DeepSplineBase):
             x : 4D input
         """
         input_size = input.size()
-        if self.mode == 'linear':
+        if self.mode == 'fc':
             if len(input_size) == 2:
                 # one activation per conv channel
                 x = input.view(*input_size, 1, 1) # transform to 4D size (N, num_units=num_activations, 1, 1)
@@ -148,7 +143,7 @@ class DeepReLU(DeepSplineBase):
         out_linear = b0 + b1 * x
         output = out_relu + out_linear
 
-        if self.mode == 'linear':
+        if self.mode == 'fc':
             return output.view(*input_size) # transform back to 2D size (N, num_units)
 
         return output

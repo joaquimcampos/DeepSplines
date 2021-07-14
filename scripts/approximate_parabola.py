@@ -86,7 +86,7 @@ if __name__ == "__main__":
     grid = spline_grid_from_range(size, args.spline_range)
 
     parab_range = 1
-    args_dict = {'mode': 'linear', 'num_activations': 1,
+    args_dict = {'mode': 'fc', 'num_activations': 1,
                 'bias': not args.no_bias,
                 'size': size, 'grid': grid,
                 'init': args.init, 'device': args.device}

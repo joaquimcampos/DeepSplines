@@ -49,7 +49,7 @@ def get_arg_parser():
     parser.add_argument('--spline_range', metavar='FLOAT,>0', type=ArgCheck.p_float,
                         help=f'Range of spline representation. Default: {default_values["spline_range"]}.')
     parser.add_argument('--save_memory', action='store_true',
-                        help='Use a memory-efficient deepsplines version (for deepBsplines only), '
+                        help='Use a memory-efficient deepsplines version (for deepBsplines only) '
                             'at the expense of additional running time.')
     parser.add_argument('--knot_threshold', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
                         help='If nonzero, sparsify activations by eliminating knots whose slope '
