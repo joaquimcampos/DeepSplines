@@ -429,7 +429,7 @@ class twoD(Dataset):
 
     @abstractmethod
     def get_labels(self, inputs):
-        """ 
+        """
         Generate dataset labels for a set of inputs.
 
         Args:
@@ -442,7 +442,7 @@ class twoD(Dataset):
 
 
     def generate_set(self, nb_samples):
-        """ 
+        """
         Generate training or validation dataset.
 
         Args:
@@ -494,11 +494,11 @@ class twoD(Dataset):
 
     @abstractmethod
     def add_gtruth_contour(self, ax, mode):
-        """ 
+        """
         Add contour of gtruth to plot.
 
         Args:
-            ax (matplotlib.axes): 
+            ax (matplotlib.axes):
                 plot axes.
             mode (str):
                 'train' or 'test' (determines color).
@@ -597,7 +597,7 @@ class Circle(twoD):
 
 
     def get_labels(self, inputs):
-        """ 
+        """
         Generate dataset labels for a set of inputs.
 
         Args:
@@ -613,11 +613,11 @@ class Circle(twoD):
 
 
     def add_gtruth_contour(self, ax, mode):
-        """ 
+        """
         Add contour of circle to plot.
 
         Args:
-            ax (matplotlib.axes): 
+            ax (matplotlib.axes):
                 plot axes.
             mode (str):
                 'train' or 'test' (determines color).
@@ -660,7 +660,7 @@ class S_shape(twoD):
 
 
     def get_labels(self, inputs):
-        """ 
+        """
         Generate dataset labels for a set of inputs.
 
         Args:
@@ -681,11 +681,11 @@ class S_shape(twoD):
 
 
     def add_gtruth_contour(self, ax, mode):
-        """ 
+        """
         Add contour of s-shape to plot.
 
         Args:
-            ax (matplotlib.axes): 
+            ax (matplotlib.axes):
                 plot axes.
             mode (str):
                 'train' or 'test' (determines color).

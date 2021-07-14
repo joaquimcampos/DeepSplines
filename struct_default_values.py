@@ -61,9 +61,8 @@ structure = {   'log_dir' : None,
                     'data_dir' : None,
                     'batch_size' : None,
                     'num_workers' : None,
-                    'train' :
-                        {'seed' : None,
-                         'test_as_valid' : None},
+                    'test_as_valid' : None,
+                    'seed' : None
                     },
                 'model':
                     {

@@ -191,7 +191,7 @@ class Manager(Project):
             self.params['valid_log_step'] = self.num_batches['train']
 
         print('\n==> Preparing data..')
-        self.dataloader = DataLoader(self.dataset, mode='train', **self.params['dataloader'])
+        self.dataloader = DataLoader(self.dataset, **self.params['dataloader'])
         self.trainloader, self.validloader = self.dataloader.get_train_valid_loader()
 
         self.save_train_info()
@@ -408,7 +408,7 @@ class Manager(Project):
         self.net.eval()
 
         print('\n==> Preparing data..')
-        self.dataloader = DataLoader(self.dataset, mode='test', **self.params['dataloader'])
+        self.dataloader = DataLoader(self.dataset, **self.params['dataloader'])
         self.testloader = self.dataloader.get_test_loader()
 
         if self.params['verbose']:

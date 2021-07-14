@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
-# References:
-# [1] https://github.com/kuangliu/pytorch-cifar
-# [2] https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
-# [3] https://gist.github.com/kevinzakka/d33bf8d6c7f06a9d8c76d97a7879f5cb
+"""
+Dataloader module.
+
+Based on:
+- https://github.com/kuangliu/pytorch-cifar
+- https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+- https://gist.github.com/kevinzakka/d33bf8d6c7f06a9d8c76d97a7879f5cb
+"""
 
 import os
 import torch
@@ -12,40 +16,50 @@ import numpy as np
 
 
 class DataLoader():
-    """ """
 
-    def __init__(self, dataset, mode='train', data_dir='./data', batch_size=64,
-                num_workers=4, train=None, **kwargs):
+    def __init__(self, dataset, data_dir='./data', batch_size=64,
+                test_as_valid=False, seed=-1, num_workers=4, **kwargs):
         """
-
         Args:
-            dataset: Dataset class instance (datasets.py)
-            mode: 'train' or 'test'
-            data_dir: path directory where data is stored
+            dataset (Dataset):
+                instance of Dataset class (datasets.py).
+            data_dir (str):
+                directory where data is stored.
+            batch_size (int):
+                batch size for neural network.
+            num_workers (int):
+                number of subprocesses to use for data loading.
+            test_as_valid (bool):
+                If true, use test set as validation set.
+            seed (int):
+                Set seed if seed >= 0.
         """
-        assert mode in ['train', 'test'], 'mode should be "train" or "test".'
-
-        self.mode = mode
         self.dataset = dataset
         self.data_dir = data_dir
         self.batch_size = batch_size
+        self.test_as_valid = test_as_valid
+        self.seed = seed
         self.num_workers = num_workers
         self.pin_memory = torch.cuda.is_available()
-
-        if self.mode == 'train':
-            self.train_params = train
 
 
 
     def get_dataset_dir(self):
-        """ Returns self.data_dir/self.dataset/
-        """
+        """ Returns data_dir/dataset_name/ """
+
         return os.path.join(self.data_dir, self.dataset.name)
 
 
 
     def get_loader_in_memory(self, inputs, labels, batch_size=None):
-        """ Split the data in batches
+        """
+        Split the data in batches.
+
+        Args:
+            inputs (torch.Tensor)
+            labels (torch.Tensor)
+            batch_size (int):
+                loader batch size. If None, self.batch_size is used.
         """
         minibatch = self.batch_size if batch_size is None else batch_size
         dataloader = list(zip(inputs.split(minibatch), labels.split(minibatch)))
@@ -55,7 +69,12 @@ class DataLoader():
 
 
     def shuffle_data_in_memory(self, inputs, labels):
-        """ Shuffle data when tensors are in memory
+        """
+        Shuffle data when tensors are in memory.
+
+        Args:
+            inputs (torch.Tensor)
+            labels (torch.Tensor)
         """
         permutation_idx = torch.randperm(inputs.size(0))
         inputs = torch.index_select(inputs, 0, permutation_idx)
@@ -66,9 +85,10 @@ class DataLoader():
 
 
     def get_shuffled_trainloader_in_memory(self):
-        """ Get reshufled trainloader when tensors are in memory
+        """
+        Get reshufled trainloader when tensors are in memory.
 
-        Splits the data in random batches
+        Shuffles the data and splits it in batches.
         """
         train_inputs, train_labels = self.shuffle_data_in_memory(self.train_inputs, self.train_labels)
         trainloader = self.get_loader_in_memory(train_inputs, train_labels)
@@ -78,8 +98,8 @@ class DataLoader():
 
 
     def load_dataset_in_memory(self, mode):
-        """ Load dataset saved in memory
-        """
+        """ Load dataset saved in memory """
+
         assert mode in ['train', 'valid', 'test']
 
         dataset_dir = self.get_dataset_dir()
@@ -97,11 +117,17 @@ class DataLoader():
 
 
     def get_train_valid_loader(self, shuffle=True):
-        """ Get the training and validation loaders (iterators) for batch training.
+        """
+        Get the training and validation loaders for batch training.
 
+        Args:
+            shuffle (bool):
+                If true, shuffle the data.
         Returns:
-            trainloader: training set iterator
-            validloader: validation set iterator
+            trainloader (iter):
+                training set iterator.
+            validloader (iter):
+                validation set iterator.
         """
         if self.dataset.is_user_dataset is True:
 
@@ -120,10 +146,11 @@ class DataLoader():
         train_dataset = torchvision_dataset(self.get_dataset_dir(), train=True,
                                         download=True, transform=train_transform)
 
-        if self.train_params['test_as_valid']:
+        if self.test_as_valid:
             # use test dataset for validation
             trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=self.batch_size,
-                                    shuffle=True, num_workers=self.num_workers, pin_memory=self.pin_memory)
+                                                    shuffle=True, num_workers=self.num_workers,
+                                                    pin_memory=self.pin_memory)
             validloader = self.get_test_loader()
         else:
             # sampler train/val split: valid_dataset will be a subset of the training data
@@ -132,16 +159,19 @@ class DataLoader():
 
             train_indices, valid_indices = self.get_split_indices(train_dataset, shuffle)
 
-            train_sampler = SubsetRandomSampler(train_indices) # sample elements randomly, without replacement from train_indices
+            # sample elements randomly, without replacement from train_indices
+            train_sampler = SubsetRandomSampler(train_indices)
             valid_sampler = SubsetRandomSampler(valid_indices)
 
             # in Dataloader shuffle=False since we already shuffle the train/valid datasets
             # through shuffling the indices and using SubsetRandomSampler
             trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=self.batch_size,
-                                sampler=train_sampler, num_workers=self.num_workers, pin_memory=self.pin_memory)
+                                                        sampler=train_sampler, num_workers=self.num_workers,
+                                                        pin_memory=self.pin_memory)
 
             validloader = torch.utils.data.DataLoader(valid_dataset, batch_size=self.batch_size,
-                                sampler=valid_sampler, num_workers=self.num_workers, pin_memory=self.pin_memory)
+                                                        sampler=valid_sampler, num_workers=self.num_workers,
+                                                        pin_memory=self.pin_memory)
 
 
         if self.dataset.plot_imgs:
@@ -152,10 +182,12 @@ class DataLoader():
 
 
     def get_split_indices(self, train_dataset, shuffle=True):
-        """ Get training and validation random split indices.
+        """
+        Get training and validation random split indices.
 
         The number of validation samples (indices) is a small fraction of the
-        total training_dataset. The remaining indices correspond to the training data.
+        total training_dataset. The remaining indices correspond to the
+        training data.
         """
         num_train_samples = len(train_dataset)
         indices = list(range(num_train_samples))
@@ -165,9 +197,9 @@ class DataLoader():
         split = int(np.floor(valid_fraction * num_train_samples))
 
         if shuffle:
-            seed = self.train_params['seed']
-            seed = seed if seed >= 0 else 0
-            np.random.seed(seed) # random seed so that validation data is always the same throughout training
+            if self.seed >= 0:
+                # random seed so that validation data is always the same throughout training
+                np.random.seed(seed)
             np.random.shuffle(indices) # shuffle indices (same as shuffling train and valid set)
 
         # indices are already shuffled
@@ -178,11 +210,13 @@ class DataLoader():
 
 
     def get_test_loader(self):
-        """ Utility function for loading and returning a multi-process
-            test iterator over the dataset (for batch testing).
+        """
+        Utility function for loading and returning a multi-process
+        test iterator over the dataset (for batch testing).
 
         Returns:
-            testloader: test set iterator.
+            testloader (iter):
+                test set iterator.
         """
 
         if self.dataset.is_user_dataset is True:
