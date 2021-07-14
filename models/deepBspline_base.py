@@ -238,42 +238,19 @@ class DeepBSplineBase(DeepSplineBase):
 
 
 
-    def reshape_forward(self, input):
-        """ """
-        input_size = input.size()
-        if self.mode == 'fc':
-            if len(input_size) == 2:
-                # one activation per conv channel
-                x = input.view(*input_size, 1, 1) # transform to 4D size (N, num_units=num_activations, 1, 1)
-            elif len(input_size) == 4:
-                # one activation per conv output unit
-                x = input.view(input_size[0], -1).unsqueeze(-1).unsqueeze(-1)
-            else:
-                raise ValueError(f'input size is {len(input_size)}D but should be 2D or 4D...')
-        else:
-            assert len(input_size) == 4, 'input to activation should be 4D (N, C, H, W) if mode="conv".'
-            x = input
-
-        return x
-
-
-
-    def reshape_back(self, output, input_size):
-        """ """
-        if self.mode == 'fc':
-            output = output.view(*input_size) # transform back to 2D size (N, num_units)
-
-        return output
-
-
-
     def forward(self, input):
         """
         Args:
-            input : 2D/4D tensor
+            input (torch.Tensor):
+                2D or 4D, depending on weather the layer is
+                convolutional ('conv') or fully-connected ('fc')
+
+        Returns:
+            output (torch.Tensor)
         """
         input_size = input.size()
         x = self.reshape_forward(input)
+
         assert x.size(1) == self.num_activations, 'input.size(1) != num_activations.'
 
         output = DeepBSpline_Func.apply(x, self.coefficients_vect_, self.grid,
@@ -321,6 +298,9 @@ class DeepBSplineBase(DeepSplineBase):
         while keeping the same zero slopes in [a] and [a'].
         This is not the case if we compute [a'] = L(P(b0,b1,[a])), where
         P is a matrix that maps (b0,b1,[a]) to [c], due to ill-conditioning.
+
+        Args:
+            threshold (float)
         """
         with torch.no_grad():
             new_relu_slopes = super().apply_threshold(threshold)
@@ -343,6 +323,9 @@ class DeepBSplineBase(DeepSplineBase):
         (b0, b1), which are lost when doing a = Lc, since two sets of
         coefficients ([c], [c']) that are related by a linear term give
         the same ReLU coefficients [a].
+
+        Args:
+            relu_slopes (torch.Tensor)
         """
         coefficients = self.coefficients
         coefficients[:, 2::] = 0. # first two coefficients remain the same

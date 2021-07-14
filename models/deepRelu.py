@@ -100,19 +100,15 @@ class DeepReLU(DeepSplineBase):
     def forward(self, input):
         """
         Args:
-            x : 4D input
+            input (torch.Tensor):
+                2D or 4D, depending on weather the layer is
+                convolutional ('conv') or fully-connected ('fc')
+
+        Returns:
+            output (torch.Tensor)
         """
         input_size = input.size()
-        if self.mode == 'fc':
-            if len(input_size) == 2:
-                # one activation per conv channel
-                x = input.view(*input_size, 1, 1) # transform to 4D size (N, num_units=num_activations, 1, 1)
-            elif len(input_size) == 4:
-                # one activation per conv output unit
-                x = input.view(input_size[0], -1).unsqueeze(-1).unsqueeze(-1)
-        else:
-            assert len(input_size) == 4, 'input to activation should be 4D (N, C, H, W) if mode="conv".'
-            x = input
+        x = self.reshape_forward(input)
 
         assert x.size(1) == self.num_activations, 'input.size(1) != num_activations.'
 
@@ -132,8 +128,7 @@ class DeepReLU(DeepSplineBase):
         out_linear = b0 + b1 * x
         output = out_relu + out_linear
 
-        if self.mode == 'fc':
-            return output.view(*input_size) # transform back to 2D size (N, num_units)
+        output = self.reshape_back(output, input_size)
 
         return output
 
@@ -143,6 +138,9 @@ class DeepReLU(DeepSplineBase):
         """
         Applies a threshold to the activations, eliminating the relu
         slopes smaller than a threshold.
+
+        Args:
+            threshold (float)
         """
         with torch.no_grad():
             new_relu_slopes = super().apply_threshold(threshold)
