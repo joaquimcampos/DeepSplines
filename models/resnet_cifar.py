@@ -119,6 +119,7 @@ class ResNet(BaseModel):
 
     def _make_layer0(self, in_planes):
         """ """
+        # TODO: Check this dataset parameter
         if self.dataset_name.startswith('cifar'):
             layer0 = nn.Sequential(
                 nn.Conv2d(3, in_planes, kernel_size=3, stride=1, padding=1, bias=False),

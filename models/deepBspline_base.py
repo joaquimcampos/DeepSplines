@@ -153,7 +153,7 @@ class DeepBSplineBase(DeepSplineBase):
         """
         Args:
             save_memory (bool):
-                weather to use a more memory efficient version (takes more time).
+                If true, use a more memory efficient version (takes more time).
         """
 
         super().__init__(**kwargs)

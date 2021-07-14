@@ -10,18 +10,60 @@ from ds_utils import spline_grid_from_range
 
 class BaseModel(nn.Module):
 
-    def __init__(self, **params):
-        """ """
+    def __init__(self, activation_type=None, dataset_name=None,
+                num_classes=None, device=None,
+                spline_init=None, spline_size=None,
+                spline_range=None, save_memory=False,
+                knot_threshold=0., **kwargs):
+        """
+        Args:
+            ------ general -----------------------
+
+            activation_type (str):
+                'relu', 'leaky_relu', 'deepBspline',
+                'deepBspline_explicit_linear', or 'deepRelu'.
+            dataset_name (str):
+                s_shape_1500', 'circle_1500', 'cifar10', 'cifar100' or 'mnist'.
+            num_classes (int):
+                number of dataset classes.
+            device (str):
+                'cuda:0' or 'cpu'
+
+            ------ deepspline --------------------
+
+            spline_init (str):
+                Function to initialize activations as (e.g. 'leaky_relu').
+            spline_size (odd int):
+                number of coefficients of spline grid;
+                the number of knots K = size - 2.
+            spline_range (float):
+                Defines the range of the B-spline expansion;
+                B-splines range = [-spline_range, spline_range].
+            save_memory (bool):
+                If true, use a more memory efficient version (takes more time);
+                for deepBsplines only
+            knot_threshold (bool):
+                If nonzero, sparsify activations by eliminating knots whose
+                slope change is below this value.
+        """
+        # TODO: Check default values of arguments
+
         super().__init__()
 
         self.params = params
 
         # general attributes
-        self.set_attributes('activation_type', 'dataset_name',
-                            'num_classes', 'device')
+        self.activation_type = activation_type
+        self.dataset_name = dataset_name
+        self.num_classes = num_classes
+        self.device = device
+
         # deepspline attributes
-        self.set_attributes('spline_init', 'spline_size', 'spline_range',
-                            'save_memory', 'knot_threshold')
+        self.spline_init = spline_init
+        self.spline_size = spline_size
+        self.spline_range = spline_range
+        self.save_memory = save_memory
+        self.knot_threshold = knot_threshold
 
         self.spline_grid = \
             spline_grid_from_range(self.spline_size, self.spline_range)
@@ -33,15 +75,6 @@ class BaseModel(nn.Module):
             self.deepspline = DeepBSplineExplicitLinear
         elif self.activation_type == 'deepRelu':
             self.deepspline = DeepReLU
-
-
-    def set_attributes(self, *names):
-        """ """
-        assert hasattr(self, 'params'), 'self.params does not exist.'
-        for name in names:
-            assert isinstance(name, str), f'{name} is not string.'
-            if name in self.params:
-                setattr(self, name, self.params[name])
 
 
     ############################################################################
