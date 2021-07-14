@@ -166,6 +166,7 @@ class DeepBSplineBase(DeepSplineBase):
         self.init_derivative_filters()
 
 
+
     def init_zero_knot_indexes(self):
         """ Initialize indexes of zero knots of each activation.
         """
@@ -175,12 +176,14 @@ class DeepBSplineBase(DeepSplineBase):
         self.zero_knot_indexes = (activation_arange*self.size + (self.size//2))
 
 
+
     def init_derivative_filters(self):
         """ Initialize D1, D2 filters.
         """
         # Derivative filters
         self.D1_filter = Tensor([-1,1]).view(1,1,2).to(**self.device_type).div(self.grid)
         self.D2_filter = Tensor([1,-2,1]).view(1,1,3).to(**self.device_type).div(self.grid)
+
 
 
     @property
@@ -207,6 +210,7 @@ class DeepBSplineBase(DeepSplineBase):
         return grid_tensor
 
 
+
     @abstractproperty
     def coefficients_vect_(self):
         """ B-spline vectorized coefficients of activations """
@@ -218,13 +222,6 @@ class DeepBSplineBase(DeepSplineBase):
         """ B-spline coefficients.
         """
         return self.coefficients_vect_.view(self.num_activations, self.size)
-
-
-    @property
-    def coefficients_grad(self):
-        """ B-spline coefficients gradients.
-        """
-        return self.coefficients_vect_.grad.view(self.num_activations, self.size)
 
 
     @property
@@ -260,12 +257,14 @@ class DeepBSplineBase(DeepSplineBase):
         return x
 
 
+
     def reshape_back(self, output, input_size):
         """ """
         if self.mode == 'fc':
             output = output.view(*input_size) # transform back to 2D size (N, num_units)
 
         return output
+
 
 
     def forward(self, input):

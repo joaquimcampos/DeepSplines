@@ -40,9 +40,10 @@ class DeepReLU(DeepSplineBase):
 
         relu_slopes = torch.zeros((self.num_activations,
                                 self.num_relus)).to(**self.device_type)
-        # linear coefficients
-        spline_bias = torch.zeros(self.num_activations).to(**self.device_type) # b0
-        spline_weight = torch.zeros_like(spline_bias) # b1
+
+        # linear term coefficients (b0, b1)
+        spline_bias = torch.zeros(self.num_activations).to(**self.device_type)
+        spline_weight = torch.zeros_like(spline_bias)
 
         leftmost_knot_loc = -self.grid.item() * (self.num_relus//2)
         loc_linspace = torch.linspace(leftmost_knot_loc, -leftmost_knot_loc,
@@ -94,18 +95,6 @@ class DeepReLU(DeepSplineBase):
     def relu_slopes(self):
         return self._relu_slopes
 
-    @property
-    def deepRelu_coefficients(self):
-        return torch.cat((self.spline_bias.view(-1, 1),
-                        self.spline_weight.view(-1, 1),
-                        self.relu_slopes), dim=1)
-
-    @property
-    def deepRelu_coefficients_grad(self):
-        return torch.cat((self.spline_bias.grad.view(-1, 1),
-                        self.spline_weight.grad.view(-1, 1),
-                        self.relu_slopes.grad), dim=1)
-
 
 
     def forward(self, input):
@@ -133,8 +122,8 @@ class DeepReLU(DeepSplineBase):
         knot_loc_view = self.knot_loc.view(1, self.num_activations, 1, 1, self.num_relus)
         clamped_xknotdiff = (x.unsqueeze(-1) - knot_loc_view).clamp(min=0) # (x - \tau_k)_+
 
-        coefficients_view = self.relu_slopes.view(1, self.num_activations, 1, 1, self.num_relus)
-        out_relu = (coefficients_view * clamped_xknotdiff).sum(-1) # sum over ReLUs
+        relu_slopes_view = self.relu_slopes.view(1, self.num_activations, 1, 1, self.num_relus)
+        out_relu = (relu_slopes_view * clamped_xknotdiff).sum(-1) # sum over ReLUs
         del clamped_xknotdiff
 
         b0 = self.spline_bias.view(1, -1, 1, 1)
@@ -151,7 +140,9 @@ class DeepReLU(DeepSplineBase):
 
 
     def apply_threshold(self, threshold):
-        """ See DeepSplineBase.apply_threshold method
+        """
+        Applies a threshold to the activations, eliminating the relu
+        slopes smaller than a threshold.
         """
         with torch.no_grad():
             new_relu_slopes = super().apply_threshold(threshold)
