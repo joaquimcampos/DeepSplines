@@ -96,15 +96,15 @@ def plot_activations(args):
 
                 if args.plot_sparsity:
                     ls = matplotlib.rcParams['lines.markersize']
-                    non_sparse_slopes = (sparsity_mask[k, :] == True)
-                    # slopes locations range from the second (idx=1) to
+                    non_sparse_relu_slopes = (sparsity_mask[k, :] == True)
+                    # relu slopes locations range from the second (idx=1) to
                     # second to last (idx=-1) B-spline coefficients
-                    ax.scatter(locations[1:-1][non_sparse_slopes],
-                            coefficients[k, 1:-1][non_sparse_slopes], s = 2*(ls**2))
+                    ax.scatter(locations[1:-1][non_sparse_relu_slopes],
+                            coefficients[k, 1:-1][non_sparse_relu_slopes], s = 2*(ls**2))
 
-                    sparse_slopes = (sparsity_mask[k, :] == False)
-                    ax.scatter(locations[1:-1][sparse_slopes],
-                            coefficients[k, 1:-1][sparse_slopes], s = 2*(ls**2))
+                    sparse_relu_slopes = (sparsity_mask[k, :] == False)
+                    ax.scatter(locations[1:-1][sparse_relu_slopes],
+                            coefficients[k, 1:-1][sparse_relu_slopes], s = 2*(ls**2))
 
             x_range = ax.get_xlim()
             assert x_range[0] < 0 and x_range[1] > 0, f'x_range: {x_range}.'

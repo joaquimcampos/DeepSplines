@@ -38,7 +38,7 @@ class DeepReLU(DeepSplineBase):
         self.num_relus = self.size - 2
         self.learn_bias = bias
 
-        relu_coefficients = torch.zeros((self.num_activations,
+        relu_slopes = torch.zeros((self.num_activations,
                                 self.num_relus)).to(**self.device_type)
         # linear coefficients
         spline_bias = torch.zeros(self.num_activations).to(**self.device_type) # b0
@@ -57,16 +57,16 @@ class DeepReLU(DeepSplineBase):
         if self.init == 'leaky_relu':
             spline_weight.fill_(0.01) # b1 = 0.01
             zero_knot_idx = self.num_relus // 2
-            relu_coefficients[:, zero_knot_idx].fill_(1.-0.01)
+            relu_slopes[:, zero_knot_idx].fill_(1.-0.01)
 
         elif self.init == 'relu':
             zero_knot_idx = self.num_relus // 2
-            relu_coefficients[:, zero_knot_idx].fill_(1.)
+            relu_slopes[:, zero_knot_idx].fill_(1.)
 
         else:
             raise ValueError('init should be in [leaky_relu, relu].')
 
-        self.relu_coefficients = nn.Parameter(relu_coefficients) # size: (num_activations, num_relus)
+        self._relu_slopes = nn.Parameter(relu_slopes) # size: (num_activations, num_relus)
         self.spline_weight = nn.Parameter(spline_weight) # size: (num_activations,)
 
         if self.learn_bias is True:
@@ -79,7 +79,7 @@ class DeepReLU(DeepSplineBase):
     @staticmethod
     def parameter_names(**kwargs):
         """ """
-        for name in ['relu_coefficients', 'spline_weight', 'spline_bias']:
+        for name in ['relu_slopes', 'spline_weight', 'spline_bias']:
             yield name
 
     @property
@@ -91,20 +91,20 @@ class DeepReLU(DeepSplineBase):
         return self.spline_bias
 
     @property
-    def slopes(self):
-        return self.relu_coefficients
+    def relu_slopes(self):
+        return self._relu_slopes
 
     @property
     def deepRelu_coefficients(self):
         return torch.cat((self.spline_bias.view(-1, 1),
                         self.spline_weight.view(-1, 1),
-                        self.slopes), dim=1)
+                        self.relu_slopes), dim=1)
 
     @property
     def deepRelu_coefficients_grad(self):
         return torch.cat((self.spline_bias.grad.view(-1, 1),
                         self.spline_weight.grad.view(-1, 1),
-                        self.slopes.grad), dim=1)
+                        self.relu_slopes.grad), dim=1)
 
 
 
@@ -133,7 +133,7 @@ class DeepReLU(DeepSplineBase):
         knot_loc_view = self.knot_loc.view(1, self.num_activations, 1, 1, self.num_relus)
         clamped_xknotdiff = (x.unsqueeze(-1) - knot_loc_view).clamp(min=0) # (x - \tau_k)_+
 
-        coefficients_view = self.slopes.view(1, self.num_activations, 1, 1, self.num_relus)
+        coefficients_view = self.relu_slopes.view(1, self.num_activations, 1, 1, self.num_relus)
         out_relu = (coefficients_view * clamped_xknotdiff).sum(-1) # sum over ReLUs
         del clamped_xknotdiff
 
@@ -154,8 +154,8 @@ class DeepReLU(DeepSplineBase):
         """ See DeepSplineBase.apply_threshold method
         """
         with torch.no_grad():
-            new_slopes = super().apply_threshold(threshold)
-            self.slopes.data = new_slopes
+            new_relu_slopes = super().apply_threshold(threshold)
+            self.relu_slopes.data = new_relu_slopes
 
 
 

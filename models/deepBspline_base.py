@@ -228,8 +228,8 @@ class DeepBSplineBase(DeepSplineBase):
 
 
     @property
-    def slopes(self):
-        """ Get the activation slopes {a_k},
+    def relu_slopes(self):
+        """ Get the activation relu slopes {a_k},
         by doing a valid convolution of the coefficients {c_k}
         with the second-order finite-difference filter [1,-2,1].
         """
@@ -237,9 +237,7 @@ class DeepBSplineBase(DeepSplineBase):
         # out(i, 1, :) = self.D2_filter(1, 1, :) *conv* coefficients(i, 1, :)
         # out.size() = (num_activations, 1, filtered_activation_size)
         # after filtering, we remove the singleton dimension
-        slopes = F.conv1d(self.coefficients.unsqueeze(1), self.D2_filter).squeeze(1)
-
-        return slopes
+        return F.conv1d(self.coefficients.unsqueeze(1), self.D2_filter).squeeze(1)
 
 
 
@@ -312,15 +310,15 @@ class DeepBSplineBase(DeepSplineBase):
         """ See DeepSplineBase.apply_threshold method
         """
         with torch.no_grad():
-            new_slopes = super().apply_threshold(threshold)
+            new_relu_slopes = super().apply_threshold(threshold)
             self.coefficients_vect_.data = \
-                self.iterative_slopes_to_coefficients(new_slopes).view(-1)
+                self.iterative_relu_slopes_to_coefficients(new_relu_slopes).view(-1)
 
 
 
-    def iterative_slopes_to_coefficients(self, slopes):
+    def iterative_relu_slopes_to_coefficients(self, relu_slopes):
         """
-        Well-conditioned way to transform slopes to coefficients.
+        Well-conditioned way to transform relu_slopes to coefficients.
 
         This way, if we set a slope to zero, we can do (b0,b1,a)->c->a'
         and still have the same slope being practically equal to zero.
@@ -332,6 +330,6 @@ class DeepBSplineBase(DeepSplineBase):
 
         for i in range(2, self.size):
             coefficients[:, i] = (coefficients[:, i-1] - coefficients[:, i-2]) + \
-                                    slopes[:, i-2].mul(self.grid) + coefficients[:, i-1]
+                                    relu_slopes[:, i-2].mul(self.grid) + coefficients[:, i-1]
 
         return coefficients
