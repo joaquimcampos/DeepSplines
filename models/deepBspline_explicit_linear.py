@@ -34,17 +34,6 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
         spline_bias = torch.zeros(self.num_activations).to(**self.device_type) # b0
         spline_weight = torch.zeros_like(spline_bias) # b1
 
-
-        if isinstance(self.init, tuple) and len(self.init) == 3:
-            if self.init[0].size() != (self.num_activations,):
-                raise ValueError('Spline bias does not have the right size...')
-            if self.init[1].size() != (self.num_activations,):
-                raise ValueError('Spline weight does not have the right size...')
-            if self.init[2].size() != (self.num_activations, self.size):
-                raise ValueError('Coefficients do not have the right size...')
-
-            spline_bias, spline_weight, coefficients = self.init
-
         if self.init == 'leaky_relu':
             spline_weight.fill_(0.01) # b1 = 0.01
             coefficients = F.leaky_relu(grid_tensor, negative_slope=0.01) \
@@ -67,7 +56,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
             coefficients[half::, :] = F.softshrink(grid_tensor[half::, :], lambd=0.5) \
                                         - (1. * grid_tensor[half::, :] + 0.5)
         else:
-            raise ValueError('init should be a 3-tensor-tuple or in [leaky_relu, relu, even_odd].')
+            raise ValueError('init should be in [leaky_relu, relu, even_odd].')
 
         # Need to vectorize coefficients to perform specific operations
         self.coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
