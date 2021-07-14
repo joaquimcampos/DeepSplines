@@ -3,6 +3,7 @@ from torch import nn
 from abc import ABC, abstractproperty
 
 
+
 class DeepSplineBase(ABC, nn.Module):
     """
     Abstract class for DeepSpline activations (deepReLU/deepBspline)
@@ -21,7 +22,7 @@ class DeepSplineBase(ABC, nn.Module):
         init (str):
             Function to initialize activations as (e.g. 'leaky_relu').
     """
-    
+
     def __init__(self, mode='conv', size=51, grid=0.1, num_activations=None,
                 init='leaky_relu', device='cuda:0',
                 dtype=torch.float32, **kwargs):

@@ -39,6 +39,7 @@ from abc import abstractproperty
 from models.deepspline_base import DeepSplineBase
 
 
+
 class DeepBSpline_Func(torch.autograd.Function):
     """
     Autograd function to only backpropagate through the B-splines that were used
@@ -208,16 +209,15 @@ class DeepBSplineBase(DeepSplineBase):
 
 
     @abstractproperty
-    def coefficients_vect_(self):
-        """ B-spline vectorized coefficients of activations """
+    def coefficients_vect(self):
+        """ B-spline vectorized coefficients. """
         pass
 
 
     @property
     def coefficients(self):
-        """ B-spline coefficients.
-        """
-        return self.coefficients_vect_.view(self.num_activations, self.size)
+        """ B-spline coefficients. """
+        return self.coefficients_vect.view(self.num_activations, self.size)
 
 
     @property
@@ -249,7 +249,7 @@ class DeepBSplineBase(DeepSplineBase):
 
         assert x.size(1) == self.num_activations, 'input.size(1) != num_activations.'
 
-        output = DeepBSpline_Func.apply(x, self.coefficients_vect_, self.grid,
+        output = DeepBSpline_Func.apply(x, self.coefficients_vect, self.grid,
                                         self.zero_knot_indexes, self.size, self.save_memory)
 
         if self.save_memory is False:
@@ -300,7 +300,7 @@ class DeepBSplineBase(DeepSplineBase):
         """
         with torch.no_grad():
             new_relu_slopes = super().apply_threshold(threshold)
-            self.coefficients_vect_.data = \
+            self.coefficients_vect.data = \
                 self.iterative_relu_slopes_to_coefficients(new_relu_slopes).view(-1)
 
 

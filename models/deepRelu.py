@@ -87,17 +87,20 @@ class DeepReLU(DeepSplineBase):
 
     @staticmethod
     def parameter_names(**kwargs):
-        """ """
+        """ Yield names of the module parameters """
         for name in ['relu_slopes', 'spline_weight', 'spline_bias']:
             yield name
+
 
     @property
     def weight(self):
         return self.spline_weight
 
+
     @property
     def bias(self):
         return self.spline_bias
+
 
     @property
     def relu_slopes(self):

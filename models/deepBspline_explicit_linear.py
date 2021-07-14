@@ -26,8 +26,6 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
         """
         super().__init__(**kwargs)
         self.learn_bias = bias # flag
-        # used to save state
-        self.input_dict = {'bias': self.learn_bias, **kwargs}
 
         # tensor with locations of spline coefficients
         grid_tensor = self.grid_tensor # size: (num_activations, size)
@@ -61,7 +59,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
             raise ValueError('init should be in [leaky_relu, relu, even_odd].')
 
         # Need to vectorize coefficients to perform specific operations
-        self.coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
+        self._coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
         self.spline_weight = nn.Parameter(spline_weight) # size: (num_activations,)
 
         if self.learn_bias is True:
@@ -72,12 +70,14 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
 
 
     @property
-    def coefficients_vect_(self):
-        return self.coefficients_vect
+    def coefficients_vect(self):
+        """ B-spline vectorized coefficients. """
+        return self._coefficients_vect
 
 
     @staticmethod
     def parameter_names(**kwargs):
+        """ Yield names of the module parameters """
         for name in ['coefficients_vect', 'spline_weight', 'spline_bias']:
             yield name
 
@@ -90,6 +90,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
     @property
     def bias(self):
         return self.spline_bias
+
 
 
     def forward(self, input):
@@ -113,6 +114,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
         output = output + self.reshape_back(out_linear, input_size)
 
         return output
+
 
 
     def extra_repr(self):

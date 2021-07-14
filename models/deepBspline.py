@@ -43,17 +43,19 @@ class DeepBSpline(DeepBSplineBase):
             raise ValueError('init should be in [leaky_relu, relu, even_odd].')
 
         # Need to vectorize coefficients to perform specific operations
-        self.coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
+        self._coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1)) # size: (num_activations*size)
 
 
 
     @property
-    def coefficients_vect_(self):
-        return self.coefficients_vect
+    def coefficients_vect(self):
+        """ B-spline vectorized coefficients. """
+        return self._coefficients_vect
 
 
     @staticmethod
     def parameter_names(**kwargs):
+        """ Yield names of the module parameters """
         yield 'coefficients_vect'
 
 
