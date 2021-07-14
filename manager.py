@@ -366,7 +366,7 @@ class Manager(Project):
         valid_running_loss = 0.
         valid_correct, valid_total = 0, 0
 
-        if self.dataset.get_plot:
+        if self.dataset.get_test_imgs:
             plot_dict = self.dataset.init_plot_dict()
 
         with torch.no_grad():
@@ -382,7 +382,7 @@ class Manager(Project):
                 valid_correct += self.count_correct(outputs, labels)
                 valid_total += labels.size(0)
 
-                if self.dataset.get_plot:
+                if self.dataset.get_test_imgs:
                     self.dataset.add_to_plot_dict(plot_dict, (inputs.cpu(), outputs.cpu()))
 
 
@@ -394,7 +394,7 @@ class Manager(Project):
         self.valid_log_step(epoch, valid_acc, losses_dict)
         self.ckpt_log_step(epoch, valid_acc) # save checkpoint
 
-        if self.dataset.get_plot:
+        if self.dataset.get_test_imgs:
             inputs, outputs = self.dataset.concatenate_plot_dict(plot_dict)
             self.dataset.plot_test_imgs(inputs, outputs)
 
@@ -426,7 +426,7 @@ class Manager(Project):
         correct = 0
         total = 0
 
-        if self.dataset.get_plot:
+        if self.dataset.get_test_imgs:
             plot_dict = self.dataset.init_plot_dict()
 
         with torch.no_grad():
@@ -441,7 +441,7 @@ class Manager(Project):
                 correct += self.count_correct(outputs, labels)
                 total += labels.size(0)
 
-                if self.dataset.get_plot:
+                if self.dataset.get_test_imgs:
                     self.dataset.add_to_plot_dict(plot_dict, (inputs.cpu(), outputs.cpu()))
 
 
@@ -453,6 +453,6 @@ class Manager(Project):
         print('\n=> Test acc  : {:7.3f}%'.format(test_acc))
         print('\n=> Test loss : {:7.3f}'.format(test_loss))
 
-        if self.dataset.get_plot:
+        if self.dataset.get_test_imgs:
             inputs, outputs = self.dataset.concatenate_plot_dict(plot_dict)
             self.dataset.plot_test_imgs(inputs, outputs)
