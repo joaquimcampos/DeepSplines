@@ -85,8 +85,8 @@ def get_arg_parser():
     parser.add_argument('--gamma', metavar='FLOAT,[0,1]', type=ArgCheck.frac_float,
                         help=f'Learning rate decay. Default: {default_values["gamma"]}.')
     parser.add_argument('--milestones', metavar='LIST[INT,>0]', nargs='+', type=ArgCheck.p_int,
-                        help='Milestones for multi-step lr_scheduler. Set to a single value higher than num_epochs '
-                            'if you do not wish to lower the learning rate during training. '
+                        help='Milestones for multi-step lr_scheduler. Set to a single value higher '
+                            'than num_epochs to not lower the learning rate during training. '
                             f'Default: {default_values["milestones"]}.')
 
     # logs-related
@@ -132,8 +132,6 @@ def get_arg_parser():
     # dataset
     parser.add_argument('--plot_imgs', action='store_true', help='Plot train/test images')
     parser.add_argument('--save_imgs', action='store_true', help='Save train/test images')
-    parser.add_argument('--save_title', metavar='STR', type=str,
-                        help='Title for saving images. Predefined titles are used if not set.')
 
     parser.add_argument('--verbose', '-v', action='store_true', help='Print more info.')
 

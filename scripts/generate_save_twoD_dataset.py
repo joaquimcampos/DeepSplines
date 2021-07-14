@@ -46,7 +46,6 @@ if __name__ == "__main__":
         inputs, labels = dataset.generate_set(num_samples)
 
         if mode == 'train':
-            dataset.save_title = 'Training set'
             dataset.plot_train_imgs(inputs, labels) # save training images
 
         save_dict = {'inputs': inputs, 'labels': labels}
@@ -56,7 +55,6 @@ if __name__ == "__main__":
     print('\nSaving test dataset...')
 
     inputs, labels = dataset.get_test_set()
-    dataset.save_title = 'Test set'
     dataset.plot_test_imgs(inputs, labels) # save test images
 
     save_dict = {'inputs': inputs, 'labels': labels}

@@ -34,7 +34,6 @@ default_values = {'mode' : 'train',
                   'num_workers' : 4, # Number of subprocesses to use for data loading.
                   'plot_imgs' : False,
                   'save_imgs' : False,
-                  'save_title' : None,
                   'verbose' : False,
                   'additional_info' : [],
                   'num_classes' : None}
@@ -56,7 +55,6 @@ structure = {   'log_dir' : None,
                     'model_name' : None,
                     'plot_imgs' : None,
                     'save_imgs' : None,
-                    'save_title' : None,
                     },
                 'dataloader':
                     {
