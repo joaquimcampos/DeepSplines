@@ -1,35 +1,33 @@
 #!/usr/bin/env python3
 
+"""
+Script to approximate a parabola using a single deepsplines
+activation funcion.
+
+Used for testing purposes.
+"""
+
+
 import argparse
 import torch
 from torch import nn
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
 import time
 
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
 from models.deepRelu import DeepReLU
-from ds_utils import ArgCheck, spline_grid_from_range
+from ds_utils import ArgCheck, spline_grid_from_range, add_date_to_filename
+
 
 
 def parabola_func(x):
-    """ Parabola function
-    """
+    """ Parabola function """
+
     return x ** 2
 
-def parameters_deepRelu(activ):
-    """ """
-    for name, param in activ.named_parameters():
-        deepRelu_param = False
-        for param_name in activ.parameter_names(which='optimizer'):
-            if name.endswith(param_name):
-                deepRelu_param = True
-
-        if deepRelu_param is True:
-            yield param
 
 
 if __name__ == "__main__":
@@ -38,89 +36,84 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Approximate a parabola in [-1, 1] with a single activation',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('--activation_type', type=str,
-                        choices={'deepBspline', 'deepRelu', 'deepBspline_explicit_linear'}
-                        default='deepBspline_explicit_linear', help=' ')
+    # for details on the arguments, see main.py
+    activation_choices = {'deepBspline', 'deepRelu', 'deepBspline_explicit_linear'}
+    parser.add_argument('--activation_type', choices=activation_choices,
+                        type=str, default='deepBspline_explicit_linear', help=' ')
+
+    parser.add_argument('--spline_init', choices=['leaky_relu', 'relu', 'even_odd'],
+                        type=str, default='leaky_relu', help=' ')
     parser.add_argument('--spline_size', metavar='INT>0',
-                        type=ArgCheck.p_odd_int, default=51,
-                        help='Number of b-spline/relu + linear coefficients.')
-    parser.add_argument('--lmbda', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
-                    default=1e-4, help='TV(2) regularization.')
-    parser.add_argument('--num_epochs', metavar='INT,>0', type=ArgCheck.p_int,
-                        default=1000, help='Number of epochs.')
-    parser.add_argument('--lr', metavar='FLOAT,>0', type=ArgCheck.p_float, default=1e-3,
-                        help=f'Learning rate for optimizer.')
-    parser.add_argument('--num_train_samples', metavar='INT,>0', type=ArgCheck.p_int,
-                        default=10000, help=' ')
-    parser.add_argument('--init', choices=['leaky_relu', 'relu', 'even_odd'],
-                        type=str, default='leaky_relu',
-                        help=f'Initialize the b-spline coefficients according to this function.')
-    parser.add_argument('--spline_range', metavar='FLOAT,>0', type=ArgCheck.p_float,
-                        default=1., help=f'One-sided range of deepspline coefficients.')
-    parser.add_argument('--no_bias', action='store_true', help='Remove activation bias.')
-    parser.add_argument('--lipschitz', action='store_true',
-                        help='Add lipschitz regularization (controled by --lmbda)')
-    parser.add_argument('--save_fig', action='store_true',
-                        help='Save learned/gtruth plots.')
-    parser.add_argument('--log_dir', metavar='STR', type=str,
-                        help='Log directory for output learned/gtruth plots.')
-    parser.add_argument('--device', choices=['cuda:0', 'cpu'], type=str,
-                        default='cpu', help=' ')
+                        type=ArgCheck.p_odd_int, default=31, help=' ')
+    parser.add_argument('--spline_range', metavar='FLOAT,>0',
+                        type=ArgCheck.p_float, default=1., help=' ')
+    parser.add_argument('--save_memory', action='store_true', help=' ')
+
+    parser.add_argument('--lmbda', metavar='FLOAT,>=0',
+                        type=ArgCheck.nn_float, default=1e-4, help=' ')
+    parser.add_argument('--lipschitz', action='store_true', help=' ')
+
+    parser.add_argument('--num_epochs', metavar='INT,>0',
+                        type=ArgCheck.p_int, default=10000, help=' ')
+    parser.add_argument('--lr', metavar='FLOAT,>0',
+                        type=ArgCheck.p_float, default=1e-3, help=' ')
+    parser.add_argument('--num_train_samples', metavar='INT,>0',
+                        type=ArgCheck.p_int, default=10000, help=' ')
+
+    parser.add_argument('--save_dir', metavar='STR', type=str)
+    parser.add_argument('--device', choices=['cuda:0', 'cpu'],
+                        type=str, default='cpu', help=' ')
 
     args = parser.parse_args()
 
     if args.device.startswith('cuda') and not torch.cuda.is_available():
         raise OSError('cuda not available...')
 
-    if args.save_fig and args.log_dir is None:
-        raise ValueError('--log_dir should be provided with --save_fig')
+    if (args.save_dir is not None) and (not os.path.isdir(args.save_dir)):
+        raise ValueError(f'directory {args.save_dir} does not exist...')
 
-    if args.log_dir is not None and not os.path.isdir(args.log_dir):
-        raise OSError('log_dir does not exist...')
+    if args.save_memory is True and not args.activation_type.startswith('deepBspline'):
+        raise ValueError('--save_memory can only be set when using deepBsplines.')
 
-    # print command-line arguments (for debugging bash scripts)
-    cmd_args = ' '.join(sys.argv)
-    print('\nCmd args : ', cmd_args, sep='\n')
+    parab_range = 1 # one-sided range of parabola function
 
-    size = args.spline_size
-    grid = spline_grid_from_range(size, args.spline_range)
+    # set up deepspline activations
+    spline_grid = spline_grid_from_range(args.spline_size, args.spline_range)
 
-    parab_range = 1
-    args_dict = {'mode': 'fc', 'num_activations': 1,
-                'bias': not args.no_bias,
-                'size': size, 'grid': grid,
-                'init': args.init, 'device': args.device}
+    deepspline_params = {'mode': 'fc', 'size': args.spline_size,
+                        'grid': spline_grid, 'init': args.spline_init,
+                        'bias': True, 'num_activations': 1,
+                        'save_memory': args.save_memory, 'device': args.device}
 
     if args.activation_type == 'deepBspline':
-        activation = DeepBSpline(**args_dict)
+        activation = DeepBSpline(**deepspline_params)
     elif args.activation_type == 'deepBspline_explicit_linear':
-        activation = DeepBSplineExplicitLinear(**args_dict)
+        activation = DeepBSplineExplicitLinear(**deepspline_params)
     elif args.activation_type == 'deepRelu':
-        activation = DeepReLU(**args_dict)
+        activation = DeepReLU(**deepspline_params)
     else:
         raise ValueError(f'Activation {args.activation_type} not available...')
 
-    num_train_samples = args.num_train_samples
-    num_test_samples = 10000
 
-    train_x = torch.zeros(num_train_samples, 1).uniform_(-parab_range, parab_range)
-
-    train_y = parabola_func(train_x)
+    # setup training data
+    train_x = torch.zeros(args.num_train_samples, 1).uniform_(-parab_range, parab_range)
+    train_y = parabola_func(train_x) # values
+    # move to device
     train_x = train_x.to(args.device)
     train_y = train_y.to(args.device)
 
+    # setup testing data
+    num_test_samples = 10000
     test_x = torch.zeros(num_test_samples, 1).uniform_(-parab_range, parab_range)
-    test_y = parabola_func(test_x)
+    test_y = parabola_func(test_x) # values
+    # move to device
     test_x = test_x.to(args.device)
     test_y = test_y.to(args.device)
 
     criterion = nn.MSELoss().to(args.device)
 
     activ = activation.to(args.device)
-    optim_class = torch.optim.Adam
-    optim_params = {'lr' : args.lr}
-    optim = optim_class(activ.parameters(), **optim_params)
-    print('Optimizer :', optim)
+    optim = torch.optim.Adam(activ.parameters(), lr=args.lr)
 
     num_epochs = args.num_epochs
     milestones = [int(6*num_epochs/10),
@@ -133,6 +126,7 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
+    # training loop
     for i in range(num_epochs):
 
         optim.zero_grad()
@@ -148,7 +142,7 @@ if __name__ == "__main__":
         optim.step()
         scheduler.step()
 
-        if i % 1000 == 0:
+        if i % int(num_epochs/10) == 0:
             loss = df_loss + tv_bv_loss
             print(f'\nepoch: {i+1}/{num_epochs}; ',
                   'loss: {:.8f}'.format(loss.item()), sep='')
@@ -160,18 +154,18 @@ if __name__ == "__main__":
     end_time = time.time()
     print('\nRun time: {:.5f}'.format(end_time - start_time))
 
-    print(f'\n\n==>Testing {activ.__class__.__name__}')
+    # Testing
+    print(f'\n==> Start testing {activ.__class__.__name__}.\n')
 
     pred = activ(test_x) # prediction
     loss = criterion(pred, test_y) # data fidelity
     tv = activ.totalVariation().sum()
+
     test_mse_str = 'Test mse loss: {:.8f}'.format(loss.item())
     tv_loss_str = 'TV(2) loss: {:.8f}'.format(tv)
-    latex_tv_loss_str = r'${\rm TV}^{(2)}$ ' + 'loss: {:.8f}'.format(tv)
     total_loss_str = 'Total loss: {:.8f}'.format(loss.item() + args.lmbda * tv)
 
     print(test_mse_str, tv_loss_str, total_loss_str, sep='\n')
-    print('\n')
 
     # move to cpu and cast to numpy arrays
     test_x = test_x.cpu().numpy()[:, 0]
@@ -189,23 +183,12 @@ if __name__ == "__main__":
     legend_list += ['best linear approximator']
 
     ax = plt.gca()
-    ax.text(-0.35, 0.95, f'lambda: {args.lmbda}; size: {args.spline_size}', fontsize=8)
-    ax.text(-0.35, 0.87, test_mse_str, fontsize=8)
-    ax.text(-0.35, 0.79, latex_tv_loss_str, fontsize=8)
-    ax.text(-0.35, 0.71, total_loss_str, fontsize=8)
-
-
     plt.legend(legend_list, fontsize=6)
 
     plt.title(f'Activation: {activ.__class__.__name__}')
-    if args.save_fig:
-        fig_save_str = (f'{activ.__class__.__name__}_' +
-                        'lambda_{:.1E}_'.format(args.lmbda) +
-                        f'size{args.spline_size}_range{args.spline_range}_' +
-                        f'num_train_samples_{args.num_train_samples}_' +
-                        'lr_{:.1E}_'.format(args.lr) +
-                        f'num_epochs_{args.num_epochs}.png')
-        plt.savefig(os.path.join(args.log_dir, fig_save_str))
+    if args.save_dir is not None:
+        filename = add_date_to_filename('parabola') + '.pdf'
+        plt.savefig(os.path.join(args.save_dir, filename))
 
     plt.show()
     plt.close()
