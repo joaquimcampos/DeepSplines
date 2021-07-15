@@ -8,6 +8,7 @@ import math
 import json
 import numpy as np
 import copy
+from datetime import datetime
 
 
 class ArgCheck():
@@ -336,3 +337,22 @@ def json_dump(results_dict, json_filename):
     except FileNotFoundError:
         print(f'File {json_filename} not found...')
         raise
+
+
+
+def add_date_to_filename(filename):
+    """
+    Adds current date to a filename.
+
+    Args:
+        filename (str)
+    Returns:
+        new_filename (str):
+            filename with added date.
+    """
+    now = datetime.now()
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d-%m-%Y_%H:%M")
+    new_filename = '_'.join([filename, dt_string])
+
+    return new_filename
