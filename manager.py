@@ -18,13 +18,6 @@ from datasets import init_dataset
 
 
 ##################################################################################################
-
-class MyDataParallel(nn.DataParallel):
-    " Class for multiple GPU usage "
-    def __getattr__(self, name):
-        return getattr(self.module, name)
-
-##################################################################################################
 #### MANAGER
 
 class Manager(Project):
@@ -68,7 +61,8 @@ class Manager(Project):
         self.criterion.to(self.device)
         self.test_criterion.to(self.device)
 
-        # print(self.net) # for printing network architecture
+        # # uncomment for printing network architecture
+        # print(self.net)
 
 
 
@@ -94,11 +88,10 @@ class Manager(Project):
         net = models_dict[params['net']](**params['model'], device=device)
 
         net = net.to(device)
-        if device == 'cuda':
-            # net = MyDataParallel(net) # for multiple GPU usage
+        if device.startswith('cuda'):
             cudnn.benchmark = True
 
-        print('[Network] Total number of parameters : {}'.format(net.num_params))
+        print(f'[Network] Total number of parameters : {net.num_params}')
 
         return net
 
