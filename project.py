@@ -134,13 +134,28 @@ class Project():
 
 
 
+    @property
+    def load_ckpt(self):
+        """
+        Returns True if loading a checkpoint and restoring its parameters,
+        for resuming training or testing a model. Otherwise, returns False.
+        """
+        if (self.params["ckpt_filename"] is not None) or (self.params["resume"] is True):
+            return True
+        else:
+            return False
+
+
+
     def restore_ckpt_params(self):
         """
-        Restore the parameters from a previously saved checkpoint
-        (either provided via --ckpt_filename or saved in log_dir/model_name)
+        Attempts to restore a checkpoint if resuming training or testing
+        a model.
 
-        Returns:
-            True if a checkpoint was successfully loaded and False otherwise.
+        If successful, it gets the loaded checkpoint and merges the saved
+        parameters.
+
+        Returns True if a checkpoint was successfully loaded, and False otherwise.
         """
         self.best_train_acc = 0.
         self.best_valid_acc = 0.
@@ -148,7 +163,7 @@ class Project():
         if self.training:
             self.start_epoch, self.global_step = 0, 0
 
-        if self.params["ckpt_filename"] is not None and self.params["ckpt_filename"] != '':
+        if self.params["ckpt_filename"] is not None:
             try:
                 self.load_merge_params(self.params["ckpt_filename"])
 

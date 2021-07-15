@@ -2,6 +2,9 @@
 # https://github.com/kuangliu/pytorch-cifar
 # https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 
+"""
+Module for managing the training and testing.
+"""
 
 import torch
 import torch.nn as nn
@@ -21,28 +24,39 @@ from datasets import init_dataset
 #### MANAGER
 
 class Manager(Project):
-    """ """
+    """ Class that manages training and testing """
 
     def __init__(self, params, user_params):
-        """ """
+        """
+        Args:
+            params (dict):
+                dictionary with all parameters.
+            user_params (dict):
+                dictionary with the user-defined parameters.
+                Used to override saved parameters from a checkpoint
+                if continuing training or testing a model.
+        """
 
         super().__init__(params, user_params)
 
-        loading_success = self.restore_ckpt_params()
-        self.init_device()
-        self.init_log()
+        is_ckpt_loaded = False
+        if self.load_ckpt is True: # resuming training or testing
+            # is_ckpt_loaded=True if a checkpoint was successfully loaded.
+            is_ckpt_loaded = self.restore_ckpt_params()
+
+        self.init_device() # initalize device (e.g. 'cpu', 'cuda')
+        self.init_log() # initalize log directory
 
         if self.params['verbose']:
-            print('\n==> Parameters info: ', self.params, sep='\n')
+            print('\n==> Parameters: ', self.params, sep='\n')
 
-        self.init_dataset()
-
+        self.dataset = init_dataset(**self.params['dataset'])
         self.net = self.build_model(self.params, self.device)
 
         if self.training:
             self.set_optimization()
 
-        if loading_success is True:
+        if is_ckpt_loaded is True:
             self.restore_model()
 
         self.init_json()
@@ -66,17 +80,20 @@ class Manager(Project):
 
 
 
-    def init_dataset(self):
-        """ """
-        self.dataset = init_dataset(**self.params['dataset'])
-        self.params['model']['num_classes'] = self.dataset.num_classes
-
-
-
     @staticmethod
     def build_model(params, device='cuda:0'):
-        """ """
-        print('\n==> Building model..')
+        """
+        Build the network model.
+
+        Args:
+            params (dict):
+                contains the network name and the model parameters.
+            device (str):
+                'cpu' or 'cuda:0'.
+        Returns:
+            net (nn.Module)
+        """
+        print('\n==> Building model...')
 
         models_dict = { 'twoDnet_onehidden' : TwoDNet_OneHidden,
                         'twoDnet_twohidden' : TwoDNet_TwoHidden,
@@ -85,20 +102,34 @@ class Manager(Project):
                         'convnet_mnist'     : ConvNetMnist}
 
         assert params['net'] in models_dict.keys(), 'network not found: please add net to models_dict.'
-        net = models_dict[params['net']](**params['model'], device=device)
+        net = models_dict[params['net']](**params['model'], device=device,
+                                        num_classes=self.dataset.num_classes)
 
         net = net.to(device)
         if device.startswith('cuda'):
             cudnn.benchmark = True
 
-        print(f'[Network] Total number of parameters : {net.num_params}')
+        print(f'[Network] Total number of parameters : {net.num_params}.')
 
         return net
 
 
 
     def set_optimization(self):
-        """ """
+        """
+        Sets the training optimizers and learning rate schedulers.
+
+        If self.params['optimizer'] has a single element, then
+        a single optimizer/scheduler is used for the network and
+        the deepspline parameters.
+
+        If self.params['optimizer'] is a list of two elements, the first
+        element is the 'main' optimizer (for the network parameters) and the
+        second 'aux' optimizer (for the deepspline parameters).
+
+        Note: Adam 'aux' optimizer is usually required for stability of
+        the deepsplines, even if main optimizer is SGD or otherwise.
+        """
         self.optim_names = self.params['optimizer']
 
         # main optimizer/scheduler
@@ -114,7 +145,9 @@ class Manager(Project):
             main_params_iter = self.net.parameters()
 
         self.main_optimizer = self.construct_optimizer(main_params_iter,
-                                                    self.optim_names[0], 'main')
+                                                        self.optim_names[0],
+                                                        self.params['lr'])
+
         self.main_scheduler = self.construct_scheduler(self.main_optimizer)
 
         self.aux_optimizer, self.aux_scheduler = None, None
@@ -129,7 +162,9 @@ class Manager(Project):
                 raise
 
             self.aux_optimizer = self.construct_optimizer(aux_params_iter,
-                                                    self.optim_names[1], 'aux')
+                                                        self.optim_names[1],
+                                                        self.params['aux_lr'])
+
             # scheduler parameters are the same for the main and aux optimizers
             self.aux_scheduler = self.construct_scheduler(self.aux_optimizer)
 
@@ -138,24 +173,41 @@ class Manager(Project):
 
 
 
-    def construct_optimizer(self, params_iter, optim_name, mode='main'):
-        """ """
-        lr = self.params['lr'] if mode == 'main' else self.params['aux_lr']
+    @staticmethod
+    def construct_optimizer(params_iter, optim_name, lr):
+        """
+        Construct an optimizer with name 'optim_name'.
 
+        Args:
+            params_iter (iter):
+                iterator over the parameters to optimize.
+            optim_name (str):
+                'Adam' or 'SGD' (can be expanded).
+            lr (float):
+                learning rate.
+
+        Returns:
+            optimizer (torch.optim)
+        """
         # weight decay is added manually
         if optim_name == 'Adam':
             optimizer = optim.Adam(params_iter, lr=lr)
         elif optim_name == 'SGD':
             optimizer = optim.SGD(params_iter, lr=lr, momentum=0.9, nesterov=True)
         else:
-            raise ValueError('Need to provide a valid optimizer type')
+            raise ValueError('Need to provide a valid optimizer type.')
 
         return optimizer
 
 
 
     def construct_scheduler(self, optimizer):
-        """ """
+        """
+        Construct a schedule from an optimizer (torch.optim).
+
+        Returns:
+            scheduler (torch.optim.lr_scheduler)
+        """
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer, self.params['milestones'],
                                                     gamma=self.params['gamma'])
 
@@ -163,12 +215,15 @@ class Manager(Project):
 
 
 
-##################################################################################################
-#### TRAIN
+    #######################################################################################
+    #### TRAIN
 
     def train(self):
-        """ """
-        self.net.train()
+        """ Training loop """
+
+        self.net.train() # set the network in training mode
+
+        ##### Set custom training and validation log steps
 
         if self.params['log_step'] is None: # default
             # log at every epoch
@@ -183,7 +238,10 @@ class Manager(Project):
             # validation at every epoch
             self.params['valid_log_step'] = self.num_batches['train']
 
-        print('\n==> Preparing data..')
+        #####
+
+        # Load the data
+        print('\n==> Loading the data...')
         self.dataloader = DataLoader(self.dataset, **self.params['dataloader'])
         self.trainloader, self.validloader = self.dataloader.get_train_valid_loader()
 
@@ -191,25 +249,30 @@ class Manager(Project):
         if self.params['verbose']:
             self.print_train_info()
 
+        # Initialize the losses to log
         self.losses_names = ['loss', 'df_loss'] # total loss and data fidelity loss
         if self.net.tv_bv_regularization is True:
             self.losses_names.append('tv_bv_loss')
 
+        # Set the number of epochs and sparsify_activations flag
         num_epochs = copy.copy(self.params['num_epochs'])
-
         self.sparsify_activations = False
+
         if self.params['knot_threshold'] > 0.:
             self.sparsify_activations = True
-            num_epochs += 1 # add one epoch to sparsify activations
+            # Last added epoch is used to sparsify activations
+            num_epochs += 1
 
-        print('\n\n==>Starting training...')
+        print('\n==> Starting training...')
 
         for epoch in range(self.start_epoch, num_epochs):
 
             if epoch == (num_epochs-1) and self.sparsify_activations is True:
-                print('\nFreezing network to sparsify activations and evaluate train accuracy.')
+                # sparsify activations and evaluate train accuracy.
+                print('\n==> Last epoch: sparsifying activations.')
                 self.net.eval() # set network in evaluation mode
                 self.net.sparsify_activations()
+                # freeze network to evaluate train accuracy without training
                 self.net.freeze_parameters()
 
             self.train_epoch(epoch)
@@ -218,15 +281,25 @@ class Manager(Project):
                 # shuffle training data
                 self.trainloader = self.dataloader.get_shuffled_trainloader_in_memory()
 
-
-        print('\n==> Finished training.')
+        print('\n==> Training completed.')
 
         self.log_additional_info()
 
 
 
     def forward_backward_train_batch(self, inputs, labels):
-        """ Forwards a batch and updates the parameter gradients.
+        """
+        Forwards a batch and updates the parameter gradients.
+
+        Args:
+            inputs, labels (torch.Tensor):
+                batch of samples.
+
+        Returns:
+            outputs (torch.Tensor)
+            losses (list):
+                list with the values of the losses corresponding to
+                self.losses_names. len(losses) = len(self.losses_names).
         """
         outputs = self.net(inputs)
 
@@ -237,16 +310,17 @@ class Manager(Project):
 
         losses = [data_fidelity]
 
-        regularization = torch.zeros_like(data_fidelity)
-        if self.net.weight_decay_regularization is True:
-            # the regularization weight is multiplied inside weight_decay()
-            regularization = regularization + self.net.weight_decay()
+        regularization = torch.zeros_like(data_fidelity, requires_grad=True)
+        if self.params['weight_decay'] > 0:
+            # weight decay regularization
+            regularization = regularization + \
+                        self.params['weight_decay']/2 * self.net.l2sqsum_weights_biases()
 
-        if self.net.tv_bv_regularization is True:
-            # the regularization weight is multiplied inside TV_BV()
-            tv_bv, tv_bv_unweighted = self.net.TV_BV()
+        if self.net.using_deepsplines and self.params['lmbda'] > 0:
+            # TV(2)/BV(2) regularization
+            tv_bv = self.params['lmbda'] * self.net.TV_BV()
             regularization = regularization + tv_bv
-            losses.append(tv_bv_unweighted)
+            losses.append(tv_bv.clone().detach())
 
         if self.net.training is True:
             regularization.backward()
@@ -259,7 +333,18 @@ class Manager(Project):
 
 
     def count_correct(self, outputs, labels):
-        """ count correct predictions """
+        """
+        Count the number of correct predictions.
+
+        Args:
+            outputs (torch.tensor):
+                predictions
+            labels (torch.tensor)
+
+        Returns:
+            correct (int):
+                number of correct predictions
+        """
 
         if isinstance(self.criterion, nn.BCELoss):
             predicted = (outputs > 0.5).to(dtype=torch.int64)
@@ -276,13 +361,19 @@ class Manager(Project):
 
 
     def train_epoch(self, epoch):
-        """ """
+        """
+        Training for one epoch.
 
+        Args:
+            epoch (int)
+        """
         print(f'\nEpoch: {epoch}\n')
 
         running_losses = [0.0] * len(self.losses_names)
-        correct = 0
-        total = 0
+
+        # for computing train accuracy
+        correct = 0 # number of correct predictions
+        total = 0 # total number of predictions
 
         for batch_idx, (inputs, labels) in enumerate(self.trainloader):
 
@@ -301,13 +392,16 @@ class Manager(Project):
             total += labels.size(0)
 
             if batch_idx % self.params['log_step'] == (self.params['log_step'] - 1):
+                # train log step
                 train_acc = 100.0 * correct / total
                 losses_dict = {key: (value / self.params['log_step']) for (key, value) in zip(self.losses_names, running_losses)}
                 self.train_log_step(epoch, batch_idx, train_acc, losses_dict)
-                running_losses = [0.0] * len(self.losses_names) # reset running losses
+                # reset values
+                running_losses = [0.0] * len(self.losses_names)
                 correct, total = 0, 0
 
             if self.global_step % self.params['valid_log_step'] == (self.params['valid_log_step'] - 1):
+                # validation log step
                 self.validation_step(epoch)
                 self.net.train()
 
@@ -319,7 +413,12 @@ class Manager(Project):
 
 
     def scheduler_step(self, epoch):
-        """ """
+        """
+        Does one step for learning rate schedulers.
+
+        Args:
+            epoch (int)
+        """
         if self.main_scheduler is not None:
             self.main_scheduler.step()
             if self.params['verbose']:
@@ -337,7 +436,8 @@ class Manager(Project):
 
 
     def optimizer_zero_grad(self):
-        """ """
+        """ Sets parameter gradients to zero """
+
         self.main_optimizer.zero_grad()
         if self.aux_optimizer is not None:
             self.aux_optimizer.zero_grad()
@@ -345,7 +445,8 @@ class Manager(Project):
 
 
     def optimizer_step(self):
-        """ """
+        """ Updates parameters """
+
         self.main_optimizer.step()
         if self.aux_optimizer is not None:
             self.aux_optimizer.step()
@@ -353,11 +454,19 @@ class Manager(Project):
 
 
     def validation_step(self, epoch):
-        """ """
+        """
+        Does one validation step. Saves results on checkpoint.
+
+        Args:
+            epoch (int)
+        """
         self.net.eval()
 
         valid_running_loss = 0.
-        valid_correct, valid_total = 0, 0
+
+        # for computing validation accuracy
+        correct = 0 # number of correct predictions
+        total = 0 # total number of validation samples
 
         if self.dataset.get_test_imgs:
             plot_dict = self.dataset.init_plot_dict()
@@ -372,17 +481,17 @@ class Manager(Project):
                 data_fidelity = self.test_criterion(outputs, labels)
                 valid_running_loss += data_fidelity.item()
 
-                valid_correct += self.count_correct(outputs, labels)
-                valid_total += labels.size(0)
+                correct += self.count_correct(outputs, labels)
+                total += labels.size(0)
 
                 if self.dataset.get_test_imgs:
                     self.dataset.add_to_plot_dict(plot_dict, (inputs.cpu(), outputs.cpu()))
 
 
-        valid_acc = 100.0 * valid_correct / valid_total
+        valid_acc = 100.0 * correct / total
 
         # only add data fidelity loss
-        losses_dict = {self.losses_names[1] : (valid_running_loss / valid_total)}
+        losses_dict = {self.losses_names[1] : (valid_running_loss / total)}
 
         self.valid_log_step(epoch, valid_acc, losses_dict)
         self.ckpt_log_step(epoch, valid_acc) # save checkpoint
@@ -393,31 +502,34 @@ class Manager(Project):
 
 
 
-##################################################################################################
-#### TEST
+    #######################################################################################
+    #### TEST
 
     def test(self):
-        """ """
+        """ Test model """
         self.net.eval()
 
-        print('\n==> Preparing data..')
+        print('\n==> Loading the data...')
         self.dataloader = DataLoader(self.dataset, **self.params['dataloader'])
         self.testloader = self.dataloader.get_test_loader()
 
         if self.params['verbose']:
             self.print_test_info()
 
+        print('\n==> Starting testing...')
         self.forward_test()
-        print('\nFinished testing.')
+        print('\n==> Testing completed.')
 
 
 
     def forward_test(self):
-        """ forwards test samples and calculates the test accuracy """
+        """ Test loop """
 
-        running_loss = 0.
-        correct = 0
-        total = 0
+        running_loss = 0. # running test loss
+
+        # for computing test accuracy
+        correct = 0 # number of correct predictions
+        total = 0 # total number of test samples
 
         if self.dataset.get_test_imgs:
             plot_dict = self.dataset.init_plot_dict()

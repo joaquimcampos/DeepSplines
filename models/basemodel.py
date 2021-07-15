@@ -312,40 +312,33 @@ class BaseModel(nn.Module):
     # Deepsplines: regularization and sparsification
 
     @property
-    def weight_decay_regularization(self):
+    def using_deepsplines(self):
         """
-        Flag indicating whether weight_decay is applied.
+        True if using deepspline activations.
         """
-        return (self.params['weight_decay'] > 0)
-
-
-    @property
-    def tv_bv_regularization(self):
-        """
-        Flag indicating whether TV2/BV2 regularization is applied.
-        """
-        return (self.deepspline is not None and self.params['lmbda'] > 0)
+        return (self.deepspline is not None)
 
 
 
-    def weight_decay(self):
+    def l2sqsum_weights_biases(self):
         """
-        Computes the total weight decay of the network.
+        Computes the sum of the l2 squared norm of the weights and biases
+        of the network.
 
         Returns:
-            wd (float):
-                = mu/2 * (sum(weights^2) + sum(biases^2))
+            l2sqsum (0d Tensor):
+                l2sqsum = (sum(weights^2) + sum(biases^2))
         """
         wd = Tensor([0.]).to(self.device)
 
         for module in self.modules():
             if hasattr(module, 'weight') and isinstance(module.weight, nn.Parameter):
-                wd = wd + self.params['weight_decay']/2 * module.weight.pow(2).sum()
+                l2sqsum = l2sqsum + module.weight.pow(2).sum()
 
             if hasattr(module, 'bias') and isinstance(module.bias, nn.Parameter):
-                wd = wd + self.params['weight_decay']/2 * module.bias.pow(2).sum()
+                l2sqsum = l2sqsum + module.bias.pow(2).sum()
 
-        return wd[0] # 1-tap 1d tensor -> 0d tensor
+        return l2sqsum[0] # 1-tap 1d tensor -> 0d tensor
 
 
 
@@ -355,14 +348,10 @@ class BaseModel(nn.Module):
         deepspline activations in the network.
 
         Returns:
-            tv_bv (float):
-                = lambda*sum(BV(2)) if lipschitz is True, otherwise = lambda*sum(TV(2))
-            tv_bv_unweighted (float):
-                = sum(BV(2)) if lipschitz is True, otherwise = sum(TV(2))
+            tv_bv (0d Tensor):
+                tv_bv = sum(BV(2)) if lipschitz is True, otherwise = sum(TV(2))
         """
         tv_bv = Tensor([0.]).to(self.device)
-        # for printing loss without weighting
-        tv_bv_unweighted = Tensor([0.]).to(self.device)
 
         for module in self.modules():
             if isinstance(module, self.deepspline):
@@ -370,11 +359,9 @@ class BaseModel(nn.Module):
                 if self.params['lipschitz'] is True:
                     module_tv_bv = module_tv_bv + module.fZerofOneAbs(mode='additive')
 
-                tv_bv = tv_bv + self.params['lmbda'] * module_tv_bv.norm(p=1)
-                with torch.no_grad():
-                    tv_bv_unweighted = tv_bv_unweighted + module_tv_bv.norm(p=1)
+                tv_bv = tv_bv + module_tv_bv.norm(p=1)
 
-        return tv_bv[0], tv_bv_unweighted[0] # 1-tap 1d tensor -> 0d tensor
+        return tv_bv[0] # 1-tap 1d tensor -> 0d tensor
 
 
 
@@ -394,7 +381,7 @@ class BaseModel(nn.Module):
         where ||s_l||_{BV(2)} = sum_{n=1}^{N_l} {BV(2)(s_{n,l})}.
 
         Returns:
-            lip_bound (float):
+            lip_bound (0d Tensor):
                 global lipschitz bound of the network
         """
         bv_product = Tensor([1.]).to(self.device)
