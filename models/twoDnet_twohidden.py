@@ -1,3 +1,6 @@
+""" 2D-input-single-output network with two hidden layers """
+
+
 import torch
 import torch.nn as nn
 
