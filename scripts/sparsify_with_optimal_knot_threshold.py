@@ -45,7 +45,7 @@ if __name__ == "__main__":
     parser.add_argument('out_log_dir', metavar='out_log_dir[STR]', type=str,
                         help='Output log directory for sparsified model.')
     parser.add_argument('acc_drop_threshold', metavar='FLOAT(-1, 0)', type=ArgCheck.n_float, default=-0.25,
-                        help='Maximum train accuracy percentage drop allowed for sparsification.')
+                        help='Maximum train accuracy percentage drop allowed for sparsification. (default: %(default)s)')
 
     args = parser.parse_args()
 

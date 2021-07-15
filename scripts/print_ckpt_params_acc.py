@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(description='Load parameters from checkpoint file.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('ckpt_filename', metavar='NAME', type=str, help='')
+    parser.add_argument('ckpt_filename', metavar='CKPT_FILENAME[STR]', type=str, help='')
     args = parser.parse_args()
 
     ckpt, params = Project.load_ckpt_params(args.ckpt_filename)
