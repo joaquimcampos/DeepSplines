@@ -91,10 +91,13 @@ class DeepBSpline_Func(torch.autograd.Function):
         activation_output = coefficients_vect[indexes+1]*fracs + \
                             coefficients_vect[indexes]*(1-fracs)
 
+        ctx.save_memory = save_memory
+
         if save_memory is False:
-            ctx.save_for_backward(save_memory, fracs, coefficients_vect, indexes, grid)
+            ctx.save_for_backward(fracs, coefficients_vect, indexes, grid)
         else:
-            ctx.save_for_backward(save_memory, x, coefficients_vect, grid, zero_knot_indexes, size)
+            ctx.size = size
+            ctx.save_for_backward(x, coefficients_vect, grid, zero_knot_indexes)
 
             # compute leftmost and rightmost slopes for linear extrapolations outside B-spline range
             num_activations = x.size(1)
@@ -118,12 +121,13 @@ class DeepBSpline_Func(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_out):
 
-        save_memory = ctx.saved_tensors[0]
+        save_memory = ctx.save_memory
 
         if save_memory is False:
-            fracs, coefficients_vect, indexes, grid = ctx.saved_tensors[1:]
+            fracs, coefficients_vect, indexes, grid = ctx.saved_tensors
         else:
-            x, coefficients_vect, grid, zero_knot_indexes, size = ctx.saved_tensors[1:]
+            size = ctx.size
+            x, coefficients_vect, grid, zero_knot_indexes = ctx.saved_tensors
 
             # compute fracs and indexes again (do not save them in ctx) to save memory
             x_clamped = x.clamp(min = -(grid.item() * (size//2)),
