@@ -41,7 +41,8 @@ class BaseModel(nn.Module):
                 B-splines range = [-spline_range, spline_range].
             save_memory (bool):
                 If true, use a more memory efficient version (takes more time);
-                for deepBsplines only
+                Can be used only with deepBsplines.
+                (see deepBspline_base.py docstring for details.)
             knot_threshold (bool):
                 If nonzero, sparsify activations by eliminating knots whose
                 slope change is below this value.

@@ -33,7 +33,7 @@ def plot_activations(args):
         raise OSError(f'Save directory {save_dir} does not exist.')
 
     device = params['device']
-    if device == 'cuda:0' and not torch.cuda.is_available():
+    if device.startswith('cuda') and not torch.cuda.is_available():
         # TODO: Test how to load model on cpu trained on gpu
         raise OSError('cuda not available...')
 

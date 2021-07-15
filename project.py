@@ -40,9 +40,9 @@ class Project():
 
     def init_device(self):
         """ """
-        if self.params['device'] == 'cuda:0':
+        if self.params['device'].startswith('cuda')
             if torch.cuda.is_available():
-                self.device = 'cuda:0'
+                self.device = 'cuda:0' # Using GPU0 by default
                 print('\nUsing GPU.')
             else:
                 self.device = 'cpu'

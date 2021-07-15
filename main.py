@@ -48,9 +48,12 @@ def get_arg_parser():
                         help='Number of spline coefficients. Default: {default_values["spline_size"]}.')
     parser.add_argument('--spline_range', metavar='FLOAT,>0', type=ArgCheck.p_float,
                         help=f'Range of spline representation. Default: {default_values["spline_range"]}.')
+
+    # see deepBspline_base.py docstring for details on --save_memory tradeoff.
     parser.add_argument('--save_memory', action='store_true',
                         help='Use a memory-efficient deepsplines version (for deepBsplines only) '
                             'at the expense of additional running time.')
+
     parser.add_argument('--knot_threshold', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
                         help='If nonzero, sparsify activations by eliminating knots whose slope '
                             f'change is below this value. Default: {default_values["knot_threshold"]}.')

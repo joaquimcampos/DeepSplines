@@ -27,6 +27,25 @@ respectively.
 
 The regularization term applied to this function is:
 TV(2)(deepsline) = ||a||_1 = ||Lc||_1
+
+The save_memory flag allows one to use a more memory efficient
+version at the expense of additional running time.
+
+Memory usage & running time for training a ResNet32
+for 5 epochs on the CIFAR dataset:
+
+ReLU:
+- 2009 MB
+- 116 seconds
+deepBsplines (save_memory=False):
+- 2609 MB
+- 208 seconds
+deepBsplines (save_memory=True):
+- 2029 MB
+- 272 seconds
+deepBspline without custom Autograd Fuction:
+- 3809 MB
+- 2043 seconds
 """
 
 import torch
@@ -46,7 +65,7 @@ class DeepBSpline_Func(torch.autograd.Function):
     to calculate output = activation(input), for each element of the input.
 
     If save_memory=True, use a memory efficient version at the expense of
-    some additional running time.
+    additional running time. (see module's docstring for details)
     """
 
     @staticmethod
@@ -153,7 +172,9 @@ class DeepBSplineBase(DeepSplineBase):
         """
         Args:
             save_memory (bool):
-                If true, use a more memory efficient version (takes more time).
+                If true, use a more memory efficient version at the
+                expense of additional running time.
+                (see module's docstring for details)
         """
 
         super().__init__(**kwargs)

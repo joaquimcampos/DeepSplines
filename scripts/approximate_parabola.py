@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.device == 'cuda:0' and not torch.cuda.is_available():
+    if args.device.startswith('cuda') and not torch.cuda.is_available():
         raise OSError('cuda not available...')
 
     if args.save_fig and args.log_dir is None:
