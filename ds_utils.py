@@ -1,6 +1,4 @@
-################################
-# deepspline project utilities
-################################
+""" Module with project utilities """
 
 import os
 import argparse
@@ -17,8 +15,9 @@ class ArgCheck():
 
     @staticmethod
     def p_int(value):
-        """ Check if int value got from argparse is positive
-            and raise error if not.
+        """
+        Check if int value got from argparse is positive
+        and raise error if not.
         """
         ivalue = int(value)
         if ivalue <= 0:
@@ -28,8 +27,9 @@ class ArgCheck():
 
     @staticmethod
     def p_odd_int(value):
-        """ Check if int value got from argparse is positive
-            and raise error if not.
+        """
+        Check if int value got from argparse is positive
+        and raise error if not.
         """
         ivalue = int(value)
         if (ivalue <= 0) or ((ivalue + 1) % 2 != 0) :
@@ -39,8 +39,9 @@ class ArgCheck():
 
     @staticmethod
     def nn_int(value):
-        """ Check if int value got from argparse is non-negative
-            and raise error if not.
+        """
+        Check if int value got from argparse is non-negative
+        and raise error if not.
         """
         ivalue = int(value)
         if ivalue < 0:
@@ -51,8 +52,9 @@ class ArgCheck():
 
     @staticmethod
     def p_float(value):
-        """ Check if float value got from argparse is positive
-            and raise error if not.
+        """
+        Check if float value got from argparse is positive
+        and raise error if not.
         """
         ivalue = float(value)
         if ivalue <= 0:
@@ -63,8 +65,9 @@ class ArgCheck():
 
     @staticmethod
     def n_float(value):
-        """ Check if float value got from argparse is negative
-            and raise error if not.
+        """
+        Check if float value got from argparse is negative
+        and raise error if not.
         """
         ivalue = float(value)
         if ivalue >= 0:
@@ -75,8 +78,9 @@ class ArgCheck():
 
     @staticmethod
     def frac_float(value):
-        """ Check if float value got from argparse is >= 0 and <= 1
-            and raise error if not.
+        """
+        Check if float value got from argparse is >= 0 and <= 1
+        and raise error if not.
         """
         ivalue = float(value)
         if ivalue < 0 or ivalue > 1:
@@ -86,8 +90,9 @@ class ArgCheck():
 
     @staticmethod
     def nn_float(value):
-        """ Check if float value got from argparse is non-negative
-            and raise error if not.
+        """
+        Check if float value got from argparse is non-negative
+        and raise error if not.
         """
         ivalue = float(value)
         if not np.allclose(np.clip(ivalue, -1.0, 0.0), 0.0):
@@ -97,17 +102,29 @@ class ArgCheck():
 
 
 def size_str(input):
-    """ Returns a string with the size of the input pytorch tensor
     """
+    Returns a string with the size of the input tensor
+
+    Args:
+        input (torch.Tensor)
+    Returns:
+        out_str (str)
+    """
+
     out_str = '[' + ', '.join(str(i) for i in input.size()) + ']'
     return out_str
 
 
 
 def update_running_losses(running_losses, losses):
-    """ Update the running_losses with the newly calculated losses
+    """
+    Update the running_losses with the newly calculated losses.
 
-    len(running_losses) = len(losses)
+    len(running_losses) = len(losses).
+
+    Args:
+        running_losses (list)
+        losses (list)
     """
     for i, loss in enumerate(losses):
         running_losses[i] += loss.item()
@@ -117,8 +134,20 @@ def update_running_losses(running_losses, losses):
 
 
 def denormalize(img_tensor, mean_tuple, std_tuple):
-    """ Denormalize input images using (mean_tuple, std_tuple)
     """
+    Denormalize input images.
+
+    Args:
+        img_tensor (torch.Tensor):
+            Tensor of size (N, C, H, W)
+        mean_tuple (tuple):
+            C-tuple with mean for each channel
+        std_tuple (tuple):
+            C-tuple with standard deviation for each channel
+    """
+    assert len(img_tensor.size()) == 4, f'{len(img_tensor.size())} != 4.'
+    assert img_tensor.size(1) == len(mean_tuple), f'{img_tensor.size(1)} != {len(mean_tuple)}.'
+    assert img_tensor.size(1) == len(std_tuple), f'{img_tensor.size(1)} != {len(std_tuple)}.'
     mean = Tensor([mean_tuple]).view(1, -1, 1, 1)
     std  = Tensor([std_tuple]).view(1, -1, 1, 1)
 
@@ -129,8 +158,17 @@ def denormalize(img_tensor, mean_tuple, std_tuple):
 
 
 def dict_recursive_merge(params_root, merger_root, base=True):
-    """ Recursively merges merger_root into params_root giving precedence
-    to the second as in z = {**x, **y}
+    """
+    Recursively merges merger_root into params_root giving precedence
+    to the second dictionary as in z = {**x, **y}
+
+    Args:
+        params_root (dict)
+        merger_root (dict):
+            dictionary with parameters to be merged into params root;
+            overwrites values of params_root for the same keys and level.
+        base (bool):
+            True for the first level of the recursion
     """
     if base:
         assert isinstance(params_root, dict)
@@ -148,9 +186,16 @@ def dict_recursive_merge(params_root, merger_root, base=True):
 
 
 
-def assign_structure_recursive(assign_root, structure, base=True):
-    """ Recursively assigns values to assign_root according to structure
+def assign_tree_structure(assign_root, structure, base=True):
+    """
+    Assign a tree structure to dictionary according to structure.
     (see structure variable in default_struct_values.py)
+
+    Args:
+        assign_root (dict):
+            dictionary to be assigned a tree structure
+        base (bool):
+            True for the first level of the recursion
     """
     if base:
         assert isinstance(assign_root, dict)
@@ -165,7 +210,7 @@ def assign_structure_recursive(assign_root, structure, base=True):
         for key, val in structure.items():
             if isinstance(val, dict):
                 assign_root[key] = {}
-                assign_root[key] = assign_structure_recursive(assign_root[key], structure[key], base=False)
+                assign_root[key] = assign_tree_structure(assign_root[key], structure[key], base=False)
                 if len(assign_root[key]) < 1: # do not have empty dictionaries in assign_root
                     del assign_root[key]
             else:
@@ -187,7 +232,15 @@ def assign_structure_recursive(assign_root, structure, base=True):
 
 
 def flatten_structure(assign_root, base=True):
-    """ Flattens the structure created with assign_structure_recursive()
+    """
+    Reverses the operation of assign_tree_structure()
+    by flattening input dictionary.
+
+    Args:
+        assign_root (dict):
+            dictionary to be flattened
+        base (bool):
+            True for the first level of the recursion
     """
     if base:
         assert isinstance(assign_root, dict)
@@ -206,19 +259,25 @@ def flatten_structure(assign_root, base=True):
 
 
 def check_device(*tensors, dev='cpu'):
-    """ Check if tensors are in device dev
-    """
+    """ Check if tensors are in device 'dev' """
+
     for t in tensors:
         assert t.device == torch.device(dev), f'tensor is not in device {dev}'
 
 
 
 def spline_grid_from_range(spline_size, range_=2, round_to=1e-6):
-    """ Compute spline grid spacing from desired one-side range
+    """
+    Compute spline grid spacing from desired one-sided range
     and the number of activation coefficients.
 
     Args:
-        round_to: round grid to this value
+        spline_size (odd int):
+            number of spline coefficients
+        range_ (float):
+            one-side range of spline expansion.
+        round_to (float):
+            round grid to this value
     """
     spline_grid = ((range_ / (spline_size//2)) // round_to) * round_to
 
@@ -227,7 +286,9 @@ def spline_grid_from_range(spline_size, range_=2, round_to=1e-6):
 
 
 def init_sub_dir(top_dir, sub_dir_name):
-    """ Initialize and return sub directory. Create it if it does not exist.
+    """
+    Returns the sub-directory folder 'top_dir/sub_dir_name'.
+    Creates it if it does not exist.
     """
     sub_dir = os.path.join(top_dir, sub_dir_name)
     if not os.path.isdir(sub_dir):
@@ -238,7 +299,16 @@ def init_sub_dir(top_dir, sub_dir_name):
 
 
 def json_load(json_filename):
-    """ """
+    """
+    Load a json file.
+
+    Args:
+        json_filename (str):
+            Path of the .json file with results.
+    Returns:
+        results_dict (dict):
+            dictionary with results stored in the json file.
+    """
     try:
         with open(json_filename) as jsonfile:
             results_dict = json.load(jsonfile)
@@ -251,7 +321,15 @@ def json_load(json_filename):
 
 
 def json_dump(results_dict, json_filename):
-    """ """
+    """
+    Save results in a json file.
+
+    Args:
+        results_dict (dict):
+            dictionary with the results to be stored in the json file.
+        json_filename (str):
+            Path of the .json file where results are stored.
+    """
     try:
         with open(json_filename, 'w') as jsonfile:
             json.dump(results_dict, jsonfile, sort_keys=False, indent=4)

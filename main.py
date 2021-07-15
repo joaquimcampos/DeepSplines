@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
 
+"""
+Main module that parses and verifies input arguments and
+sends them to Manager for training/testing.
+"""
+
 import os
 import argparse
 from manager import Manager
 from project import Project
 
-from ds_utils import ArgCheck, assign_structure_recursive
+from ds_utils import ArgCheck, assign_tree_structure
 from struct_default_values import structure, default_values
+
+
 
 # TODO: write setup.py!
 def get_arg_parser():
-    """ Define argument parser
+    """
+    Parses command-line arguments.
 
-    The default values are saved as a dictionary in struct_default_values.py
+    The default values are fetched from the 'default_values' dictionary.
+    (see struct_default_values.py)
+
+    Returns:
+        parser (argparse.ArgumentParser)
     """
     parser = argparse.ArgumentParser(description='Deep Spline Neural Network')
 
@@ -73,7 +85,7 @@ def get_arg_parser():
     parser.add_argument('--optimizer', metavar='LIST[STR]', nargs='+', type=str,
                         help='Can be one or two args. In the latter case, the first arg is the main '
                             'optimizer (for network parameters) and the second arg is the aux optimizer '
-                            '(for deepspline parameters). Adam aux_optimizer is usually required for stability '
+                            '(for deepspline parameters). "Adam" aux optimizer is usually required for stability '
                             f'during training, even if main optimizer is SGD. Choices: {str(optimizer_choices)}. '
                             f'Default: {default_values["optimizer"]}.')
 
@@ -82,7 +94,7 @@ def get_arg_parser():
     parser.add_argument('--aux_lr', metavar='FLOAT,>0', type=ArgCheck.p_float,
                         help=f'Learning rate for aux optimizer (for deepspline parameters). Default: {default_values["aux_lr"]}.')
     parser.add_argument('--weight_decay', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
-                        help=f'L2 penalty on parameters. Default: {default_values["weight_decay"]}.')
+                        help=f'weight decay hyperparameter. Default: {default_values["weight_decay"]}.')
 
     # multistep scheduler
     parser.add_argument('--gamma', metavar='FLOAT,[0,1]', type=ArgCheck.frac_float,
@@ -147,19 +159,29 @@ def get_arg_parser():
 
 
 
-def assign_recursive(params, user_params):
-    """ Assign recursive structure """
-    # assign recursive structure to both dictionaries as defined in struct_default_values.py
-    user_params = assign_structure_recursive(user_params, structure)
-    params = assign_structure_recursive(params, structure)
-
-    return params, user_params
-
-
-
 def verify_params(params):
-    """ Verify parameters (e.g. mutual inclusivity or exclusivity) and
-    assign recursive structure to parameters.
+    """
+    Verifies the parameters (e.g. checks for mutual inclusivity and exclusivity).
+
+    If not specified by the user via the command-line, a parameter
+    gets the default value from the 'default_values' dictionary.
+    (see struct_default_values.py).
+
+    It also returns a dictionary with the parameters that were specified
+    by the user, which are used to override the parameters saved in a
+    checkpoint when resuming training or testing a model.
+
+    Args:
+        params (dict):
+            dictionary with parameter names (keys) and values.
+
+    Returns:
+        params (dict):
+            dictionary with all parameters. If not specified by the user,
+            a parameter gets the default value in the 'default_values'
+            dictionary.
+        user_params (dict):
+            dictionary with the user-defined parameters (command-line args).
     """
     user_params = {}  # parameters input by user
 
@@ -205,11 +227,28 @@ def verify_params(params):
 
 
 def main_prog(params, isloaded_params=False):
-    """ Main program
+    """
+    Main program that initializes the Manager
+    with the parameters and runs the training or testing.
+
+    It first verifies the params dictionary (all parameters) and the
+    'user_params' (user-defined parameters), if necessary.
+    'user_params' is used to override the parameters saved in a
+    checkpoint, if resuming training or testing a model.
+
+    'params' and 'user_params' are then assigned a tree structure
+    according to the 'structure'
+    dictionary (see struct_default_values.py).
+
+    Finally, 'params' and 'user_params' are used to instantiate
+    a Manager() object and the training or testing is ran.
 
     Args:
-        isloaded_params : True if params are loaded from ckpt
-                        (no need to verify) and flattened (ds_utils)
+        params (dict):
+            dictionary with the parameters from the parser.
+        isloaded_params :
+            True if params were loaded from ckpt (no need to verify) and
+            are flattened (ds_utils), i.e., don't have a tree structure.
     """
     if isloaded_params:
         assert params['mode'] != 'test', 'params need to be verified in test mode...'
@@ -217,8 +256,10 @@ def main_prog(params, isloaded_params=False):
     else:
         params, user_params = verify_params(params)
 
-    # assign recursive structure to params according to structure in struct_default_values.py
-    params, user_params = assign_recursive(params, user_params)
+    # assign tree structure to params according to 'structure' dictionary
+    # (see struct_default_values.py)
+    user_params = assign_tree_structure(user_params, structure)
+    params = assign_tree_structure(params, structure)
 
     manager = Manager(params, user_params)
 
