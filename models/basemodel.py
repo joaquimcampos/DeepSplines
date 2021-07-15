@@ -85,7 +85,7 @@ class BaseModel(nn.Module):
     # Activation initialization
 
 
-    def init_activation_list(self, activation_specs, bias=False, **kwargs):
+    def init_activation_list(self, activation_specs, bias=True, **kwargs):
         """
         Initialize list of activation modules.
 
@@ -96,7 +96,7 @@ class BaseModel(nn.Module):
                 e.g., [('conv', 64), ('fc', 100)].
 
             bias (bool):
-                explicit bias;
+                if True, add explicit bias to deepspline;
                 only relevant if self.deepspline == DeepBSplineExplicitLinear.
 
         Returns:
@@ -107,9 +107,9 @@ class BaseModel(nn.Module):
         if self.deepspline is not None:
             activations = nn.ModuleList()
             for mode, num_activations in activation_specs:
-                activations.append(self.deepspline(size=self.spline_size, grid=self.spline_grid,
-                                                init=self.spline_init, bias=bias, mode=mode,
-                                                num_activations=num_activations,
+                activations.append(self.deepspline(mode=mode, size=self.spline_size,
+                                                grid=self.spline_grid, init=self.spline_init,
+                                                bias=bias, num_activations=num_activations,
                                                 save_memory=self.save_memory, device=self.device))
         else:
             activations = self.init_standard_activations(activation_specs)
