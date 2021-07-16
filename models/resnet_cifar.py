@@ -84,6 +84,7 @@ class BasicBlock(BaseModel):
         return out
 
 
+
 class ResNet(BaseModel):
     '''
     ResNet for CIFAR classification.
@@ -97,18 +98,18 @@ class ResNet(BaseModel):
 
         self.in_planes = in_planes
         self.layer0 = self._make_layer0(in_planes)
-        self.layer1 = self._make_layer(block, in_planes,  num_blocks[0])
+        self.layer1 = self._make_layer(block, in_planes, num_blocks[0], **params)
 
         planes = in_planes * 2
-        self.layer2 = self._make_layer(block, planes, num_blocks[1], stride=2)
+        self.layer2 = self._make_layer(block, planes, num_blocks[1], stride=2, **params)
 
         planes *= 2
-        self.layer3 = self._make_layer(block, planes, num_blocks[2], stride=2)
+        self.layer3 = self._make_layer(block, planes, num_blocks[2], stride=2, **params)
 
         self.layer4 = None
         if len(num_blocks) > 3:
             planes *= 2
-            self.layer4 = self._make_layer(block, planes, num_blocks[3], stride=2)
+            self.layer4 = self._make_layer(block, planes, num_blocks[3], stride=2, **params)
 
         self.avgpool2d = nn.AdaptiveAvgPool2d((1, 1))
         self.linear = nn.Linear(planes * block.expansion, self.num_classes)
@@ -119,25 +120,16 @@ class ResNet(BaseModel):
 
     def _make_layer0(self, in_planes):
         """ """
-        # TODO: Check this dataset parameter
-        if self.dataset_name.startswith('cifar'):
-            layer0 = nn.Sequential(
-                nn.Conv2d(3, in_planes, kernel_size=3, stride=1, padding=1, bias=False),
-                nn.BatchNorm2d(in_planes),
-                self.init_activation(('conv', in_planes), bias=False)
-            )
-        else:
-            layer0 = nn.Sequential(
-                 nn.Conv2d(3, in_planes, kernel_size=7, stride=2, padding=3, bias=False),
-                 nn.BatchNorm2d(in_planes),
-                 self.init_activation(('conv', in_planes), bias=False),
-                 nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-            )
+        layer0 = nn.Sequential(
+            nn.Conv2d(3, in_planes, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(in_planes),
+            self.init_activation(('conv', in_planes), bias=False)
+        )
 
         return layer0
 
 
-    def _make_layer(self, block, planes, num_blocks, stride=1):
+    def _make_layer(self, block, planes, num_blocks, stride=1, **params):
         """ """
         downsample = None
         if stride != 1 or self.in_planes != planes * block.expansion:
@@ -149,12 +141,12 @@ class ResNet(BaseModel):
         layers = []
         # First layer block, before adding to output in the skip-connection:
         # layers 2,3,4 - need to increase number of filters of identity + downsample.
-        layers.append(block(self.in_planes, planes, stride, downsample, **self.params))
+        layers.append(block(self.in_planes, planes, stride, downsample, **params))
         self.in_planes = planes * block.expansion
 
         for _ in range(1, num_blocks):
             # no downsampling, stride=1
-            layers.append(block(self.in_planes, planes, **self.params))
+            layers.append(block(self.in_planes, planes, **params))
 
         return nn.Sequential(*layers)
 
