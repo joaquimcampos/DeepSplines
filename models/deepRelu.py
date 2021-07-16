@@ -46,16 +46,15 @@ class DeepReLU(DeepSplineBase):
         self.num_relus = self.size - 2
         self.learn_bias = bias
 
-        relu_slopes = torch.zeros((self.num_activations,
-                                self.num_relus)).to(**self.device_type)
+        relu_slopes = torch.zeros((self.num_activations, self.num_relus))
 
         # linear term coefficients (b0, b1)
-        spline_bias = torch.zeros(self.num_activations).to(**self.device_type)
+        spline_bias = torch.zeros(self.num_activations)
         spline_weight = torch.zeros_like(spline_bias)
 
         leftmost_knot_loc = -self.grid.item() * (self.num_relus//2)
         loc_linspace = torch.linspace(leftmost_knot_loc, -leftmost_knot_loc,
-                                    self.num_relus).to(**self.device_type)
+                                    self.num_relus)
 
         # size: (num_activations, num_relus)
         knot_loc = loc_linspace.view(1, -1).expand(self.num_activations, -1)
@@ -86,7 +85,7 @@ class DeepReLU(DeepSplineBase):
 
 
     @staticmethod
-    def parameter_names(**kwargs):
+    def parameter_names():
         """ Yield names of the module parameters """
         for name in ['relu_slopes', 'spline_weight', 'spline_bias']:
             yield name

@@ -83,7 +83,7 @@ if __name__ == "__main__":
     deepspline_params = {'mode': 'fc', 'size': args.spline_size,
                         'grid': spline_grid, 'init': args.spline_init,
                         'bias': True, 'num_activations': 1,
-                        'save_memory': args.save_memory, 'device': args.device}
+                        'save_memory': args.save_memory}
 
     if args.activation_type == 'deepBspline':
         activation = DeepBSpline(**deepspline_params)
@@ -94,6 +94,7 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'Activation {args.activation_type} not available...')
 
+    activation = activation.to(args.device)
 
     # setup training data
     train_x = torch.zeros(args.num_train_samples, 1).uniform_(-parab_range, parab_range)

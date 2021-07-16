@@ -105,7 +105,7 @@ class Manager(Project):
                         'convnet_mnist'     : ConvNetMnist}
 
         assert params['net'] in models_dict.keys(), 'network not found: please add net to models_dict.'
-        net = models_dict[params['net']](**params['model'], device=device)
+        net = models_dict[params['net']](**params['model'])
 
         net = net.to(device)
         if device.startswith('cuda'):

@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from abc import ABC, abstractproperty
+from abc import ABC, abstractproperty, abstractmethod
 
 
 
@@ -24,8 +24,7 @@ class DeepSplineBase(ABC, nn.Module):
     """
 
     def __init__(self, mode='conv', size=51, grid=0.1, num_activations=None,
-                init='leaky_relu', device='cuda:0',
-                dtype=torch.float32, **kwargs):
+                init='leaky_relu', **kwargs):
 
         if mode not in ['conv', 'fc']:
             raise ValueError('Mode should be either "conv" or "fc".')
@@ -40,15 +39,25 @@ class DeepSplineBase(ABC, nn.Module):
         self.size = size
         self.num_activations = num_activations
         self.init = init
-        self.device = device
-        self.dtype = dtype
-        self.grid = torch.Tensor([grid]).to(**self.device_type)
+        self.grid = torch.Tensor([grid])
 
 
 
     @property
-    def device_type(self):
-        return dict(device=self.device, dtype=self.dtype)
+    def device(self):
+        """
+        Get the module's device (torch.device)
+
+        Returns the device of the first found parameter.
+        """
+        return getattr(self, next(self.parameter_names())).device
+
+
+    @staticmethod
+    @abstractmethod
+    def parameter_names():
+        """ Yield names of the module parameters """
+        pass
 
 
     @abstractproperty
@@ -170,7 +179,7 @@ class DeepSplineBase(ABC, nn.Module):
 
         Required for the BV(2) regularization.
         """
-        zero_one_vec = torch.tensor([0, 1]).view(-1, 1).to(**self.device_type)
+        zero_one_vec = torch.tensor([0, 1]).view(-1, 1).to(self.device)
         zero_one_vec = zero_one_vec.expand((-1, self.num_activations))
 
         if self.mode == 'conv':

@@ -23,7 +23,7 @@ class BaseModel(nn.Module):
     """
 
     def __init__(self, activation_type=None,
-                num_classes=None, device=None,
+                num_classes=None,
                 spline_init=None, spline_size=None,
                 spline_range=None, save_memory=False,
                 knot_threshold=None, **kwargs):
@@ -36,8 +36,6 @@ class BaseModel(nn.Module):
                 'deepBspline_explicit_linear', or 'deepRelu'.
             num_classes (int):
                 number of dataset classes.
-            device (str):
-                'cuda:0' or 'cpu'
 
             ------ deepspline --------------------
 
@@ -64,7 +62,6 @@ class BaseModel(nn.Module):
         # general attributes
         self.activation_type = activation_type
         self.num_classes = num_classes
-        self.device = device
 
         # deepspline attributes
         self.spline_init = spline_init
@@ -91,6 +88,17 @@ class BaseModel(nn.Module):
             self.deepspline = DeepBSplineExplicitLinear
         elif self.activation_type == 'deepRelu':
             self.deepspline = DeepReLU
+
+
+
+    @property
+    def device(self):
+        """
+        Get the network's device (torch.device)
+
+        Returns the device of the first found parameter.
+        """
+        return next(self.parameters()).device
 
 
     ############################################################################
@@ -122,7 +130,7 @@ class BaseModel(nn.Module):
                 activations.append(self.deepspline(mode=mode, num_activations=num_activations,
                                                 size=self.spline_size, grid=self.spline_grid,
                                                 init=self.spline_init, bias=bias,
-                                                save_memory=self.save_memory, device=self.device))
+                                                save_memory=self.save_memory))
         else:
             activations = self.init_standard_activations(activation_specs)
 
@@ -475,7 +483,7 @@ class BaseModel(nn.Module):
 
                 if isinstance(module, self.deepspline):
                     locations = module.grid_tensor # (num_activations, size)
-                    input = locations.transpose(0,1) # (size, num_activations)
+                    input = locations.transpose(0,1).to(self.device) # (size, num_activations)
                     if module.mode == 'conv':
                         input = input.unsqueeze(-1).unsqueeze(-1) # to 4D
 

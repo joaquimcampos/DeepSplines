@@ -33,7 +33,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
         coefficients = torch.zeros_like(grid_tensor) # spline coefficients
 
         # linear term coefficients (b0, b1)
-        spline_bias = torch.zeros(self.num_activations).to(**self.device_type)
+        spline_bias = torch.zeros(self.num_activations)
         spline_weight = torch.zeros_like(spline_bias)
 
         if self.init == 'leaky_relu':
@@ -80,7 +80,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
 
 
     @staticmethod
-    def parameter_names(**kwargs):
+    def parameter_names():
         """ Yield names of the module parameters """
         for name in ['coefficients_vect', 'spline_weight', 'spline_bias']:
             yield name
@@ -111,7 +111,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
         output = super().forward(input)
 
         x = self.reshape_forward(input)
-        b0 = self.spline_bias.view((1, -1, 1, 1))
+        b0 = self.spline_bias.view((1, -1, 1, 1)).to(self.spline_weight.device)
         b1 = self.spline_weight.view((1, -1, 1, 1))
 
         out_linear = b0 + b1 * x

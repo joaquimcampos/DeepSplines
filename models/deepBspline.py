@@ -55,7 +55,7 @@ class DeepBSpline(DeepBSplineBase):
 
 
     @staticmethod
-    def parameter_names(**kwargs):
+    def parameter_names():
         """ Yield names of the module parameters """
         yield 'coefficients_vect'
 

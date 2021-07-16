@@ -185,7 +185,8 @@ class DeepBSplineBase(DeepSplineBase):
 
         self.save_memory = save_memory
         self.init_zero_knot_indexes()
-        self.init_derivative_filters()
+
+        self.D2_filter = Tensor([1,-2,1]).view(1,1,3).div(self.grid)
 
 
 
@@ -194,43 +195,23 @@ class DeepBSplineBase(DeepSplineBase):
         """
         # self.zero_knot_indexes[i] gives index of knot 0 for filter/neuron_i.
         # size: (num_activations,)
-        activation_arange = torch.arange(0, self.num_activations).to(**self.device_type)
+        activation_arange = torch.arange(0, self.num_activations)
         self.zero_knot_indexes = (activation_arange*self.size + (self.size//2))
-
-
-
-    def init_derivative_filters(self):
-        """ Initialize D1, D2 filters.
-        """
-        # Derivative filters
-        self.D1_filter = Tensor([-1,1]).view(1,1,2).to(**self.device_type).div(self.grid)
-        self.D2_filter = Tensor([1,-2,1]).view(1,1,3).to(**self.device_type).div(self.grid)
 
 
 
     @property
     def grid_tensor(self):
         """
-        Locations of B-spline coefficients.
+        Get locations of B-spline coefficients.
+
+        Returns:
+            grid_tensor (torch.Tensor):
+                size: (num_activations, size)
         """
-        return self.get_grid_tensor(self.size, self.grid)
+        grid_arange = torch.arange(-(self.size//2), (self.size//2)+1).mul(self.grid)
 
-
-    def get_grid_tensor(self, size_, grid_):
-        """
-        Creates a 2D grid tensor of size (num_activations, size)
-        with the locations of the B-spline coefficients.
-
-        Args:
-            size (odd int): number of B-spline coefficients
-            grid (float): spacing between B-spline basis elements.
-        """
-        grid_arange = torch.arange(-(size_//2),
-                                    (size_//2)+1).to(**self.device_type).mul(grid_)
-        grid_tensor = grid_arange.expand((self.num_activations, size_))
-
-        return grid_tensor
-
+        return grid_arange.expand((self.num_activations, self.size))
 
 
     @abstractproperty
@@ -251,11 +232,13 @@ class DeepBSplineBase(DeepSplineBase):
         by doing a valid convolution of the coefficients {c_k}
         with the second-order finite-difference filter [1,-2,1].
         """
+        D2_filter = self.D2_filter.to(device=self.coefficients.device)
+
         # F.conv1d():
-        # out(i, 1, :) = self.D2_filter(1, 1, :) *conv* coefficients(i, 1, :)
+        # out(i, 1, :) = D2_filter(1, 1, :) *conv* coefficients(i, 1, :)
         # out.size() = (num_activations, 1, filtered_activation_size)
         # after filtering, we remove the singleton dimension
-        return F.conv1d(self.coefficients.unsqueeze(1), self.D2_filter).squeeze(1)
+        return F.conv1d(self.coefficients.unsqueeze(1), D2_filter).squeeze(1)
 
 
 
@@ -274,8 +257,11 @@ class DeepBSplineBase(DeepSplineBase):
 
         assert x.size(1) == self.num_activations, 'input.size(1) != num_activations.'
 
-        output = DeepBSpline_Func.apply(x, self.coefficients_vect, self.grid,
-                                        self.zero_knot_indexes, self.size, self.save_memory)
+        grid = self.grid.to(self.coefficients_vect.device)
+        zero_knot_indexes = self.zero_knot_indexes.to(grid.device)
+
+        output = DeepBSpline_Func.apply(x, self.coefficients_vect, grid,
+                                        zero_knot_indexes, self.size, self.save_memory)
 
         if self.save_memory is False:
             # Linear extrapolations:
@@ -285,12 +271,12 @@ class DeepBSplineBase(DeepSplineBase):
             # are taken into account in DeepBspline_Func() and linearExtrapolations adds the rest.
 
             coefficients = self.coefficients
-            leftmost_slope = (coefficients[:,1] - coefficients[:,0]).div(self.grid).view(1,-1,1,1)
-            rightmost_slope = (coefficients[:,-1] - coefficients[:,-2]).div(self.grid).view(1,-1,1,1)
+            leftmost_slope = (coefficients[:,1] - coefficients[:,0]).div(grid).view(1,-1,1,1)
+            rightmost_slope = (coefficients[:,-1] - coefficients[:,-2]).div(grid).view(1,-1,1,1)
 
             # x.detach(): gradient w/ respect to x is already tracked in DeepBSpline_Func
-            leftExtrapolations  = (x.detach() + self.grid*(self.size//2)).clamp(max=0) * leftmost_slope
-            rightExtrapolations = (x.detach() - self.grid*(self.size//2-1)).clamp(min=0) * rightmost_slope
+            leftExtrapolations  = (x.detach() + grid*(self.size//2)).clamp(max=0) * leftmost_slope
+            rightExtrapolations = (x.detach() - grid*(self.size//2-1)).clamp(min=0) * rightmost_slope
             # linearExtrapolations is zero for inputs inside B-spline range
             linearExtrapolations = leftExtrapolations + rightExtrapolations
 
@@ -350,9 +336,10 @@ class DeepBSplineBase(DeepSplineBase):
         """
         coefficients = self.coefficients
         coefficients[:, 2::] = 0. # first two coefficients remain the same
+        grid = self.grid.to(coefficients.device)
 
         for i in range(2, self.size):
             coefficients[:, i] = (coefficients[:, i-1] - coefficients[:, i-2]) + \
-                                    relu_slopes[:, i-2].mul(self.grid) + coefficients[:, i-1]
+                                    relu_slopes[:, i-2].mul(grid) + coefficients[:, i-1]
 
         return coefficients
