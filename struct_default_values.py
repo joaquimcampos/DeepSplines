@@ -74,7 +74,6 @@ structure = {   'log_dir' : None,
                     'save_memory' : None,
                     'knot_threshold' : None,
                     'hidden' : None,
-                    'lipschitz' : None,
                     'net' : None,
                     'verbose' : None
                     }

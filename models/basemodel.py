@@ -104,12 +104,12 @@ class BaseModel(nn.Module):
         """
         assert isinstance(activation_specs, list)
 
-        if self.deepspline is not None:
+        if self.using_deepsplines:
             activations = nn.ModuleList()
             for mode, num_activations in activation_specs:
-                activations.append(self.deepspline(mode=mode, size=self.spline_size,
-                                                grid=self.spline_grid, init=self.spline_init,
-                                                bias=bias, num_activations=num_activations,
+                activations.append(self.deepspline(mode=mode, num_activations=num_activations,
+                                                size=self.spline_size, grid=self.spline_grid,
+                                                init=self.spline_init, bias=bias,
                                                 save_memory=self.save_memory, device=self.device))
         else:
             activations = self.init_standard_activations(activation_specs)
@@ -182,7 +182,7 @@ class BaseModel(nn.Module):
                 nonlinearity = self.activation_type
                 slope_init = 0.01 if nonlinearity == 'leaky_relu' else 0.
 
-            elif self.deepspline is not None and self.spline_init in ['leaky_relu', 'relu']:
+            elif self.using_deepsplines and self.spline_init in ['leaky_relu', 'relu']:
                 nonlinearity = self.spline_init
                 slope_init = 0.01 if nonlinearity == 'leaky_relu' else 0.
             else:
@@ -222,6 +222,7 @@ class BaseModel(nn.Module):
         return num_params
 
 
+
     def modules_deepspline(self):
         """
         Yields all deepspline modules in the network.
@@ -231,26 +232,22 @@ class BaseModel(nn.Module):
                 yield module
 
 
+
     def named_parameters_no_deepspline(self, recurse=True):
         """
         Yields all named_parameters in the network,
         excepting deepspline parameters.
         """
-        try:
-            for name, param in self.named_parameters(recurse=recurse):
-                deepspline_param = False
-                # get all deepspline parameters
-                if self.deepspline is not None:
-                    for param_name in self.deepspline.parameter_names():
-                        if name.endswith(param_name):
-                            deepspline_param = True
+        for name, param in self.named_parameters(recurse=recurse):
+            deepspline_param = False
+            # get all deepspline parameters
+            if self.using_deepsplines:
+                for param_name in self.deepspline.parameter_names():
+                    if name.endswith(param_name):
+                        deepspline_param = True
 
-                if deepspline_param is False:
-                    yield name, param
-
-        except AttributeError:
-            print('Not using deepspline activations...')
-            raise
+            if deepspline_param is False:
+                yield name, param
 
 
 
@@ -258,19 +255,17 @@ class BaseModel(nn.Module):
         """
         Yields all deepspline named_parameters in the network.
         """
-        try:
-            for name, param in self.named_parameters(recurse=recurse):
-                deepspline_param = False
-                for param_name in self.deepspline.parameter_names():
-                    if name.endswith(param_name):
-                        deepspline_param = True
+        if not self.using_deepsplines:
+            raise ValueError('Not using deepspline activations...')
 
-                if deepspline_param is True:
-                    yield name, param
+        for name, param in self.named_parameters(recurse=recurse):
+            deepspline_param = False
+            for param_name in self.deepspline.parameter_names():
+                if name.endswith(param_name):
+                    deepspline_param = True
 
-        except AttributeError:
-            print('Not using deepspline activations...')
-            raise
+            if deepspline_param is True:
+                yield name, param
 
 
 
@@ -293,16 +288,6 @@ class BaseModel(nn.Module):
 
 
 
-    def parameters_batch_norm(self):
-        """
-        Yields all batch_norm parameters in the network.
-        """
-        for module in self.modules():
-            if isinstance(module, nn.BatchNorm2d):
-                yield module.weight, module.bias
-
-
-
     def freeze_parameters(self):
         """
         Freezes the network (no gradient computations).
@@ -313,6 +298,7 @@ class BaseModel(nn.Module):
 
     ############################################################################
     # Deepsplines: regularization and sparsification
+
 
     @property
     def using_deepsplines(self):
@@ -332,7 +318,7 @@ class BaseModel(nn.Module):
             l2sqsum (0d Tensor):
                 l2sqsum = (sum(weights^2) + sum(biases^2))
         """
-        wd = Tensor([0.]).to(self.device)
+        l2sqsum = Tensor([0.]).to(self.device)
 
         for module in self.modules():
             if hasattr(module, 'weight') and isinstance(module.weight, nn.Parameter):
@@ -345,26 +331,47 @@ class BaseModel(nn.Module):
 
 
 
-    def TV_BV(self):
+    def TV2(self):
         """
-        Computes the sum of the TV(2)/BV(2) norm of all
-        deepspline activations in the network.
+        Computes the sum of the TV(2) (second-order total-variation)
+        semi-norm of all deepspline activations in the network.
 
         Returns:
-            tv_bv (0d Tensor):
-                tv_bv = sum(BV(2)) if lipschitz is True, otherwise = sum(TV(2))
+            tv2 (0d Tensor):
+                tv2 = sum(TV(2))
         """
-        tv_bv = Tensor([0.]).to(self.device)
+        tv2 = Tensor([0.]).to(self.device)
 
         for module in self.modules():
             if isinstance(module, self.deepspline):
-                module_tv_bv = module.totalVariation(mode='additive')
-                if self.params['lipschitz'] is True:
-                    module_tv_bv = module_tv_bv + module.fZerofOneAbs(mode='additive')
+                module_tv2 = module.totalVariation(mode='additive')
+                tv2 = tv2 + module_tv2.norm(p=1)
 
-                tv_bv = tv_bv + module_tv_bv.norm(p=1)
+        return tv2[0] # 1-tap 1d tensor -> 0d tensor
 
-        return tv_bv[0] # 1-tap 1d tensor -> 0d tensor
+
+
+    def BV2(self):
+        """
+        Computes the sum of the BV(2) norm of all
+        deepspline activations in the network.
+
+        BV(2)(f) = TV(2)(f) + |f(0)| + |f(1)|
+        This is a norm, whereas the TV(2) is a semi-norm.
+
+        Returns:
+            bv2 (0d Tensor):
+                bv2 = sum(BV(2))
+        """
+        bv2 = Tensor([0.]).to(self.device)
+
+        for module in self.modules():
+            if isinstance(module, self.deepspline):
+                module_tv2 = module.totalVariation(mode='additive')
+                module_bv2 = module_tv2 + module.fZerofOneAbs(mode='additive')
+                bv2 = bv2 + module_bv2.norm(p=1)
+
+        return bv2[0] # 1-tap 1d tensor -> 0d tensor
 
 
 
@@ -416,6 +423,7 @@ class BaseModel(nn.Module):
         for module in self.modules():
             if isinstance(module, self.deepspline):
                 module.apply_threshold(self.knot_threshold)
+
 
 
     def compute_sparsity(self):

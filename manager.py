@@ -251,8 +251,12 @@ class Manager(Project):
 
         # Initialize the losses to log
         self.losses_names = ['loss', 'df_loss'] # total loss and data fidelity loss
-        if self.net.tv_bv_regularization is True:
-            self.losses_names.append('tv_bv_loss')
+
+        if self.net.using_deepsplines and self.params['lmbda'] > 0:
+            if self.params['lipschitz'] is True:
+                self.losses_names.append('bv2_loss')
+            else:
+                self.losses_names.append('tv2_loss')
 
         # Set the number of epochs and sparsify_activations flag
         num_epochs = copy.copy(self.params['num_epochs'])
@@ -310,17 +314,21 @@ class Manager(Project):
 
         losses = [data_fidelity]
 
-        regularization = torch.zeros_like(data_fidelity, requires_grad=True)
+        regularization = torch.zeros_like(data_fidelity)
         if self.params['weight_decay'] > 0:
             # weight decay regularization
-            regularization = regularization + \
-                        self.params['weight_decay']/2 * self.net.l2sqsum_weights_biases()
+            wd_regularization = self.params['weight_decay']/2 * self.net.l2sqsum_weights_biases()
+            regularization = regularization + wd_regularization
 
         if self.net.using_deepsplines and self.params['lmbda'] > 0:
-            # TV(2)/BV(2) regularization
-            tv_bv = self.params['lmbda'] * self.net.TV_BV()
-            regularization = regularization + tv_bv
-            losses.append(tv_bv.clone().detach())
+            # deepspline regularization (TV(2) or BV(2))
+            if self.params['lipschitz'] is True:
+                ds_regularization = self.params['lmbda'] * self.net.BV2()
+            else:
+                ds_regularization = self.params['lmbda'] * self.net.TV2()
+
+            losses.append(ds_regularization.clone().detach())
+            regularization = regularization + ds_regularization
 
         if self.net.training is True:
             regularization.backward()
