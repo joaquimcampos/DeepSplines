@@ -1,9 +1,8 @@
 """
 Wrap around nn.Module for DeepSpline networks.
 
-This module is specific to this project.
-For using DeepSplines in other projects, the model should
-subclass DeepSplineModule() instead. (see deepspline_module.py).
+Includes all DeepSpline functionalities.
+DeepSpline networks should subclass DeepSplineModule.
 """
 
 
@@ -17,79 +16,39 @@ from models.deepRelu import DeepReLU
 from ds_utils import spline_grid_from_range
 
 
-class BaseModel(nn.Module):
+class DeepSplineModule(nn.Module):
     """
-    Parent class for DeepSpline networks in this project.
+    Parent class for DeepSpline networks.
     """
 
-    def __init__(self, activation_type=None,
-                num_classes=None,
-                spline_size=None, spline_range=None,
-                spline_init=None, save_memory=False,
-                knot_threshold=None, **kwargs):
-        """
-        Args:
-            ------ general -----------------------
 
-            activation_type (str):
-                'relu', 'leaky_relu', 'deepBspline',
-                'deepBspline_explicit_linear', or 'deepRelu'.
-            num_classes (int):
-                number of dataset classes.
+    # dictionary with names and classes of deepspline modules
+    deepsplines = {'deepBspline': DeepBSpline,
+                    'deepBspline_explicit_linear': DeepBSplineExplicitLinear,
+                    'deepRelu': DeepReLU
+                    }
 
-            ------ deepspline --------------------
 
-            spline_size (odd int):
-                number of coefficients of spline grid;
-                the number of knots is K = size - 2.
-            spline_range (float):
-                Defines the range of the B-spline expansion;
-                B-splines range = [-spline_range, spline_range].
-            spline_init (str):
-                Function to initialize activations as (e.g. 'leaky_relu').
-                For deepBsplines: 'leaky_relu', 'relu' or 'even_odd';
-                For deepReLU: 'leaky_relu', 'relu'.
-            save_memory (bool):
-                If true, use a more memory efficient version (takes more time);
-                Can be used only with deepBsplines.
-                (see deepBspline_base.py docstring for details.)
-            knot_threshold (non-negative float):
-                If nonzero, sparsify activations by eliminating knots whose
-                slope change is below this value.
-        """
+    def __init__(self, **kwargs):
+        """ """
+
         super().__init__()
 
-        past_attr_names = dir(self) # save attribute names
 
-        # general attributes
-        self.activation_type = activation_type
-        self.num_classes = num_classes
 
-        # deepspline attributes
-        self.spline_init = spline_init
-        self.spline_size = spline_size
-        self.spline_range = spline_range
-        self.save_memory = save_memory
-        self.knot_threshold = knot_threshold
+    @classmethod
+    def is_deepspline_module(cls, module):
+        """
+        Returns True if module is a deepspline module, and False otherwise.
 
-        current_attr_names = dir(self) # current attribute names
-        # Get list of newly added attributes
-        new_attr_names = list(set(current_attr_names) - set(past_attr_names))
+        Args:
+            module (nn.Module)
+        """
+        for class_ in cls.deepsplines.values():
+            if isinstance(module, class_):
+                return True
 
-        for attr_name in new_attr_names:
-            # check that all the arguments were given (are not None).
-            assert getattr(self, attr_name) is not None, f'self.{attr_name} is None.'
-
-        self.spline_grid = \
-            spline_grid_from_range(self.spline_size, self.spline_range)
-
-        self.deepspline = None
-        if self.activation_type == 'deepBspline':
-            self.deepspline = DeepBSpline
-        elif self.activation_type == 'deepBspline_explicit_linear':
-            self.deepspline = DeepBSplineExplicitLinear
-        elif self.activation_type == 'deepRelu':
-            self.deepspline = DeepReLU
+        return False
 
 
 
@@ -107,107 +66,113 @@ class BaseModel(nn.Module):
     # Activation initialization
 
 
-    def init_activation_list(self, activation_specs, bias=True, **kwargs):
+    @classmethod
+    def init_activation_list(cls, activation_specs, activation_type,
+                            spline_size=51, spline_range=4,
+                            spline_init='leaky_relu', bias=True,
+                            save_memory=False, **kwargs):
         """
         Initialize list of activation modules.
 
         Args:
             activation_specs (list):
-                list of pairs ('layer_type', num_channels/neurons);
+                list of 2-tuples ('layer_type', num_channels/neurons);
                 'layer_type' can be 'conv' (convolutional) or 'fc' (fully-connected);
                 len(activation_specs) = number of activation layers;
                 e.g., [('conv', 64), ('fc', 100)].
-
+            activation_type (str):
+                'deepBspline', 'deepBspline_explicit_linear', or 'deepRelu'.
+            spline_size (odd int):
+                number of coefficients of spline grid;
+                the number of knots is K = size - 2.
+            spline_range (float):
+                Defines the range of the B-spline expansion;
+                B-splines range = [-spline_range, spline_range].
+            spline_init (str):
+                Function to initialize activations as (e.g. 'leaky_relu').
+                For deepBsplines: 'leaky_relu', 'relu' or 'even_odd';
+                For deepReLU: 'leaky_relu', 'relu'.
             bias (bool):
                 if True, add explicit bias to deepspline;
                 only relevant if self.deepspline == DeepBSplineExplicitLinear.
+            save_memory (bool):
+                If true, use a more memory efficient version (takes more time);
+                Can be used only with deepBsplines.
+                (see deepBspline_base.py docstring for details.)
 
         Returns:
             activations (nn.ModuleList)
         """
-        assert isinstance(activation_specs, list), f'activation_specs type: {type(activation_specs)}'
+        if not isinstance(activation_specs, list):
+            raise ValueError('activation_specs needs to be a list of 2-tuples, '
+                            f'but is of type: {type(activation_specs)}.')
 
-        if self.using_deepsplines:
-            activations = nn.ModuleList()
-            for mode, num_activations in activation_specs:
-                activations.append(self.deepspline(mode=mode, num_activations=num_activations,
-                                                size=self.spline_size, grid=self.spline_grid,
-                                                init=self.spline_init, bias=bias,
-                                                save_memory=self.save_memory))
-        else:
-            activations = self.init_standard_activations(activation_specs)
+        spline_grid = spline_grid_from_range(spline_size, spline_range)
+
+        deepspline = None
+        for name in cls.deepsplines.keys():
+            if activation_type == name:
+                deepspline = cls.deepsplines[name]
+
+        if deepspline is None:
+            raise ValueError(f'Activation "{activation_type}" is not deepspline.')
+
+        activations = nn.ModuleList()
+        for mode, num_activations in activation_specs:
+            activations.append(deepspline(mode=mode, num_activations=num_activations,
+                                            size=spline_size, grid=spline_grid,
+                                            init=spline_init, bias=bias,
+                                            save_memory=save_memory))
 
         return activations
 
 
 
-    def init_activation(self, activation_specs, **kwargs):
+    @classmethod
+    def init_activation(cls, activation_specs, activation_type, **kwargs):
         """
-        Initialize a single activation module
+        Initialize a single activation module.
+
+        Check init_activation_list() for **kwargs details.
 
         Args:
             activation_specs (tuple):
                 2-tuple ('layer_type', num_channels/neurons);
                 'layer_type' can be 'conv' (convolutional) or 'fc' (fully-connected);
                 e.g. ('conv', 64).
+            activation_type (str):
+                'deepBspline', 'deepBspline_explicit_linear', or 'deepRelu'
 
         Returns:
             activation (nn.Module)
         """
-        assert isinstance(activation_specs, tuple), f'activation_specs type: {type(activation_specs)}'
-        activation = self.init_activation_list([activation_specs], **kwargs)[0]
+        if not isinstance(activation_specs, tuple):
+            raise ValueError('activation_specs needs to be a tuple, '
+                            f'but is of type: {type(activation_specs)}.')
+
+        activation = cls.init_activation_list([activation_specs],
+                                                activation_type, **kwargs)[0]
 
         return activation
 
 
 
-    def init_standard_activations(self, activation_specs, **kwargs):
-        """
-        Initialize non-spline activation modules.
-
-        Args:
-            activation_specs :
-                list of pairs ('layer_type', num_channels/neurons);
-                'layer_type' can be 'conv' (convolutional) or 'fc' (fully-connected);
-                len(activation_specs) = number of activation layers.
-                e.g., [('conv', 64), ('fc', 100)].
-
-        Returns:
-            activations (nn.ModuleList)
-        """
-        activations = nn.ModuleList()
-
-        if self.activation_type == 'relu':
-            relu = nn.ReLU()
-            for i in range(len(activation_specs)):
-                activations.append(relu)
-
-        elif self.activation_type == 'leaky_relu':
-            leaky_relu = nn.LeakyReLU()
-            for i in range(len(activation_specs)):
-                activations.append(leaky_relu)
-
-        else:
-            raise ValueError(f'{self.activation_type} is not in relu family...')
-
-        return activations
-
-
-
-    def initialization(self, init_type='He'):
+    def initialization(self, spline_init, init_type='He'):
         """
         Initializes the network weights with 'He', 'Xavier', or a
         custom gaussian initialization.
+
+        spline_init (str):
+            Function that activations are initialized as. Only used
+            when init_type='He' and spline_init is 'leaky_relu' or 'relu'.
+            Otherwise, 'Xavier' or 'custom_normal' inits are used.
         """
-        assert init_type in ['He', 'Xavier', 'custom_normal']
+        if init_type not in ['He', 'Xavier', 'custom_normal']:
+            raise ValueError(f'init_type {init_type} is invalid.')
 
         if init_type == 'He':
-            if self.activation_type in ['leaky_relu', 'relu']:
-                nonlinearity = self.activation_type
-                slope_init = 0.01 if nonlinearity == 'leaky_relu' else 0.
-
-            elif self.using_deepsplines and self.spline_init in ['leaky_relu', 'relu']:
-                nonlinearity = self.spline_init
+            if spline_init in ['leaky_relu', 'relu']:
+                nonlinearity = spline_init
                 slope_init = 0.01 if nonlinearity == 'leaky_relu' else 0.
             else:
                 init_type = 'Xavier' # overwrite init_type
@@ -254,7 +219,7 @@ class BaseModel(nn.Module):
         Yields all deepspline modules in the network.
         """
         for module in self.modules():
-            if isinstance(module, self.deepspline):
+            if self.is_deepspline_module(module):
                 yield module
 
 
@@ -267,8 +232,8 @@ class BaseModel(nn.Module):
         for name, param in self.named_parameters(recurse=recurse):
             deepspline_param = False
             # get all deepspline parameters
-            if self.using_deepsplines:
-                for param_name in self.deepspline.parameter_names():
+            for deepspline in self.deepsplines.values():
+                for param_name in deepspline.parameter_names():
                     if name.endswith(param_name):
                         deepspline_param = True
 
@@ -281,14 +246,13 @@ class BaseModel(nn.Module):
         """
         Yields all deepspline named_parameters in the network.
         """
-        if not self.using_deepsplines:
-            raise ValueError('Not using deepspline activations...')
-
         for name, param in self.named_parameters(recurse=recurse):
             deepspline_param = False
-            for param_name in self.deepspline.parameter_names():
-                if name.endswith(param_name):
-                    deepspline_param = True
+            # get all deepspline parameters
+            for deepspline in self.deepsplines.values():
+                for param_name in self.deepspline.parameter_names():
+                    if name.endswith(param_name):
+                        deepspline_param = True
 
             if deepspline_param is True:
                 yield name, param
@@ -326,15 +290,6 @@ class BaseModel(nn.Module):
     # Deepsplines: regularization and sparsification
 
 
-    @property
-    def using_deepsplines(self):
-        """
-        True if using deepspline activations.
-        """
-        return (self.deepspline is not None)
-
-
-
     def l2sqsum_weights_biases(self):
         """
         Computes the sum of the l2 squared norm of the weights and biases
@@ -369,7 +324,7 @@ class BaseModel(nn.Module):
         tv2 = Tensor([0.]).to(self.device)
 
         for module in self.modules():
-            if isinstance(module, self.deepspline):
+            if self.is_deepspline_module(module):
                 module_tv2 = module.totalVariation(mode='additive')
                 tv2 = tv2 + module_tv2.norm(p=1)
 
@@ -392,7 +347,7 @@ class BaseModel(nn.Module):
         bv2 = Tensor([0.]).to(self.device)
 
         for module in self.modules():
-            if isinstance(module, self.deepspline):
+            if self.is_deepspline_module(module):
                 module_tv2 = module.totalVariation(mode='additive')
                 module_bv2 = module_tv2 + module.fZerofOneAbs(mode='additive')
                 bv2 = bv2 + module_bv2.norm(p=1)
@@ -424,7 +379,7 @@ class BaseModel(nn.Module):
         max_weights_product = Tensor([1.]).to(self.device)
 
         for module in self.modules():
-            if isinstance(module, self.deepspline):
+            if self.is_deepspline_module(module):
                 module_tv = module.totalVariation()
                 module_fzero_fone = module.fZerofOneAbs()
                 bv_product = bv_product * (module_tv.sum() + module_fzero_fone.sum())
@@ -438,42 +393,64 @@ class BaseModel(nn.Module):
 
 
 
-    def sparsify_activations(self):
+    def sparsify_activations(self, knot_threshold):
         """
         Sparsifies the deepspline activations, eliminating slope
         changes (a_k) smaller than a threshold.
 
         Note that deepspline(x) = sum_k [a_k * ReLU(x-kT)] + (b1*x + b0)
         This function sets a_k to zero if |a_k| < knot_threshold.
+
+        Args:
+            knot_threshold (non-negative float):
+                If nonzero, sparsify activations by eliminating knots whose
+                slope change is below this value.
         """
+        if float(knot_threshold) < 0:
+            raise ValueError('knot_threshold should be a positive float...')
+
         for module in self.modules():
-            if isinstance(module, self.deepspline):
-                module.apply_threshold(self.knot_threshold)
+            if self.is_deepspline_module(module):
+                module.apply_threshold(float(knot_threshold))
 
 
 
-    def compute_sparsity(self):
+    def compute_sparsity(self, knot_threshold):
         """
         Returns the sparsity of the activations, i.e. the number of
         activation knots whose slope change is below knot_threshold.
 
+        Args:
+            knot_threshold (non-negative float):
+                threshold for slope change. If activations were sparsified
+                with sparsify_activations(), this value should be equal
+                to the knot_threshold used for sparsification.
         Returns:
             sparsity (int)
         """
+        if float(knot_threshold) < 0:
+            raise ValueError('knot_threshold should be a positive float...')
+
         sparsity = 0
         for module in self.modules():
-            if isinstance(module, self.deepspline):
-                module_sparsity, _ = module.get_threshold_sparsity(self.knot_threshold)
+            if self.is_deepspline_module(module):
+                module_sparsity, _ = module.get_threshold_sparsity(float(knot_threshold))
                 sparsity += module_sparsity.sum().item()
 
         return sparsity
 
 
 
-    def get_deepspline_activations(self):
+    def get_deepspline_activations(self, knot_threshold=0.):
         """
         Get information of deepspline activations (e.g. for plotting).
 
+        Args:
+            knot_threshold (non-negative float):
+                threshold for slope change. If activations were sparsified
+                with sparsify_activations(), this value should be equal
+                to the knot_threshold used for sparsification.
+                If zero, all knots are True in sparsity_mask.
         Returns:
             activations_list (list):
                 Length = number of deepspline activations.
@@ -487,7 +464,7 @@ class BaseModel(nn.Module):
             activations_list = []
             for name, module in self.named_modules():
 
-                if isinstance(module, self.deepspline):
+                if self.is_deepspline_module(module):
                     locations = module.grid_tensor # (num_activations, size)
                     input = locations.transpose(0,1).to(self.device) # (size, num_activations)
                     if module.mode == 'conv':
@@ -499,7 +476,7 @@ class BaseModel(nn.Module):
                         coefficients = coefficients.squeeze(-1).squeeze(-1) # to 2D
                     # coefficients: (num_activations, size)
 
-                    _, threshold_sparsity_mask = module.get_threshold_sparsity(self.knot_threshold)
+                    _, threshold_sparsity_mask = module.get_threshold_sparsity(float(knot_threshold))
                     activations_list.append({'name': '_'.join([name, module.mode]),
                                             'locations': locations.clone().detach().cpu(),
                                             'coefficients': coefficients.clone().detach().cpu(),
