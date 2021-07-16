@@ -11,11 +11,11 @@ __all__ = ['TwoDNet_OneHidden']
 
 class TwoDNet_OneHidden(BaseModel):
     """
-    Input size: N x 2 (2D data points)
-
-    Output size of each layer:
-    fc1 -> N x h
-    fc2 -> N x 1
+    - Input size:
+        N x 2 (2D data points)
+    - Output size of each layer:
+        fc1 -> N x h
+        fc2 -> N x 1
     """
 
     def __init__(self, hidden=2, **params):
