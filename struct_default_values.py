@@ -66,7 +66,6 @@ structure = {   'log_dir' : None,
                     },
                 'model':
                     {
-                    'dataset_name' : None,
                     'activation_type' : None,
                     'spline_init' : None,
                     'spline_size' : None,

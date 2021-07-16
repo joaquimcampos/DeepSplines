@@ -1,4 +1,10 @@
-""" Wrap around nn.Module to accomodate for Deepsplines """
+"""
+Wrap around nn.Module for DeepSpline networks.
+
+This module is specific to this project.
+For using DeepSplines in other projects, the model should
+subclass DeepSplineModule() instead. (see deepspline_module.py).
+"""
 
 
 import torch
@@ -12,12 +18,15 @@ from ds_utils import spline_grid_from_range
 
 
 class BaseModel(nn.Module):
+    """
+    Parent class for DeepSpline networks in this project.
+    """
 
-    def __init__(self, activation_type=None, dataset_name=None,
+    def __init__(self, activation_type=None,
                 num_classes=None, device=None,
                 spline_init=None, spline_size=None,
                 spline_range=None, save_memory=False,
-                knot_threshold=0., **kwargs):
+                knot_threshold=None, **kwargs):
         """
         Args:
             ------ general -----------------------
@@ -25,8 +34,6 @@ class BaseModel(nn.Module):
             activation_type (str):
                 'relu', 'leaky_relu', 'deepBspline',
                 'deepBspline_explicit_linear', or 'deepRelu'.
-            dataset_name (str):
-                s_shape_1500', 'circle_1500', 'cifar10', 'cifar100' or 'mnist'.
             num_classes (int):
                 number of dataset classes.
             device (str):
@@ -50,15 +57,12 @@ class BaseModel(nn.Module):
                 If nonzero, sparsify activations by eliminating knots whose
                 slope change is below this value.
         """
-        # TODO: Check default values of arguments
-
         super().__init__()
 
-        self.params = params
+        past_attr_names = dir(self) # save attribute names
 
         # general attributes
         self.activation_type = activation_type
-        self.dataset_name = dataset_name
         self.num_classes = num_classes
         self.device = device
 
@@ -68,6 +72,14 @@ class BaseModel(nn.Module):
         self.spline_range = spline_range
         self.save_memory = save_memory
         self.knot_threshold = knot_threshold
+
+        current_attr_names = dir(self) # current attribute names
+        # Get list of newly added attributes
+        new_attr_names = list(set(current_attr_names) - set(past_attr_names))
+
+        for attr_name in new_attr_names:
+            # check that all the arguments were given (are not None).
+            assert getattr(self, attr_name) is not None, f'self.{attr_name} is None.'
 
         self.spline_grid = \
             spline_grid_from_range(self.spline_size, self.spline_range)
