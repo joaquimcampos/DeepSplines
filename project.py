@@ -25,6 +25,12 @@ class Project():
         self.training = (self.params["mode"]=='train')
         self.log_dir_model = os.path.join(self.params["log_dir"],
                                             self.params["model_name"])
+                                            
+        self.best_train_acc = 0.
+        self.best_valid_acc = 0.
+
+        if self.training:
+            self.start_epoch, self.global_step = 0, 0
 
 
 
@@ -157,12 +163,6 @@ class Project():
 
         Returns True if a checkpoint was successfully loaded, and False otherwise.
         """
-        self.best_train_acc = 0.
-        self.best_valid_acc = 0.
-
-        if self.training:
-            self.start_epoch, self.global_step = 0, 0
-
         if self.params["ckpt_filename"] is not None:
             try:
                 self.load_merge_params(self.params["ckpt_filename"])
