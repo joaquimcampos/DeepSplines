@@ -267,7 +267,7 @@ def check_device(*tensors, dev='cpu'):
 
 
 
-def spline_grid_from_range(spline_size, range_=2, round_to=1e-6):
+def spline_grid_from_range(spline_size, spline_range, round_to=1e-6):
     """
     Compute spline grid spacing from desired one-sided range
     and the number of activation coefficients.
@@ -275,12 +275,17 @@ def spline_grid_from_range(spline_size, range_=2, round_to=1e-6):
     Args:
         spline_size (odd int):
             number of spline coefficients
-        range_ (float):
+        spline_range (float):
             one-side range of spline expansion.
         round_to (float):
             round grid to this value
     """
-    spline_grid = ((range_ / (spline_size//2)) // round_to) * round_to
+    if int(spline_size) % 2 == 0:
+        raise ValueError('size should be an odd number.')
+    if float(spline_range) <= 0:
+        raise ValueError('spline_range needs to be a positive float...')
+
+    spline_grid = ((float(spline_range) / (int(spline_size)//2)) // round_to) * round_to
 
     return spline_grid
 
