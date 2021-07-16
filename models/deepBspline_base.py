@@ -183,7 +183,7 @@ class DeepBSplineBase(DeepSplineBase):
 
         super().__init__(**kwargs)
 
-        self.save_memory = save_memory
+        self.save_memory = bool(save_memory)
         self.init_zero_knot_indexes()
 
         self.D2_filter = Tensor([1,-2,1]).view(1,1,3).div(self.grid)

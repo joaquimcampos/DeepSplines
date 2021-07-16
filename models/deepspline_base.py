@@ -28,18 +28,22 @@ class DeepSplineBase(ABC, nn.Module):
 
         if mode not in ['conv', 'fc']:
             raise ValueError('Mode should be either "conv" or "fc".')
-        if size % 2 == 0:
-            raise ValueError('Size should be an odd number.')
+        if int(size) % 2 == 0:
+            raise ValueError('size should be an odd number.')
         if num_activations is None:
             raise ValueError('Need to provide num_activations...')
+        if int(num_activations) < 1:
+            raise ValueError('num_activations needs to be a positive integer...')
+        if float(grid) <= 0:
+            raise ValueError('grid needs to be a positive float...')
 
         super().__init__()
 
         self.mode = mode
-        self.size = size
-        self.num_activations = num_activations
+        self.size = int(size)
+        self.num_activations = int(num_activations)
         self.init = init
-        self.grid = torch.Tensor([grid])
+        self.grid = torch.Tensor([float(grid)])
 
 
 
