@@ -51,6 +51,9 @@ class Manager(Project):
             print('\n==> Parameters: ', self.params, sep='\n')
 
         self.dataset = init_dataset(**self.params['dataset'])
+
+        # model requires number of dataset classes for the output layer.
+        self.params['model']['num_classes'] = self.dataset.num_classes
         self.net = self.build_model(self.params, self.device)
 
         if self.training:
@@ -102,8 +105,7 @@ class Manager(Project):
                         'convnet_mnist'     : ConvNetMnist}
 
         assert params['net'] in models_dict.keys(), 'network not found: please add net to models_dict.'
-        net = models_dict[params['net']](**params['model'], device=device,
-                                        num_classes=self.dataset.num_classes)
+        net = models_dict[params['net']](**params['model'], device=device)
 
         net = net.to(device)
         if device.startswith('cuda'):
@@ -223,23 +225,6 @@ class Manager(Project):
 
         self.net.train() # set the network in training mode
 
-        ##### Set custom training and validation log steps
-
-        if self.params['log_step'] is None: # default
-            # log at every epoch
-            self.params['log_step'] = self.num_batches['train']
-
-        if self.params['valid_log_step'] is None: # default
-            # validation done halfway and at the end of training
-            self.params['valid_log_step'] = \
-                int(self.num_batches['train'] * self.params['num_epochs']*1./2.)
-
-        elif self.params['valid_log_step'] < 0:
-            # validation at every epoch
-            self.params['valid_log_step'] = self.num_batches['train']
-
-        #####
-
         # Load the data
         print('\n==> Loading the data...')
         self.dataloader = DataLoader(self.dataset, **self.params['dataloader'])
@@ -248,6 +233,23 @@ class Manager(Project):
         self.save_train_info()
         if self.params['verbose']:
             self.print_train_info()
+
+        ##### Set custom training and validation log steps
+
+        if self.params['log_step'] is None: # default
+            # log at every epoch
+            self.params['log_step'] = self.num_train_batches
+
+        if self.params['valid_log_step'] is None: # default
+            # validation done halfway and at the end of training
+            self.params['valid_log_step'] = \
+                int(self.num_train_batches * self.params['num_epochs']*1./2.)
+
+        elif self.params['valid_log_step'] < 0:
+            # validation at every epoch
+            self.params['valid_log_step'] = self.num_train_batches
+
+        #####
 
         # Initialize the losses to log
         self.losses_names = ['loss', 'df_loss'] # total loss and data fidelity loss
