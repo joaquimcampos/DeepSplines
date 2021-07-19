@@ -14,10 +14,7 @@ from ds_utils import ArgCheck, assign_tree_structure
 from struct_default_values import structure, default_values
 
 
-
 # TODO: write setup.py!
-# TODO: ValueError->Type Error
-# TODO: Use types in function def.
 def get_arg_parser():
     """
     Parses command-line arguments.

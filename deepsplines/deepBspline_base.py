@@ -55,7 +55,7 @@ from torch import Tensor
 import numpy as np
 from scipy.linalg import toeplitz
 from abc import abstractproperty
-from models.deepspline_base import DeepSplineBase
+from deepsplines.deepspline_base import DeepSplineBase
 
 
 

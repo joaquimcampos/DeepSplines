@@ -43,15 +43,15 @@ class DeepSplineBase(ABC, nn.Module):
         if mode not in ['conv', 'fc']:
             raise ValueError('Mode should be either "conv" or "fc".')
         if int(num_activations) < 1:
-            raise ValueError('num_activations needs to be a positive integer...')
+            raise TypeError('num_activations needs to be a positive integer...')
         if int(size) % 2 == 0:
-            raise ValueError('size should be an odd number.')
+            raise TypeError('size should be an odd number.')
 
         if range_ is None:
             if grid is None:
                 raise ValueError('One of the two args (range_ or grid) required.')
             elif float(grid) <= 0:
-                raise ValueError('grid should be a positive float...')
+                raise TypeError('grid should be a positive float...')
         elif grid is not None:
             raise ValueError('range_ and grid should not be both set.')
 

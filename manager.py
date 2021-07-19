@@ -16,7 +16,7 @@ from dataloader import DataLoader
 from project import Project
 from ds_utils import update_running_losses
 
-from models import *
+from networks import *
 from datasets import init_dataset
 
 
@@ -98,14 +98,14 @@ class Manager(Project):
         """
         print('\n==> Building model...')
 
-        models_dict = { 'twoDnet_onehidden' : TwoDNet_OneHidden,
-                        'twoDnet_twohidden' : TwoDNet_TwoHidden,
-                        'resnet32_cifar'    : ResNet32Cifar,
-                        'nin_cifar'         : NiNCifar,
-                        'convnet_mnist'     : ConvNetMnist}
+        networks_dict = {'twoDnet_onehidden' : TwoDNet_OneHidden,
+                    'twoDnet_twohidden' : TwoDNet_TwoHidden,
+                    'resnet32_cifar'    : ResNet32Cifar,
+                    'nin_cifar'         : NiNCifar,
+                    'convnet_mnist'     : ConvNetMnist}
 
-        assert params['net'] in models_dict.keys(), 'network not found: please add net to models_dict.'
-        net = models_dict[params['net']](**params['model'])
+        assert params['net'] in networks_dict.keys(), 'network not found: please add net to networks_dict.'
+        net = networks_dict[params['net']](**params['model'])
 
         net = net.to(device)
         if device.startswith('cuda'):
@@ -130,7 +130,7 @@ class Manager(Project):
         second 'aux' optimizer (for the deepspline parameters).
 
         Note: An 'aux' optimizer different from SGD is usually required
-        for training deepsplines. Adam generally works well. 
+        for training deepsplines. Adam generally works well.
         """
         self.optim_names = self.params['optimizer']
 

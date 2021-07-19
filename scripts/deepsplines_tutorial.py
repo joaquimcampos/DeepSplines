@@ -16,7 +16,7 @@ import torch.optim as optim
 import time
 
 # Need to import dsnn (takes the role of torch.nn for DeepSplines)
-from models import dsnn
+from deepsplines import dsnn
 
 
 ########################################################################
@@ -104,9 +104,10 @@ class DSNet(dsnn.DSModule):
         self.conv_ds = nn.ModuleList()
         self.fc_ds = nn.ModuleList()
 
-        # We define some optional parameter for the deepspline
-        # For the optional parameters, see the classes docstring.
-        opt_params = {}
+        # We define some optional parameters for the deepspline
+        # (see DeepBSpline.__init__())
+        opt_params = {'size': 51, 'range_': 4, 'init': 'leaky_relu',
+                        'save_memory': False}
 
         # we generally do not need biases since DeepSplines can do them
         self.conv1 = nn.Conv2d(3, 6, 5, bias=False)
@@ -123,7 +124,7 @@ class DSNet(dsnn.DSModule):
         self.fc_ds.append(dsnn.DeepBSpline('fc', 84, **opt_params))
         self.fc3 = nn.Linear(84, 10)
 
-        self.initialization('leaky_relu', init_type='He')
+        self.initialization(opt_params['init'], init_type='He')
         self.num_params = self.get_num_params()
 
 
@@ -201,8 +202,8 @@ print('Finished Training ReLU network. \n'
 
 ########################################################################
 # Training the DeepSpline network
-# Note: Since the network is very small, the time it takes to train
-# deepsplines should be significantly longer.
+# Note: Since the original network is small, the time it takes to train
+# deepsplines is significantly larger.
 
 # Regularization weight for the TV(2) or BV(2) regularization.
 # Needs to be tuned for performance

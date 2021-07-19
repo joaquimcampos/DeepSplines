@@ -9,7 +9,7 @@ in some contexts.
 import torch
 from torch import nn
 from torch.nn import functional as F
-from models.deepBspline_base import DeepBSplineBase
+from deepsplines.deepBspline_base import DeepBSplineBase
 
 
 

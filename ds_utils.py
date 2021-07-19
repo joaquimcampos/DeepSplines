@@ -281,9 +281,9 @@ def spline_grid_from_range(spline_size, spline_range, round_to=1e-6):
             round grid to this value
     """
     if int(spline_size) % 2 == 0:
-        raise ValueError('size should be an odd number.')
+        raise TypeError('size should be an odd number.')
     if float(spline_range) <= 0:
-        raise ValueError('spline_range needs to be a positive float...')
+        raise TypeError('spline_range needs to be a positive float...')
 
     spline_grid = ((float(spline_range) / (int(spline_size)//2)) // round_to) * round_to
 

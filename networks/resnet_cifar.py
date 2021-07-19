@@ -13,7 +13,7 @@ Based on:
 import torch
 import torch.nn as nn
 
-from models.basemodel import BaseModel
+from deepsplines.basemodel import BaseModel
 
 __all__ = ['ResNet32Cifar']
 
