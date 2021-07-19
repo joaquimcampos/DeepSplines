@@ -1,10 +1,8 @@
 """
-Wrap around nn.Module for DeepSpline networks.
+Wrap around nn.Module with all DeepSpline functionalities.
 
-Includes all DeepSpline functionalities.
 DeepSpline networks should subclass DeepSplineModule.
 """
-
 
 import torch
 from torch import nn
@@ -12,22 +10,19 @@ from torch import Tensor
 
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
-from models.deepRelu import DeepReLU
-from ds_utils import spline_grid_from_range
+from models.deepReLUspline import DeepReLUSpline
 
 
-class DeepSplineModule(nn.Module):
+class DSModule(nn.Module):
     """
     Parent class for DeepSpline networks.
     """
 
-
     # dictionary with names and classes of deepspline modules
     deepsplines = {'deepBspline': DeepBSpline,
                     'deepBspline_explicit_linear': DeepBSplineExplicitLinear,
-                    'deepRelu': DeepReLU
+                    'deepReLUspline': DeepReLUSpline
                     }
-
 
     def __init__(self, **kwargs):
         """ """
@@ -60,100 +55,6 @@ class DeepSplineModule(nn.Module):
         Returns the device of the first found parameter.
         """
         return next(self.parameters()).device
-
-
-    ############################################################################
-    # Activation initialization
-
-
-    @classmethod
-    def init_activation_list(cls, activation_specs, activation_type,
-                            spline_size=51, spline_range=4,
-                            spline_init='leaky_relu', bias=True,
-                            save_memory=False, **kwargs):
-        """
-        Initialize list of activation modules.
-
-        Args:
-            activation_specs (list):
-                list of 2-tuples ('layer_type', num_channels/neurons);
-                'layer_type' can be 'conv' (convolutional) or 'fc' (fully-connected);
-                len(activation_specs) = number of activation layers;
-                e.g., [('conv', 64), ('fc', 100)].
-            activation_type (str):
-                'deepBspline', 'deepBspline_explicit_linear', or 'deepRelu'.
-            spline_size (odd int):
-                number of coefficients of spline grid;
-                the number of knots is K = size - 2.
-            spline_range (float):
-                Defines the range of the B-spline expansion;
-                B-splines range = [-spline_range, spline_range].
-            spline_init (str):
-                Function to initialize activations as (e.g. 'leaky_relu').
-                For deepBsplines: 'leaky_relu', 'relu' or 'even_odd';
-                For deepReLU: 'leaky_relu', 'relu'.
-            bias (bool):
-                if True, add explicit bias to deepspline;
-                only relevant if self.deepspline == DeepBSplineExplicitLinear.
-            save_memory (bool):
-                If true, use a more memory efficient version (takes more time);
-                Can be used only with deepBsplines.
-                (see deepBspline_base.py docstring for details.)
-
-        Returns:
-            activations (nn.ModuleList)
-        """
-        if not isinstance(activation_specs, list):
-            raise ValueError('activation_specs needs to be a list of 2-tuples, '
-                            f'but is of type: {type(activation_specs)}.')
-
-        spline_grid = spline_grid_from_range(spline_size, spline_range)
-
-        deepspline = None
-        for name in cls.deepsplines.keys():
-            if activation_type == name:
-                deepspline = cls.deepsplines[name]
-
-        if deepspline is None:
-            raise ValueError(f'Activation "{activation_type}" is not deepspline.')
-
-        activations = nn.ModuleList()
-        for mode, num_activations in activation_specs:
-            activations.append(deepspline(mode=mode, num_activations=num_activations,
-                                            size=spline_size, grid=spline_grid,
-                                            init=spline_init, bias=bias,
-                                            save_memory=save_memory))
-
-        return activations
-
-
-
-    @classmethod
-    def init_activation(cls, activation_specs, activation_type, **kwargs):
-        """
-        Initialize a single activation module.
-
-        Check init_activation_list() for **kwargs details.
-
-        Args:
-            activation_specs (tuple):
-                2-tuple ('layer_type', num_channels/neurons);
-                'layer_type' can be 'conv' (convolutional) or 'fc' (fully-connected);
-                e.g. ('conv', 64).
-            activation_type (str):
-                'deepBspline', 'deepBspline_explicit_linear', or 'deepRelu'
-
-        Returns:
-            activation (nn.Module)
-        """
-        if not isinstance(activation_specs, tuple):
-            raise ValueError('activation_specs needs to be a tuple, '
-                            f'but is of type: {type(activation_specs)}.')
-
-        activation = cls.init_activation_list([activation_specs],
-                                                activation_type, **kwargs)[0]
-
-        return activation
 
 
 
@@ -250,7 +151,7 @@ class DeepSplineModule(nn.Module):
             deepspline_param = False
             # get all deepspline parameters
             for deepspline in self.deepsplines.values():
-                for param_name in self.deepspline.parameter_names():
+                for param_name in deepspline.parameter_names():
                     if name.endswith(param_name):
                         deepspline_param = True
 

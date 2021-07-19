@@ -1,5 +1,5 @@
 """
-This module implements deepReLU activation functions, which are
+This module implements deepReLUspline activation functions, which are
 given by a sum of ReLUs with learnable slopes and a learnable linear term.
 
 A linear spline activation with ReLU parameters {a_k},
@@ -27,22 +27,29 @@ from models.deepspline_base import DeepSplineBase
 
 
 
-class DeepReLU(DeepSplineBase):
+class DeepReLUSpline(DeepSplineBase):
     """
-    Class for DeepReLU activation functions.
+    Class for DeepReLUSpline activation functions.
 
     This activation is a sum of ReLUs with learnable slopes and
     a learnable linear term.
     """
 
-    def __init__(self, bias=True, **kwargs):
+    def __init__(self, mode, num_activations, bias=True, **kwargs):
         """
         Args:
+            mode (str):
+                'conv' (convolutional) or 'fc' (fully-connected).
+            num_activations :
+                number of convolutional filters (if mode='conv');
+                number of units (if mode='fc').
             bias (bool):
                 if True, learn bias in the linear term.
+            **kwargs:
+                see deepspline_base.py.
         """
 
-        super().__init__(**kwargs)
+        super().__init__(mode, num_activations, **kwargs)
         self.num_relus = self.size - 2
         self.learn_bias = bias
 
@@ -122,7 +129,7 @@ class DeepReLU(DeepSplineBase):
 
         assert x.size(1) == self.num_activations, 'input.size(1) != num_activations.'
 
-        # the deepRelu implementation is badly-conditioned: in order to
+        # the deepReLUspline implementation is badly-conditioned: in order to
         # compute the output value at a location x, you need the value
         # (at x) of all the ReLUs that have knots before it.
         knot_loc_view = self.knot_loc.view(1, self.num_activations, 1, 1, self.num_relus)

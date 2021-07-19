@@ -16,6 +16,8 @@ from struct_default_values import structure, default_values
 
 
 # TODO: write setup.py!
+# TODO: ValueError->Type Error
+# TODO: Use types in function def.
 def get_arg_parser():
     """
     Parses command-line arguments.
@@ -47,7 +49,7 @@ def get_arg_parser():
                         help=f'Number of epochs. Default: {default_values["num_epochs"]}.')
 
     # model parameters
-    activation_type_choices = {'deepBspline', 'deepRelu', 'deepBspline_explicit_linear', \
+    activation_type_choices = {'deepBspline', 'deepReLUspline', 'deepBspline_explicit_linear', \
                                 'relu', 'leaky_relu'}
     parser.add_argument('--activation_type', choices=activation_type_choices, type=str,
                         help=f'Default: {default_values["activation_type"]}.')
@@ -85,8 +87,8 @@ def get_arg_parser():
     parser.add_argument('--optimizer', metavar='LIST[STR]', nargs='+', type=str,
                         help='Can be one or two args. In the latter case, the first arg is the main '
                             'optimizer (for network parameters) and the second arg is the aux optimizer '
-                            '(for deepspline parameters). "Adam" aux optimizer is usually required for stability '
-                            f'during training, even if main optimizer is SGD. Choices: {str(optimizer_choices)}. '
+                            '(for deepspline parameters). An "aux" optimizer different from "SGD" is usually required '
+                            'for stability during training (Adam is recommended). Choices: {str(optimizer_choices)}.'
                             f'Default: {default_values["optimizer"]}.')
 
     parser.add_argument('--lr', metavar='FLOAT,>0', type=ArgCheck.p_float,
@@ -213,8 +215,8 @@ def verify_params(params):
         raise ValueError('Need to provide either log_dir and model_name, '
                         'if resuming training from best or latest checkpoint.')
 
-    if params['activation_type'] == 'deepRelu' and params['spline_init'] == 'even_odd':
-        raise ValueError('Cannot use even_odd spline initialization with deeprelu.')
+    if params['activation_type'] == 'deepReLUspline' and params['spline_init'] == 'even_odd':
+        raise ValueError('Cannot use even_odd spline initialization with deepReLUspline.')
 
     if params['save_memory'] is True and not params['activation_type'].startswith('deepBspline'):
         raise ValueError('--save_memory can only be set when using deepBsplines.')

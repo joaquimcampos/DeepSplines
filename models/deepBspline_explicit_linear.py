@@ -19,13 +19,20 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
     linear term.
     """
 
-    def __init__(self, bias=True, **kwargs):
+    def __init__(self, mode, num_activations, bias=True, **kwargs):
         """
         Args:
+            mode (str):
+                'conv' (convolutional) or 'fc' (fully-connected).
+            num_activations :
+                number of convolutional filters (if mode='conv');
+                number of units (if mode='fc').
             bias (bool):
                 if True, learn bias in the linear term.
+            **kwargs:
+                see deepBspline_base.py/deepspline_base.py.
         """
-        super().__init__(**kwargs)
+        super().__init__(mode, num_activations, **kwargs)
         self.learn_bias = bias
 
         # tensor with locations of spline coefficients

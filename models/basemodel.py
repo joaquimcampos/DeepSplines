@@ -13,8 +13,7 @@ from torch import Tensor
 
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
-from models.deepRelu import DeepReLU
-from ds_utils import spline_grid_from_range
+from models.deepReLUspline import DeepReLUSpline
 
 
 class BaseModel(nn.Module):
@@ -33,7 +32,7 @@ class BaseModel(nn.Module):
 
             activation_type (str):
                 'relu', 'leaky_relu', 'deepBspline',
-                'deepBspline_explicit_linear', or 'deepRelu'.
+                'deepBspline_explicit_linear', or 'deepReLUspline'.
             num_classes (int):
                 number of dataset classes.
 
@@ -48,7 +47,7 @@ class BaseModel(nn.Module):
             spline_init (str):
                 Function to initialize activations as (e.g. 'leaky_relu').
                 For deepBsplines: 'leaky_relu', 'relu' or 'even_odd';
-                For deepReLU: 'leaky_relu', 'relu'.
+                For deepReLUspline: 'leaky_relu', 'relu'.
             save_memory (bool):
                 If true, use a more memory efficient version (takes more time);
                 Can be used only with deepBsplines.
@@ -80,16 +79,13 @@ class BaseModel(nn.Module):
             # check that all the arguments were given (are not None).
             assert getattr(self, attr_name) is not None, f'self.{attr_name} is None.'
 
-        self.spline_grid = \
-            spline_grid_from_range(self.spline_size, self.spline_range)
-
         self.deepspline = None
         if self.activation_type == 'deepBspline':
             self.deepspline = DeepBSpline
         elif self.activation_type == 'deepBspline_explicit_linear':
             self.deepspline = DeepBSplineExplicitLinear
-        elif self.activation_type == 'deepRelu':
-            self.deepspline = DeepReLU
+        elif self.activation_type == 'deepReLUspline':
+            self.deepspline = DeepReLUSpline
 
 
 
@@ -130,8 +126,8 @@ class BaseModel(nn.Module):
         if self.using_deepsplines:
             activations = nn.ModuleList()
             for mode, num_activations in activation_specs:
-                activations.append(self.deepspline(mode=mode, num_activations=num_activations,
-                                                size=self.spline_size, grid=self.spline_grid,
+                activations.append(self.deepspline(mode, num_activations,
+                                                size=self.spline_size, range_=self.spline_range,
                                                 init=self.spline_init, bias=bias,
                                                 save_memory=self.save_memory))
         else:

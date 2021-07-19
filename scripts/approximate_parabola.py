@@ -18,7 +18,7 @@ import time
 
 from models.deepBspline import DeepBSpline
 from models.deepBspline_explicit_linear import DeepBSplineExplicitLinear
-from models.deepRelu import DeepReLU
+from models.deepReLUspline import DeepReLUSpline
 from ds_utils import ArgCheck, spline_grid_from_range, add_date_to_filename
 
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # for details on the arguments, see main.py
-    activation_choices = {'deepBspline', 'deepRelu', 'deepBspline_explicit_linear'}
+    activation_choices = {'deepBspline', 'deepReLUspline', 'deepBspline_explicit_linear'}
     parser.add_argument('--activation_type', choices=activation_choices,
                         type=str, default='deepBspline_explicit_linear', help=' ')
 
@@ -89,8 +89,8 @@ if __name__ == "__main__":
         activation = DeepBSpline(**deepspline_params)
     elif args.activation_type == 'deepBspline_explicit_linear':
         activation = DeepBSplineExplicitLinear(**deepspline_params)
-    elif args.activation_type == 'deepRelu':
-        activation = DeepReLU(**deepspline_params)
+    elif args.activation_type == 'deepReLUspline':
+        activation = DeepReLUSpline(**deepspline_params)
     else:
         raise ValueError(f'Activation {args.activation_type} not available...')
 

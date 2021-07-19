@@ -1,5 +1,6 @@
-data/cifar10/
-data/mnist/
+data/cifar10*
+data/cifar-10*
+data/mnist*
 *.pdf
 ckpt*/
 linear_experiments/

@@ -16,9 +16,19 @@ from models.deepBspline_base import DeepBSplineBase
 class DeepBSpline(DeepBSplineBase):
     """ nn.Module for DeepBspline activation functions. """
 
-    def __init__(self, **kwargs):
+    def __init__(self, mode, num_activations, **kwargs):
+        """
+        Args:
+            mode (str):
+                'conv' (convolutional) or 'fc' (fully-connected).
+            num_activations :
+                number of convolutional filters (if mode='conv');
+                number of units (if mode='fc').
+            **kwargs:
+                see deepBspline_base.py/deepspline_base.py.
+        """
 
-        super().__init__(**kwargs)
+        super().__init__(mode, num_activations, **kwargs)
 
         # tensor with locations of spline coefficients
         grid_tensor = self.grid_tensor # size: (num_activations, size)

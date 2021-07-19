@@ -2,40 +2,58 @@ import torch
 from torch import nn
 from abc import ABC, abstractproperty, abstractmethod
 
+from ds_utils import spline_grid_from_range
+
 
 
 class DeepSplineBase(ABC, nn.Module):
     """
-    Abstract class for DeepSpline activations (deepReLU/deepBspline)
+    Abstract class for DeepSpline activations (deepReLUspline/deepBspline*)
 
     Args:
         mode (str):
             'conv' (convolutional) or 'fc' (fully-connected).
-        size (odd int):
-            number of coefficients of spline grid;
-            the number of knots K = size - 2.
-        grid (float):
-            spacing of spline knots.
         num_activations :
             number of convolutional filters (if mode='conv');
             number of units (if mode='fc').
+
+        size (odd int):
+            number of coefficients of spline grid;
+            the number of knots K = size - 2.
+
+        ---- Mutually exclusive arguments ---------------------------
+        range_ (float):
+            positive range of the B-spline expansion.
+            B-splines range = [-range_, range_].
+            If it is set, the "grid" argument needs to be None,
+            as it will be computed from size and range_ using
+            ds_utils.spline_grid_from_range().
+        grid (float):
+            spacing between the spline knots.
+            If given, the "grid" argument needs to be None.
+        -------------------------------------------------------------
+
         init (str):
             Function to initialize activations as (e.g. 'leaky_relu').
     """
 
-    def __init__(self, mode='conv', size=51, grid=0.1, num_activations=None,
+    def __init__(self, mode, num_activations, size=51, range_=4, grid=None,
                 init='leaky_relu', **kwargs):
 
         if mode not in ['conv', 'fc']:
             raise ValueError('Mode should be either "conv" or "fc".')
-        if int(size) % 2 == 0:
-            raise ValueError('size should be an odd number.')
-        if num_activations is None:
-            raise ValueError('Need to provide num_activations...')
         if int(num_activations) < 1:
             raise ValueError('num_activations needs to be a positive integer...')
-        if float(grid) <= 0:
-            raise ValueError('grid needs to be a positive float...')
+        if int(size) % 2 == 0:
+            raise ValueError('size should be an odd number.')
+
+        if range_ is None:
+            if grid is None:
+                raise ValueError('One of the two args (range_ or grid) required.')
+            elif float(grid) <= 0:
+                raise ValueError('grid should be a positive float...')
+        elif grid is not None:
+            raise ValueError('range_ and grid should not be both set.')
 
         super().__init__()
 
@@ -43,7 +61,12 @@ class DeepSplineBase(ABC, nn.Module):
         self.size = int(size)
         self.num_activations = int(num_activations)
         self.init = init
-        self.grid = torch.Tensor([float(grid)])
+
+        if range_ is None:
+            self.grid = torch.Tensor([float(grid)])
+        else:
+            grid = spline_grid_from_range(size, range_)
+            self.grid = torch.Tensor([grid])
 
 
 

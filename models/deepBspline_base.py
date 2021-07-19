@@ -172,16 +172,21 @@ class DeepBSplineBase(DeepSplineBase):
     Parent class for DeepBSpline activations (deepBspline/deepBspline_explicit_Linear)
     """
 
-    def __init__(self, save_memory=False, **kwargs):
+    def __init__(self, mode, num_activations, save_memory=False, **kwargs):
         """
         Args:
+            mode (str):
+                'conv' (convolutional) or 'fc' (fully-connected).
+            num_activations :
+                number of convolutional filters (if mode='conv');
+                number of units (if mode='fc').
             save_memory (bool):
                 If true, use a more memory efficient version at the
                 expense of additional running time.
                 (see module's docstring for details)
         """
 
-        super().__init__(**kwargs)
+        super().__init__(mode, num_activations, **kwargs)
 
         self.save_memory = bool(save_memory)
         self.init_zero_knot_indexes()
@@ -255,7 +260,7 @@ class DeepBSplineBase(DeepSplineBase):
         input_size = input.size()
         x = self.reshape_forward(input)
 
-        assert x.size(1) == self.num_activations, 'input.size(1) != num_activations.'
+        assert x.size(1) == self.num_activations, f'{input.size(1)} != {self.num_activations}.'
 
         grid = self.grid.to(self.coefficients_vect.device)
         zero_knot_indexes = self.zero_knot_indexes.to(grid.device)
@@ -299,7 +304,7 @@ class DeepBSplineBase(DeepSplineBase):
         . [c_hat] = f([a], c_{-L}, c_{-L+1}).
 
         This uses a well-conditioned iterative method to convert from the
-        deeprelu representation to the B-spline representation
+        deepReLU representation to the B-spline representation
         (see iterative_relu_slopes_to_coefficients()).
         This is required so that we can do (b0,b1,[a])->[c]->[a']
         while keeping the same zero slopes in [a] and [a'].

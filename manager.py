@@ -129,8 +129,8 @@ class Manager(Project):
         element is the 'main' optimizer (for the network parameters) and the
         second 'aux' optimizer (for the deepspline parameters).
 
-        Note: Adam 'aux' optimizer is usually required for stability of
-        the deepsplines, even if main optimizer is SGD or otherwise.
+        Note: An 'aux' optimizer different from SGD is usually required
+        for training deepsplines. Adam generally works well. 
         """
         self.optim_names = self.params['optimizer']
 
