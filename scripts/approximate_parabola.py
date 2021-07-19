@@ -19,7 +19,7 @@ import time
 from deepsplines.deepBspline import DeepBSpline
 from deepsplines.deepBspline_explicit_linear import DeepBSplineExplicitLinear
 from deepsplines.deepReLUspline import DeepReLUSpline
-from ds_utils import ArgCheck, spline_grid_from_range, add_date_to_filename
+from ds_utils import ArgCheck, add_date_to_filename
 
 
 
@@ -77,11 +77,8 @@ if __name__ == "__main__":
 
     parab_range = 1 # one-sided range of parabola function
 
-    # set up deepspline activations
-    spline_grid = spline_grid_from_range(args.spline_size, args.spline_range)
-
     deepspline_params = {'mode': 'fc', 'size': args.spline_size,
-                        'grid': spline_grid, 'init': args.spline_init,
+                        'range_': args.spline_range, 'init': args.spline_init,
                         'bias': True, 'num_activations': 1,
                         'save_memory': args.save_memory}
 
