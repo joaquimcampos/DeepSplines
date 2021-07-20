@@ -32,10 +32,9 @@ if __name__ == "__main__":
     if not os.path.isdir(args.data_dir):
         raise OSError(f'Directory {args.data_dir} not found.')
 
-    dataset_name = '_'.join([args.dataset, str(args.num_train_samples)])
-    dataset_dir = init_sub_dir(args.data_dir, dataset_name)
+    dataset_dir = init_sub_dir(args.data_dir, args.dataset_name)
 
-    params = {'dataset_name' : dataset_name, 'log_dir': dataset_dir,
+    params = {'dataset_name' : args.dataset_name, 'log_dir': dataset_dir,
                 'plot_imgs' : False, 'save_imgs' : True}
 
     dataset = init_dataset(**params)

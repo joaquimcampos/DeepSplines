@@ -147,7 +147,7 @@ def get_arg_parser():
                             f'Default: {default_values["test_as_valid"]}.')
 
     # add other datasets here and create a corresponding Dataset class in datasets.py
-    dataset_choices = {'cifar10', 'cifar100', 'mnist', 's_shape_1500', 'circle_1500'}
+    dataset_choices = {'cifar10', 'cifar100', 'mnist', 's_shape', 'circle'}
     parser.add_argument('--dataset_name', choices=dataset_choices, type=str,
                         help=f'Dataset to train/test on. Default: {default_values["dataset_name"]}.')
 

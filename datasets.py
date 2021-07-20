@@ -19,7 +19,7 @@ def init_dataset(**params):
     """
 
     # add your datasets here and create a corresponding Dataset class
-    dataset_dict = {'s_shape_1500' : S_shape, 'circle_1500' : Circle,
+    dataset_dict = {'s_shape' : S_shape, 'circle' : Circle,
                     'cifar10' : Cifar10, 'cifar100' : Cifar100, 'mnist' : MNIST}
 
     if params['dataset_name'] not in dataset_dict.keys():
@@ -39,7 +39,7 @@ class Dataset(ABC):
         """
         Args:
             dataset_name (str):
-                s_shape_1500', 'circle_1500', 'cifar10', 'cifar100' or 'mnist'.
+                s_shape', 'circle', 'cifar10', 'cifar100' or 'mnist'.
             log_dir (str):
                 log_directory for saving images if model_name is None.
             model_name (str):
