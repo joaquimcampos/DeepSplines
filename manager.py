@@ -68,7 +68,7 @@ class Manager(Project):
         # of the loss per sample. If using reduction='mean', when
         # nb_test_samples % batch_size != 0 we can only average the loss per batch
         # (as done in training for printing the losses) but not per sample.
-        if self.params['net'].startswith('twoDnet'):
+        if self.params['net'] == 'twoDnet':
             self.criterion = nn.BCELoss(reduction='mean')
             self.test_criterion = nn.BCELoss(reduction='sum')
         else:
@@ -98,11 +98,10 @@ class Manager(Project):
         """
         print('\n==> Building model...')
 
-        networks_dict = {'twoDnet_onehidden' : TwoDNet_OneHidden,
-                    'twoDnet_twohidden' : TwoDNet_TwoHidden,
-                    'resnet32_cifar'    : ResNet32Cifar,
-                    'nin_cifar'         : NiNCifar,
-                    'convnet_mnist'     : ConvNetMnist}
+        networks_dict = {'twoDnet'      : TwoDNet,
+                        'resnet32_cifar'    : ResNet32Cifar,
+                        'nin_cifar'         : NiNCifar,
+                        'convnet_mnist'     : ConvNetMnist}
 
         assert params['net'] in networks_dict.keys(), 'network not found: please add net to networks_dict.'
         net = networks_dict[params['net']](**params['model'])
