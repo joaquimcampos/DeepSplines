@@ -15,6 +15,7 @@ from struct_default_values import structure, default_values
 
 
 # TODO: write setup.py!
+# TODO: DO not push data. remove dependency on number of points.
 def get_arg_parser():
     """
     Parses command-line arguments.
