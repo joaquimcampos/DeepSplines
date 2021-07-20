@@ -35,6 +35,8 @@ class DeepSplineBase(ABC, nn.Module):
 
         init (str):
             Function to initialize activations as (e.g. 'leaky_relu').
+            For deepBsplines: 'leaky_relu', 'relu' or 'even_odd';
+            For deepReLUspline: 'leaky_relu', 'relu'.
     """
 
     def __init__(self, mode, num_activations, size=51, range_=4, grid=None,

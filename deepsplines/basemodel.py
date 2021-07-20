@@ -105,12 +105,14 @@ class BaseModel(nn.Module):
 
     def init_activation_list(self, activation_specs, bias=True, **kwargs):
         """
-        Initialize list of activation modules.
+        Initialize list of activation modules (deepspline or standard).
 
         Args:
             activation_specs (list):
-                list of pairs ('layer_type', num_channels/neurons);
-                'layer_type' can be 'conv' (convolutional) or 'fc' (fully-connected);
+                list of 2-tuples (mode[str], num_activations[int]);
+                mode can be 'conv' (convolutional) or 'fc' (fully-connected);
+                if mode='conv', num_activations = number of convolutional filters;
+                if mode='fc', num_activations = number of units.
                 len(activation_specs) = number of activation layers;
                 e.g., [('conv', 64), ('fc', 100)].
 
@@ -139,12 +141,14 @@ class BaseModel(nn.Module):
 
     def init_activation(self, activation_specs, **kwargs):
         """
-        Initialize a single activation module
+        Initialize a single activation module (deepspline or standard).
 
         Args:
             activation_specs (tuple):
-                2-tuple ('layer_type', num_channels/neurons);
-                'layer_type' can be 'conv' (convolutional) or 'fc' (fully-connected);
+                2-tuple (mode[str], num_activations[int]);
+                mode can be 'conv' (convolutional) or 'fc' (fully-connected);
+                if mode='conv', num_activations = number of convolutional filters;
+                if mode='fc', num_activations = number of units.
                 e.g. ('conv', 64).
 
         Returns:
@@ -159,14 +163,12 @@ class BaseModel(nn.Module):
 
     def init_standard_activations(self, activation_specs, **kwargs):
         """
-        Initialize non-spline activation modules.
+        Initialize standard activation modules.
 
         Args:
             activation_specs :
-                list of pairs ('layer_type', num_channels/neurons);
-                'layer_type' can be 'conv' (convolutional) or 'fc' (fully-connected);
-                len(activation_specs) = number of activation layers.
-                e.g., [('conv', 64), ('fc', 100)].
+                list of pairs (mode, num_channels/neurons);
+                Only the length of this list matters for this function.
 
         Returns:
             activations (nn.ModuleList)
@@ -263,10 +265,9 @@ class BaseModel(nn.Module):
         for name, param in self.named_parameters(recurse=recurse):
             deepspline_param = False
             # get all deepspline parameters
-            if self.using_deepsplines:
-                for param_name in self.deepspline.parameter_names():
-                    if name.endswith(param_name):
-                        deepspline_param = True
+            for param_name in self.deepspline.parameter_names():
+                if name.endswith(param_name):
+                    deepspline_param = True
 
             if deepspline_param is False:
                 yield name, param
@@ -282,6 +283,7 @@ class BaseModel(nn.Module):
 
         for name, param in self.named_parameters(recurse=recurse):
             deepspline_param = False
+            # get all deepspline parameters
             for param_name in self.deepspline.parameter_names():
                 if name.endswith(param_name):
                     deepspline_param = True
