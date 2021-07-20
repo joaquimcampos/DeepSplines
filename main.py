@@ -30,16 +30,13 @@ def get_arg_parser():
 
     # for test mode, need to provide --ckpt_filename
     parser.add_argument('--mode', choices=['train', 'test'], type=str,
-                        help=f'Train or test mode. Default: {default_values["mode"]}.')
+                        help=f'"train" or "test" mode. Default: {default_values["mode"]}.')
 
     # add other networks here, in the models/ directory and in Manager.build_model()
-    net_choices = {'twoDnet_onehidden', 'twoDnet_onehidden', \
-                    'resnet32_cifar', 'nin_cifar', 'convnet_mnist'}
-    parser.add_argument('--net', metavar='STR', type=str,
-                        help=f'Network to train. Available networks: {str(net_choices)}.'
-                            'Default: {default_values["net"]}.')
-    parser.add_argument('--model_name', metavar='STR', type=str,
-                        help=f'Default: {default_values["model_name"]}.')
+    net_choices = {'twoDnet', 'resnet32_cifar', 'nin_cifar', 'convnet_mnist'}
+    parser.add_argument('--net', type=str, choices=net_choices,
+                        help=f'Network to train/test. Default: {default_values["net"]}.')
+
     parser.add_argument('--device', choices=['cuda:0', 'cpu'], type=str,
                         help=f'Default: {default_values["device"]}.')
 
@@ -57,67 +54,79 @@ def get_arg_parser():
                         help='Initialize the b-spline coefficients according to this function. '
                             f'Default: {default_values["spline_init"]}.')
     parser.add_argument('--spline_size', metavar='INT>0', type=ArgCheck.p_odd_int,
-                        help='Number of spline coefficients. Default: {default_values["spline_size"]}.')
+                        help=f'Number of spline coefficients. Default: {default_values["spline_size"]}.')
     parser.add_argument('--spline_range', metavar='FLOAT,>0', type=ArgCheck.p_float,
                         help=f'Range of spline representation. Default: {default_values["spline_range"]}.')
 
     # see deepBspline_base.py docstring for details on --save_memory tradeoff.
     parser.add_argument('--save_memory', action='store_true',
-                        help='Use a memory-efficient deepsplines version (for deepBsplines only) '
-                            'at the expense of additional running time.')
+                        help='Use a memory-efficient deepsplines version (for deepBsplines only) at the '
+                            f'expense of additional running time. Default: {default_values["save_memory"]}.')
 
     parser.add_argument('--knot_threshold', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
                         help='If nonzero, sparsify activations by eliminating knots whose slope '
                             f'change is below this value. Default: {default_values["knot_threshold"]}.')
 
-    # neural net
-    parser.add_argument('--hidden', metavar='INT,>0', type=ArgCheck.p_int,
-                        help=f'Number of hidden neurons in each layer (for twoDnet). Default: {default_values["hidden"]}.')
+    # Only relevant if args.net='twoDnet'
+    parser.add_argument('--num_hidden_layers', choices=[1, 2], type=ArgCheck.p_int,
+                        help='Number of hidden layers (for twoDnet). '
+                            f'Default: {default_values["num_hidden_layers"]}.')
+    parser.add_argument('--num_hidden_neurons', metavar='INT,>0', type=ArgCheck.p_int,
+                        help='Number of hidden neurons in each layer (for twoDnet). '
+                            f'Default: {default_values["num_hidden_neurons"]}.')
 
     # regularization
     parser.add_argument('--lipschitz', action='store_true',
-                        help='Perform lipschitz BV(2) regularization; the hyperparameter is set by --lmbda.')
+                        help='Perform lipschitz BV(2) regularization; the hyperparameter is set by --lmbda. '
+                            f'Default: {default_values["lipschitz"]}.')
     parser.add_argument('--lmbda', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
                         help=f'TV/BV(2) hyperparameter. Default: {default_values["lmbda"]}.')
 
     # optimizer
     optimizer_choices={'Adam', 'SGD'}
-    parser.add_argument('--optimizer', metavar='LIST[STR]', nargs='+', type=str,
+    parser.add_argument('--optimizer', metavar='STR', nargs='+', type=str,
                         help='Can be one or two args. In the latter case, the first arg is the main '
                             'optimizer (for network parameters) and the second arg is the aux optimizer '
                             '(for deepspline parameters). An "aux" optimizer different from "SGD" is usually required '
-                            'for stability during training (Adam is recommended). Choices: {str(optimizer_choices)}.'
-                            f'Default: {default_values["optimizer"]}.')
+                            f'for stability during training (Adam is recommended). '
+                            f'Choices: {str(optimizer_choices)}. Default: {default_values["optimizer"]}.')
 
     parser.add_argument('--lr', metavar='FLOAT,>0', type=ArgCheck.p_float,
-                        help=f'Learning rate for main optimizer (for network parameters). Default: {default_values["lr"]}.')
+                        help='Learning rate for main optimizer (for network parameters). '
+                            f'Default: {default_values["lr"]}.')
     parser.add_argument('--aux_lr', metavar='FLOAT,>0', type=ArgCheck.p_float,
-                        help=f'Learning rate for aux optimizer (for deepspline parameters). Default: {default_values["aux_lr"]}.')
+                        help='Learning rate for aux optimizer (for deepspline parameters). '
+                            f'Default: {default_values["aux_lr"]}.')
     parser.add_argument('--weight_decay', metavar='FLOAT,>=0', type=ArgCheck.nn_float,
                         help=f'weight decay hyperparameter. Default: {default_values["weight_decay"]}.')
 
     # multistep scheduler
     parser.add_argument('--gamma', metavar='FLOAT,[0,1]', type=ArgCheck.frac_float,
                         help=f'Learning rate decay. Default: {default_values["gamma"]}.')
-    parser.add_argument('--milestones', metavar='LIST[INT,>0]', nargs='+', type=ArgCheck.p_int,
+    parser.add_argument('--milestones', metavar='INT,>0', nargs='+', type=ArgCheck.p_int,
                         help='Milestones for multi-step lr_scheduler. Set to a single value higher '
                             'than num_epochs to not lower the learning rate during training. '
                             f'Default: {default_values["milestones"]}.')
 
     # logs-related
+    parser.add_argument('--log_dir', metavar='STR', type=str,
+                    help=f'General directory for saving checkpoints. Default: {default_values["log_dir"]}.')
+    parser.add_argument('--model_name', metavar='STR', type=str,
+                    help=f'Directory under --log_dir where checkpoints are saved. '
+                        f'Default: {default_values["model_name"]}.')
+
     parser.add_argument('--ckpt_filename', metavar='STR', type=str,
                     help=f'Continue training (if --mode=train) or test (if --mode=test) the model saved '
                         f'in this checkpoint. Default: {default_values["ckpt_filename"]}.')
 
     parser.add_argument('--resume', '-r', action='store_true',
                         help='Resume training from latest checkpoint. Need to provide '
-                            '--model_name and --log_dir where the model is saved.')
+                            '--model_name and --log_dir where the model is saved. '
+                            f'Default: {default_values["resume"]}.')
     parser.add_argument('--resume_from_best', '-best', action='store_true',
                         help='Resume training from best validation accuracy checkpoint. Need to provide '
-                            '--model_name and --log_dir where the model is saved.')
-
-    parser.add_argument('--log_dir', metavar='STR', type=str,
-                        help=f'Directory for saving checkpoints. Default: {default_values["log_dir"]}.')
+                            '--model_name and --log_dir where the model is saved. '
+                            f'Default: {default_values["resume_from_best"]}.')
 
     parser.add_argument('--log_step', metavar='INT,>0', type=ArgCheck.p_int,
                             help='Train log step in number of batches. '
@@ -131,29 +140,36 @@ def get_arg_parser():
 
     # dataloader
     parser.add_argument('--seed', metavar='INT,>0', type=ArgCheck.nn_int,
-                        help=f'fix seed for reproducibility. Default: {default_values["seed"]}.')
+                        help=f'Fix seed for reproducibility. If negative, no seed is set. '
+                            f'Default: {default_values["seed"]}.')
     parser.add_argument('--test_as_valid', action='store_true',
-                        help='Train on full training data and evaluate model on test set in validation step.')
+                        help='Train on full training data and evaluate model on test set in validation step. '
+                            f'Default: {default_values["test_as_valid"]}.')
 
     # add other datasets here and create a corresponding Dataset class in datasets.py
     dataset_choices = {'cifar10', 'cifar100', 'mnist', 's_shape_1500', 'circle_1500'}
-    parser.add_argument('--dataset_name', metavar='STR', type=str,
-                        help=f'dataset to train/test on. Available datasets: {str(dataset_choices)}. '
-                            f'Default: {default_values["dataset_name"]}.')
+    parser.add_argument('--dataset_name', choices=dataset_choices, type=str,
+                        help=f'Dataset to train/test on. Default: {default_values["dataset_name"]}.')
 
-    parser.add_argument('--data_dir', metavar='STR', type=str, help=f'location of the data. Default: {default_values["data_dir"]}.')
-    parser.add_argument('--batch_size', metavar='INT,>0', type=ArgCheck.p_int, help=f'Default: {default_values["batch_size"]}.')
+    parser.add_argument('--data_dir', metavar='STR', type=str,
+                        help=f'Location of the data. Default: {default_values["data_dir"]}.')
+    parser.add_argument('--batch_size', metavar='INT,>0', type=ArgCheck.p_int,
+                        help=f'Default: {default_values["batch_size"]}.')
 
     # dataset
-    parser.add_argument('--plot_imgs', action='store_true', help='Plot train/test images')
-    parser.add_argument('--save_imgs', action='store_true', help='Save train/test images')
+    parser.add_argument('--plot_imgs', action='store_true',
+                        help='Plot train/test images. Default: {default_values["plot_imgs"]}.')
+    parser.add_argument('--save_imgs', action='store_true',
+                        help='Save train/test images. Default: {default_values["save_imgs"]}.')
 
-    parser.add_argument('--verbose', '-v', action='store_true', help='Print more info.')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help='Print more info. Default: {default_values["verbose"]}.')
 
     additional_info_choices = {'sparsity', 'lipschitz_bound'}
-    parser.add_argument('--additional_info', metavar='LIST[STR]', nargs='+', type=str,
+    parser.add_argument('--additional_info', metavar='STR', nargs='+', type=str,
                         help=f'Additional info to log in results json file. '
-                            f'Choices: {str(additional_info_choices)}. Default: {default_values["additional_info"]}.')
+                            f'Choices: {str(additional_info_choices)}. '
+                            f'Default: {default_values["additional_info"]}.')
 
     return parser
 
