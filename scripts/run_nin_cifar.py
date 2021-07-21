@@ -18,21 +18,22 @@ from main import main_prog
 if __name__ == "__main__":
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Run NIN on the CIFAR100 dataset.',
+    parser = argparse.ArgumentParser(description='Run Network-in-Network on the CIFAR100 dataset.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--log_dir', metavar='STR', type=str, default='./ckpt',
                         help='Model log directory.')
 
-    choices_ = ['deepsplines', 'relu']
-    parser.add_argument('--activation_type', metavar='STR', default='deepspline',
-                        type=str, choices=choices_,
-                        help=f'Available choices {str(choices_)}. (default: %(default)s)')
+    activ_choices = ['deepspline', 'relu']
+    parser.add_argument('--activation_type', default='deepspline',
+                        type=str, choices=activ_choices, help=' ')
 
     args = parser.parse_args()
 
+
     if not os.path.isdir(args.log_dir):
-        raise OSError(f'Directory {args.log_dir} not found.')
+        print(f'\nLog directory {args.log_dir} not found. Creating it.')
+        os.makedirs(args.log_dir)
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
 

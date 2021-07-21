@@ -70,7 +70,8 @@ if __name__ == "__main__":
         raise OSError('cuda not available...')
 
     if (args.save_dir is not None) and (not os.path.isdir(args.save_dir)):
-        raise ValueError(f'directory {args.save_dir} does not exist...')
+        print(f'\nDirectory {args.save_dir} not found. Creating it.')
+        os.makedirs(args.save_dir)
 
     if args.save_memory is True and not args.activation_type.startswith('deepBspline'):
         raise ValueError('--save_memory can only be set when using deepBsplines.')
