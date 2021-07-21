@@ -2,6 +2,7 @@
 
 '''
 This script reproduces the results for twoDnet
+on an s-shape or circle 2D dataset.
 
 See https://ieeexplore.ieee.org/document/9264754.
 '''
@@ -18,7 +19,7 @@ from generate_save_twoD_dataset import generate_save_dataset
 if __name__ == "__main__":
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Run twoDnet on a s_shape or circle 2D dataset.',
+    parser = argparse.ArgumentParser(description='Run twoDnet on an s_shape or circle 2D dataset.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     dataset_choices = {'s_shape', 'circle'}
