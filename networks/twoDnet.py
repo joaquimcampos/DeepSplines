@@ -3,7 +3,6 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from deepsplines.basemodel import BaseModel
 
@@ -53,10 +52,10 @@ class TwoDNet(BaseModel):
     def forward(self, x):
         """ """
         x = self.activations[0](self.fc1(x))
-        
+
         if self.num_hidden_layers > 1:
             x = self.activations[1](self.fc2(x))
-        
-        x = F.sigmoid(self.fc_last(x)).squeeze(1)
+
+        x = torch.sigmoid(self.fc_last(x)).squeeze(1)
 
         return x
