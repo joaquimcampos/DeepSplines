@@ -3,7 +3,7 @@
 
 """
 This script exemplifies how to use DeepSplines in a network,
-starting from the pytorch CIFAR10 tutorial:
+starting from the PyTorch CIFAR-10 tutorial:
 https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 """
 
