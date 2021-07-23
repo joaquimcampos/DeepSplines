@@ -2,14 +2,18 @@
 
 # Deep Spline Neural Networks
 
-This repository contains the necessary code for using Deep Spline activation
-functions in a neural network, as well as reproducing the results reported in
-the following papers:
+DeepSplines is a framework to train the activation functions of a neural network.
 
--   [Learning Activation Functions in Deep (Spline) Neural Networks](http://bigwww.epfl.ch/publications/bohra2003.html) [[1]](#1)
--   [Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant](http://bigwww.epfl.ch/publications/aziznejad2001.html) [[2]](#2)
+The aim of this repository is to:
 
-This framework is based on the theoretical work of
+-   Facilitate the reproduction of the results reported in the research papers
+       -   [Learning Activation Functions in Deep (Spline) Neural Networks](http://bigwww.epfl.ch/publications/bohra2003.html) [[1]](#1)   
+       -   [Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant](http://bigwww.epfl.ch/publications/aziznejad2001.html) [[2]](#2)
+-   Enable a seamless integration of Deep Spline activation functions in
+    a custom neural network.
+
+
+The proposed scheme is based on the theoretical work of
 [M. Unser](http://bigwww.epfl.ch/publications/unser1901.html) [[3]](#3).
 
 
