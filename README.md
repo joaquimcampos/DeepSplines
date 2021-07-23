@@ -1,4 +1,4 @@
-![img](./img/deepspline_basis.svg | width=100px)
+<img src="https://github.com/joaquimcampos/DeepSplines/blob/master/img/deepspline_basis.svg" width=45% height=45%>
 
 # Deep Spline Neural Networks
 
