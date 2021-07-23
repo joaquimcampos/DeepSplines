@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     # B-spline expansion function
     f = interp1d(grid_points, coeff)
-    
+
     # extrapolation functions
     f_left = interp1d(left_grid_points, left_extrap)
     f_right = interp1d(right_grid_points, right_extrap)
@@ -114,8 +114,8 @@ if __name__ == "__main__":
     ax.set_xticklabels(np.concatenate((np.arange(-4, 0), np.arange(1, 5))),
                 fontdict={'horizontalalignment': 'center', 'fontsize': 10}, minor=False)
 
-    ax.tick_params(axis='both', which='major', labelsize=10)
-    ax.tick_params(axis='both', which='minor', labelsize=10)
+    ax.tick_params(axis='both', which='major', labelsize=12)
+    ax.tick_params(axis='both', which='minor', labelsize=12)
 
     # draw B-spline (triangular-shaped) basis elements
     for i, center in enumerate(grid_points):
@@ -161,8 +161,9 @@ if __name__ == "__main__":
 
     plt.xlim(-(range_+extrap-0.2), (range_+extrap-0.2))
     plt.ylim(-0.8, 5.5)
+    plt.gca().set_position([0, 0, 1, 1])
 
     if args.save_dir is not None:
-        plt.savefig(os.path.join(args.save_dir, 'deepspline_basis.pdf'))
+        plt.savefig(os.path.join(args.save_dir, 'deepspline_basis.svg'), format="svg")
 
     plt.show()
