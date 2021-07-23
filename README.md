@@ -1,4 +1,4 @@
-![img](./img/deepspline_basis.svg){:height="50%" width="50%"}
+![img](./img/deepspline_basis.svg | width=100px)
 
 # Deep Spline Neural Networks
 
