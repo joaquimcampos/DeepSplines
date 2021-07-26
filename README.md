@@ -134,7 +134,7 @@ for epoch in range(2):
         aux_optimizer.step()
 ```
 
-For full details, see ./scripts/deepsplines_tutorial.py.
+For full details, please consult the [tutorial](scripts/deepsplines_tutorial.py).
 
 <a id="org4"></a>
 
