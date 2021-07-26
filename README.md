@@ -54,69 +54,85 @@ To use DeepSplines with PyTorch install:
 Example on how to adapt the [PyTorch CIFAR-10 tutorial](https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html)
 to use DeepBSpline activations.
 
-    class DSNet(dsnn.DSModule):
-
-        def __init__(self):
-
-            super().__init__()
-
-            # we put the deepsplines (ds) of the convolutional and fully-connected
-            # layers in two separate nn.ModuleList() for simplicty.
-            self.conv_ds = nn.ModuleList()
-            self.fc_ds = nn.ModuleList()
-
-            # We define some optional parameters for the deepspline
-            opt_params = {'size': 51, 'range_': 4, 'init': 'leaky_relu',
-                            'save_memory': False}
-
-            # we generally do not need biases since DeepSplines can do them
-            self.conv1 = nn.Conv2d(3, 6, 5, bias=False)
-            # 1st parameter (mode): 'conv' (convolutional) or 'fc' (fully-connected);
-            # 2nd parameter: nb. channels (mode='conv') / nb. neurons (mode='fc').
-            self.conv_ds.append(dsnn.DeepBSpline('conv', 6, **opt_params))
-            self.pool = nn.MaxPool2d(2, 2)
-            self.conv2 = nn.Conv2d(6, 16, 5)
-            self.conv_ds.append(dsnn.DeepBSpline('conv', 16, **opt_params))
-
-            self.fc1 = nn.Linear(16 * 5 * 5, 120)
-            self.fc_ds.append(dsnn.DeepBSpline('fc', 120, **opt_params))
-            self.fc2 = nn.Linear(120, 84)
-            self.fc_ds.append(dsnn.DeepBSpline('fc', 84, **opt_params))
-            self.fc3 = nn.Linear(84, 10)
+```
+from deepsplines import dsnn
 
 
-        def forward(self, x):
+class DSNet(dsnn.DSModule):
 
-            x = self.pool(self.conv_ds[0](self.conv1(x)))
-            x = self.pool(self.conv_ds[1](self.conv2(x)))
-            x = torch.flatten(x, 1) # flatten all dimensions except batch
-            x = self.fc_ds[0](self.fc1(x))
-            x = self.fc_ds[1](self.fc2(x))
-            x = self.fc3(x)
+    def __init__(self):
 
-            return x
+        super().__init__()
+
+        self.conv_ds = nn.ModuleList()
+        self.fc_ds = nn.ModuleList()
+
+        # deepspline parameters
+        opt_params = {'size': 51, 'range_': 4, 'init': 'leaky_relu',
+                        'save_memory': False}
+
+        # convolutional layer with 6 output channels
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.conv_ds.append(dsnn.DeepBSpline('conv', 6, **opt_params))
+
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.conv_ds.append(dsnn.DeepBSpline('conv', 16, **opt_params))
+
+        # fully-connected layer with 120 output units
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc_ds.append(dsnn.DeepBSpline('fc', 120, **opt_params))
+
+        self.fc2 = nn.Linear(120, 84)
+        self.fc_ds.append(dsnn.DeepBSpline('fc', 84, **opt_params))
+        self.fc3 = nn.Linear(84, 10)
 
 
-    [...]
+    def forward(self, x):
 
-    dsnet = DSNet()
+        x = self.pool(self.conv_ds[0](self.conv1(x)))
+        x = self.pool(self.conv_ds[1](self.conv2(x)))
+        x = torch.flatten(x, 1) # flatten all dimensions except batch
+        x = self.fc_ds[0](self.fc1(x))
+        x = self.fc_ds[1](self.fc2(x))
+        x = self.fc3(x)
 
-    [...]
+        return x
 
-    main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(), lr=0.001, momentum=0.9)
-    aux_optimizer = optim.Adam(dsnet.parameters_deepspline())
 
-    [...]
+dsnet = DSNet()
+dsnet.to(device)
 
-            # inside the training loop
-            outputs = dsnet(inputs)
-            loss = criterion(outputs, labels)
-            # add regularization loss. It can be TV2 or BV2 regularization.
+main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(), lr=0.001, momentum=0.9)
+aux_optimizer = optim.Adam(dsnet.parameters_deepspline())
+
+lmbda = 1e-4 # regularization weight
+lipschitz = False # lipschitz control
+
+
+for epoch in range(2):
+
+    for i, data in enumerate(trainloader):
+        # get the inputs; data is a list of [inputs, labels]
+        inputs, labels = data[0].to(device), data[1].to(device)
+
+        # zero the parameter gradients
+        main_optimizer.zero_grad()
+        aux_optimizer.zero_grad()
+
+        outputs = dsnet(inputs)
+        loss = criterion(outputs, labels)
+
+        # add regularization loss
+        if lipschitz is True:
+            loss = loss + lmbda * dsnet.BV2()
+        else:
             loss = loss + lmbda * dsnet.TV2()
-            loss.backward()
-            main_optimizer.step()
-            aux_optimizer.step()
 
+        loss.backward()
+        main_optimizer.step()
+        aux_optimizer.step()
+```
 
 For full details, see ./scripts/deepsplines_tutorial.py.
 

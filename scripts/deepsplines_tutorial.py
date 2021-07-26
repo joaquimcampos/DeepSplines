@@ -146,12 +146,11 @@ net = Net() # relu network
 net.to(device)
 print('ReLU: nb. parameters - {:d}'.format(net.num_params))
 
+optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+
 dsnet = DSNet() # deepsplines network
 dsnet.to(device)
 print('DeepSpline: nb. parameters - {:d}'.format(dsnet.num_params))
-
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
 # For the parameters of the deepsplines, an optimizer different from "SGD"
 # is usually required for stability during training (Adam is recommended).
@@ -161,6 +160,8 @@ optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 # and parameters_no_deepspline() methods for this.
 main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(), lr=0.001, momentum=0.9)
 aux_optimizer = optim.Adam(dsnet.parameters_deepspline())
+
+criterion = nn.CrossEntropyLoss()
 
 
 ########################################################################
@@ -204,9 +205,12 @@ print('Finished Training ReLU network. \n'
 # Note: Since the original network is small, the time it takes to train
 # deepsplines is significantly larger.
 
-# Regularization weight for the TV(2) or BV(2) regularization.
+# Regularization weight for the TV(2)/BV(2) regularization
 # Needs to be tuned for performance
 lmbda = 1e-4
+# lipschitz control: if True, BV(2) regularization is used instead of TV(2)
+lipschitz = False
+
 
 print('\nTraining DeepSpline network.')
 
@@ -226,8 +230,13 @@ for epoch in range(2):  # loop over the dataset multiple times
         # forward + backward + optimize
         outputs = dsnet(inputs)
         loss = criterion(outputs, labels)
-        # add regularization loss. It can be TV2 or BV2 regularization.
-        loss = loss + lmbda * dsnet.TV2()
+
+        # add regularization loss
+        if lipschitz is True:
+            loss = loss + lmbda * dsnet.BV2()
+        else:
+            loss = loss + lmbda * dsnet.TV2()
+
         loss.backward()
         main_optimizer.step()
         aux_optimizer.step()
