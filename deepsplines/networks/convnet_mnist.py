@@ -3,9 +3,8 @@
 import torch
 import torch.nn as nn
 
-from deepsplines.basemodel import BaseModel
+from deepsplines.modules import BaseModel
 
-__all__ = ['ConvNetMnist']
 
 
 class ConvNetMnist(BaseModel):

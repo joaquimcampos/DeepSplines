@@ -178,7 +178,7 @@ def dict_recursive_merge(params_root, merger_root, base=True):
 
     if merger_root: # non-empty dict
         for key, val in merger_root.items():
-            if isinstance(val, dict):
+            if isinstance(val, dict) and key in params_root:
                 merger_root[key] = dict_recursive_merge(params_root[key], merger_root[key], base=False)
 
         merger_root = {**params_root, **merger_root}

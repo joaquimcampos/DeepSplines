@@ -6,8 +6,8 @@ import sys
 import collections
 import itertools
 
-from ds_utils import size_str, dict_recursive_merge, flatten_structure
-from ds_utils import json_load, json_dump
+from deepsplines.ds_utils import size_str, dict_recursive_merge, flatten_structure
+from deepsplines.ds_utils import json_load, json_dump
 
 
 class Project():

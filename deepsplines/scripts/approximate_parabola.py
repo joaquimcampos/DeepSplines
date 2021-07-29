@@ -16,10 +16,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-from deepsplines.deepBspline import DeepBSpline
-from deepsplines.deepBspline_explicit_linear import DeepBSplineExplicitLinear
-from deepsplines.deepReLUspline import DeepReLUSpline
-from ds_utils import ArgCheck, add_date_to_filename
+from deepsplines.modules import *
+from deepsplines.ds_utils import ArgCheck, add_date_to_filename
 
 
 

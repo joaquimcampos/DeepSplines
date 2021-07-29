@@ -55,7 +55,7 @@ Example on how to adapt the [PyTorch CIFAR-10 tutorial](https://pytorch.org/tuto
 to use DeepBSpline activations.
 
 ```
-from deepsplines import dsnn
+from deepsplines.modules import dsnn
 
 
 class DSNet(dsnn.DSModule):

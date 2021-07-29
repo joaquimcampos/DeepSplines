@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from project import Project
-from manager import Manager
-from ds_utils import ArgCheck
+from deepsplines.project import Project
+from deepsplines.manager import Manager
+from deepsplines.ds_utils import ArgCheck
 
 
 def plot_activations(args):

@@ -10,8 +10,8 @@ If params['knot_threshold'] > 0., it also prints:
 '''
 
 import argparse
-from project import Project
-from manager import Manager
+from deepsplines.project import Project
+from deepsplines.manager import Manager
 
 
 if __name__ == "__main__":

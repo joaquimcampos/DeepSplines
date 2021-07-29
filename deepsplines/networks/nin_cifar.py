@@ -14,9 +14,8 @@ blob/master/examples/cifar100/NIN/baseline/train_test1.prototxt
 import torch
 import torch.nn as nn
 
-from deepsplines.basemodel import BaseModel
+from deepsplines.modules import BaseModel
 
-__all__ = ['NiNCifar']
 
 
 class NiNCifar(BaseModel):

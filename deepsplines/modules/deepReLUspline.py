@@ -23,7 +23,7 @@ an alternative B-spline representation for the linear spline.
 import torch
 from torch import nn
 from torch.nn import functional as F
-from deepsplines.deepspline_base import DeepSplineBase
+from .deepspline_base import DeepSplineBase
 
 
 

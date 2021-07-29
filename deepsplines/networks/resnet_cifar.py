@@ -13,9 +13,7 @@ Based on:
 import torch
 import torch.nn as nn
 
-from deepsplines.basemodel import BaseModel
-
-__all__ = ['ResNet32Cifar']
+from deepsplines.modules import BaseModel
 
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1):

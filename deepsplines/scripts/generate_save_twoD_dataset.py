@@ -8,8 +8,8 @@ with a given number of training and validation samples.
 import argparse
 import os
 import torch
-from datasets import init_dataset
-from ds_utils import ArgCheck, init_sub_dir
+from deepsplines.datasets import init_dataset
+from deepsplines.ds_utils import ArgCheck, init_sub_dir
 
 
 def generate_save_dataset(dataset_name, data_dir, num_train_samples=1500,

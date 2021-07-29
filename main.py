@@ -7,15 +7,17 @@ sends them to Manager for training/testing.
 
 import os
 import argparse
-from manager import Manager
-from project import Project
+from deepsplines.manager import Manager
+from deepsplines.project import Project
 
-from ds_utils import ArgCheck, assign_tree_structure
-from struct_default_values import structure, default_values
+from deepsplines.ds_utils import ArgCheck, assign_tree_structure
+from deepsplines.struct_default_values import structure, default_values
 
 
 # TODO: write setup.py!
-# TODO: DO not push data. remove dependency on number of points.
+# TODO: Conform to PEP8 https://stackoverflow.com/questions/35727134/module-imports-and-init-py
+# TODO: Fix imports
+# TODO: Ensure that networks and datasets are aligned
 def get_arg_parser():
     """
     Parses command-line arguments.

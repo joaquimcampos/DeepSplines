@@ -13,6 +13,7 @@ from scipy.interpolate import interp1d
 import argparse
 
 
+
 def Bspline(x, center=0, grid=1, coeff=1, mode='both'):
     """
     Evaluates a B-spline basis element at x.

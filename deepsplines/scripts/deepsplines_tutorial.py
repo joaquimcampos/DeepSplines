@@ -16,7 +16,7 @@ import torch.optim as optim
 import time
 
 # Need to import dsnn (takes the role of torch.nn for DeepSplines)
-from deepsplines import dsnn
+from deepsplines.modules import dsnn
 
 
 ########################################################################

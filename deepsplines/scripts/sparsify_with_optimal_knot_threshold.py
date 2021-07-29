@@ -18,8 +18,8 @@ import copy
 import warnings
 import shutil
 
-from ds_utils import ArgCheck
-from project import Project
+from deepsplines.ds_utils import ArgCheck
+from deepsplines.project import Project
 from main import main_prog
 
 

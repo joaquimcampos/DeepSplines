@@ -4,9 +4,8 @@
 import torch
 import torch.nn as nn
 
-from deepsplines.basemodel import BaseModel
+from deepsplines.modules import BaseModel
 
-__all__ = ['TwoDNet']
 
 
 class TwoDNet(BaseModel):

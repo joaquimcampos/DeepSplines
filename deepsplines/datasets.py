@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from abc import ABC, abstractproperty, abstractmethod
 
-from ds_utils import check_device, denormalize
+from .ds_utils import check_device, denormalize
 
 
 def init_dataset(**params):

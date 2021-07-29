@@ -12,12 +12,12 @@ import torch.optim as optim
 import torch.backends.cudnn as cudnn
 import copy
 
-from dataloader import DataLoader
-from project import Project
-from ds_utils import update_running_losses
+from .dataloader import DataLoader
+from .project import Project
+from .ds_utils import update_running_losses
 
-from networks import *
-from datasets import init_dataset
+from .networks import *
+from .datasets import init_dataset
 
 
 ##################################################################################################

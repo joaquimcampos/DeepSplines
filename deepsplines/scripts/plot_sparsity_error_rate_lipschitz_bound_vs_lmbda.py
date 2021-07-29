@@ -6,8 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from functools import partial
 
-from project import Project
-from ds_utils import json_load
+from deepsplines.project import Project
+from deepsplines.ds_utils import json_load
 
 '''
 This script plots sparsity, error_rate and lipschitz_bound vs lambda.

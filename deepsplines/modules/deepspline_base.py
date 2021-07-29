@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from abc import ABC, abstractproperty, abstractmethod
 
-from ds_utils import spline_grid_from_range
+from deepsplines.ds_utils import spline_grid_from_range
 
 
 
