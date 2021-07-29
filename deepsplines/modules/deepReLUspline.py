@@ -22,10 +22,8 @@ an alternative B-spline representation for the linear spline.
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from .deepspline_base import DeepSplineBase
-
 
 
 class DeepReLUSpline(DeepSplineBase):
@@ -60,20 +58,20 @@ class DeepReLUSpline(DeepSplineBase):
         spline_bias = torch.zeros(self.num_activations)
         spline_weight = torch.zeros_like(spline_bias)
 
-        leftmost_knot_loc = -self.grid.item() * (self.num_relus//2)
+        leftmost_knot_loc = -self.grid.item() * (self.num_relus // 2)
         loc_linspace = torch.linspace(leftmost_knot_loc, -leftmost_knot_loc,
-                                    self.num_relus)
+                                      self.num_relus)
 
         # size: (num_activations, num_relus)
         knot_loc = loc_linspace.view(1, -1).expand(self.num_activations, -1)
         # by default, there is no knot discovery. If it is desired to
         # have knot discovery, make knot_loc an nn.Parameter.
-        self.knot_loc = knot_loc # knot locations are not parameters
+        self.knot_loc = knot_loc  # knot locations are not parameters
 
         if self.init == 'leaky_relu':
-            spline_weight.fill_(0.01) # b1 = 0.01
+            spline_weight.fill_(0.01)  # b1 = 0.01
             zero_knot_idx = self.num_relus // 2
-            relu_slopes[:, zero_knot_idx].fill_(1.-0.01)
+            relu_slopes[:, zero_knot_idx].fill_(1. - 0.01)
 
         elif self.init == 'relu':
             zero_knot_idx = self.num_relus // 2
@@ -82,15 +80,16 @@ class DeepReLUSpline(DeepSplineBase):
         else:
             raise ValueError('init should be in [leaky_relu, relu].')
 
-        self._relu_slopes = nn.Parameter(relu_slopes) # size: (num_activations, num_relus)
-        self.spline_weight = nn.Parameter(spline_weight) # size: (num_activations,)
+        # size: (num_activations, num_relus)
+        self._relu_slopes = nn.Parameter(relu_slopes)
+        # size: (num_activations,)
+        self.spline_weight = nn.Parameter(spline_weight)
 
         if self.learn_bias is True:
-            self.spline_bias = nn.Parameter(spline_bias) # size: (num_activations,)
+            # size: (num_activations,)
+            self.spline_bias = nn.Parameter(spline_bias)
         else:
             self.spline_bias = spline_bias
-
-
 
     @staticmethod
     def parameter_names():
@@ -98,22 +97,17 @@ class DeepReLUSpline(DeepSplineBase):
         for name in ['relu_slopes', 'spline_weight', 'spline_bias']:
             yield name
 
-
     @property
     def weight(self):
         return self.spline_weight
-
 
     @property
     def bias(self):
         return self.spline_bias
 
-
     @property
     def relu_slopes(self):
         return self._relu_slopes
-
-
 
     def forward(self, input):
         """
@@ -128,16 +122,23 @@ class DeepReLUSpline(DeepSplineBase):
         input_size = input.size()
         x = self.reshape_forward(input)
 
-        assert x.size(1) == self.num_activations, 'input.size(1) != num_activations.'
+        assert x.size(1) == self.num_activations, \
+            'input.size(1) != num_activations.'
 
         # the deepReLUspline implementation is badly-conditioned: in order to
         # compute the output value at a location x, you need the value
         # (at x) of all the ReLUs that have knots before it.
-        knot_loc_view = self.knot_loc.view(1, self.num_activations, 1, 1, self.num_relus)
-        clamped_xknotdiff = (x.unsqueeze(-1) - knot_loc_view).clamp(min=0) # (x - \tau_k)_+
+        knot_loc_view = self.knot_loc.view(
+            1, self.num_activations, 1, 1, self.num_relus)
 
-        relu_slopes_view = self.relu_slopes.view(1, self.num_activations, 1, 1, self.num_relus)
-        out_relu = (relu_slopes_view * clamped_xknotdiff).sum(-1) # sum over ReLUs
+        # (x - \tau_k)_+
+        clamped_xknotdiff = (x.unsqueeze(-1) - knot_loc_view)\
+            .clamp(min=0)
+
+        relu_slopes_view = self.relu_slopes.view(
+            1, self.num_activations, 1, 1, self.num_relus)
+        # sum over ReLUs
+        out_relu = (relu_slopes_view * clamped_xknotdiff).sum(-1)
         del clamped_xknotdiff
 
         b0 = self.spline_bias.view(1, -1, 1, 1)
@@ -149,8 +150,6 @@ class DeepReLUSpline(DeepSplineBase):
         output = self.reshape_back(output, input_size)
 
         return output
-
-
 
     def apply_threshold(self, threshold):
         """
@@ -164,12 +163,10 @@ class DeepReLUSpline(DeepSplineBase):
             new_relu_slopes = super().apply_threshold(threshold)
             self.relu_slopes.data = new_relu_slopes
 
-
-
     def extra_repr(self):
         """ repr for print(model) """
 
         s = ('mode={mode}, num_activations={num_activations}, init={init}, '
-            'num_relus={num_relus}, grid={grid[0]}, {bias}: {learn_bias}.')
+             'num_relus={num_relus}, grid={grid[0]}, {bias}: {learn_bias}.')
 
         return s.format(**self.__dict__)
