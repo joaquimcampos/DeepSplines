@@ -16,7 +16,7 @@ from .dataloader import DataLoader
 from .project import Project
 from .ds_utils import update_running_losses
 
-from .networks import *
+from .networks import TwoDNet, ResNet32Cifar, NiNCifar, ConvNetMnist
 from .datasets import init_dataset
 
 
