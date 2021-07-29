@@ -7,10 +7,10 @@ on the CIFAR100 dataset.
 See https://ieeexplore.ieee.org/document/9264754.
 '''
 
-import argparse
 import os
-import torch
+import argparse
 import copy
+import torch
 
 from main import main_prog
 

@@ -6,11 +6,11 @@
 Module for managing the training and testing.
 """
 
+import copy
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
-import copy
 
 from .dataloader import DataLoader
 from .project import Project

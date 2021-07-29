@@ -10,13 +10,13 @@ The script then looks for the highest knot_threshold
 (higher => sparser activations) that is allowed by the specifications.
 '''
 
-import argparse
 import os
-import numpy as np
 import sys
+import argparse
 import copy
 import warnings
 import shutil
+import numpy as np
 
 from deepsplines.ds_utils import ArgCheck
 from deepsplines.project import Project

@@ -7,13 +7,13 @@ starting from the PyTorch CIFAR-10 tutorial:
 https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 """
 
+import time
 import torch
 import torchvision
 import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import time
 
 # Need to import dsnn (takes the role of torch.nn for DeepSplines)
 from deepsplines.modules import dsnn

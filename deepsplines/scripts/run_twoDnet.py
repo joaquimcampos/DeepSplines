@@ -7,10 +7,10 @@ on an s-shape or circle 2D dataset.
 See https://ieeexplore.ieee.org/document/9264754.
 '''
 
-import argparse
 import os
-import torch
+import argparse
 import copy
+import torch
 
 from main import main_prog
 from generate_save_twoD_dataset import generate_save_dataset

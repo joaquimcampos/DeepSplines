@@ -5,9 +5,10 @@ This script generates and saves a 2D circle or s_shape dataset
 with a given number of training and validation samples.
 '''
 
-import argparse
 import os
+import argparse
 import torch
+
 from deepsplines.datasets import init_dataset
 from deepsplines.ds_utils import ArgCheck, init_sub_dir
 

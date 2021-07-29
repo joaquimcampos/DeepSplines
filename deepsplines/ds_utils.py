@@ -2,13 +2,13 @@
 
 import os
 import argparse
-import torch
-from torch import Tensor
+import copy
 import math
 import json
-import numpy as np
-import copy
 from datetime import datetime
+import torch
+from torch import Tensor
+import numpy as np
 
 
 class ArgCheck():

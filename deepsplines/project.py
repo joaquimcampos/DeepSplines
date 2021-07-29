@@ -1,7 +1,7 @@
 import os
+import sys
 import glob
 import math
-import sys
 import collections
 import itertools
 import torch

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import argparse
 import os
+import argparse
+from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
-from functools import partial
 
 from deepsplines.project import Project
 from deepsplines.ds_utils import json_load

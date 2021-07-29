@@ -9,8 +9,8 @@ To only check the activations for a given layer, set --layer [layer_idx].
 Please run ./plot_activations.py --help for argument details.
 '''
 
-import argparse
 import os
+import argparse
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np

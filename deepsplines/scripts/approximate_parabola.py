@@ -8,13 +8,13 @@ Used for testing purposes.
 """
 
 
+import os
+import time
 import argparse
 import torch
-from torch import nn
-import os
+import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 
 from deepsplines.modules import *
 from deepsplines.ds_utils import ArgCheck, add_date_to_filename

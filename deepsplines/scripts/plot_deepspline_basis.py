@@ -7,10 +7,10 @@ Please run script with --help for argument details.
 '''
 
 import os
+import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
-import argparse
 
 
 
