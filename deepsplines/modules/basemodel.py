@@ -22,10 +22,10 @@ class BaseModel(nn.Module):
     """
 
     def __init__(self, activation_type=None,
-                num_classes=None,
-                spline_size=None, spline_range=None,
-                spline_init=None, save_memory=False,
-                knot_threshold=None, **kwargs):
+                 num_classes=None,
+                 spline_size=None, spline_range=None,
+                 spline_init=None, save_memory=False,
+                 knot_threshold=None, **kwargs):
         """
         Args:
             ------ general -----------------------
@@ -58,7 +58,7 @@ class BaseModel(nn.Module):
         """
         super().__init__()
 
-        past_attr_names = dir(self) # save attribute names
+        past_attr_names = dir(self)  # save attribute names
 
         # general attributes
         self.activation_type = activation_type
@@ -71,13 +71,14 @@ class BaseModel(nn.Module):
         self.save_memory = save_memory
         self.knot_threshold = knot_threshold
 
-        current_attr_names = dir(self) # current attribute names
+        current_attr_names = dir(self)  # current attribute names
         # Get list of newly added attributes
         new_attr_names = list(set(current_attr_names) - set(past_attr_names))
 
         for attr_name in new_attr_names:
             # check that all the arguments were given (are not None).
-            assert getattr(self, attr_name) is not None, f'self.{attr_name} is None.'
+            assert getattr(self, attr_name) is not None, \
+                f'self.{attr_name} is None.'
 
         self.deepspline = None
         if self.activation_type == 'deepBspline':
@@ -86,8 +87,6 @@ class BaseModel(nn.Module):
             self.deepspline = DeepBSplineExplicitLinear
         elif self.activation_type == 'deepReLUspline':
             self.deepspline = DeepReLUSpline
-
-
 
     @property
     def device(self):
@@ -98,10 +97,8 @@ class BaseModel(nn.Module):
         """
         return next(self.parameters()).device
 
-
-    ############################################################################
+    ###########################################################################
     # Activation initialization
-
 
     def init_activation_list(self, activation_specs, bias=True, **kwargs):
         """
@@ -111,8 +108,8 @@ class BaseModel(nn.Module):
             activation_specs (list):
                 list of 2-tuples (mode[str], num_activations[int]);
                 mode can be 'conv' (convolutional) or 'fc' (fully-connected);
-                if mode='conv', num_activations = number of convolutional filters;
-                if mode='fc', num_activations = number of units.
+                if mode='conv', num_activations = number of convolutional
+                filters; if mode='fc', num_activations = number of units.
                 len(activation_specs) = number of activation layers;
                 e.g., [('conv', 64), ('fc', 100)].
 
@@ -123,21 +120,23 @@ class BaseModel(nn.Module):
         Returns:
             activations (nn.ModuleList)
         """
-        assert isinstance(activation_specs, list), f'activation_specs type: {type(activation_specs)}'
+        assert isinstance(activation_specs, list), \
+            f'activation_specs type: {type(activation_specs)}'
 
         if self.using_deepsplines:
             activations = nn.ModuleList()
             for mode, num_activations in activation_specs:
-                activations.append(self.deepspline(mode, num_activations,
-                                                size=self.spline_size, range_=self.spline_range,
-                                                init=self.spline_init, bias=bias,
-                                                save_memory=self.save_memory))
+                activations.append(
+                    self.deepspline(mode, num_activations,
+                                    size=self.spline_size,
+                                    range_=self.spline_range,
+                                    init=self.spline_init,
+                                    bias=bias,
+                                    save_memory=self.save_memory))
         else:
             activations = self.init_standard_activations(activation_specs)
 
         return activations
-
-
 
     def init_activation(self, activation_specs, **kwargs):
         """
@@ -147,19 +146,18 @@ class BaseModel(nn.Module):
             activation_specs (tuple):
                 2-tuple (mode[str], num_activations[int]);
                 mode can be 'conv' (convolutional) or 'fc' (fully-connected);
-                if mode='conv', num_activations = number of convolutional filters;
-                if mode='fc', num_activations = number of units.
+                if mode='conv', num_activations = number of convolutional
+                filters; if mode='fc', num_activations = number of units.
                 e.g. ('conv', 64).
 
         Returns:
             activation (nn.Module)
         """
-        assert isinstance(activation_specs, tuple), f'activation_specs type: {type(activation_specs)}'
+        assert isinstance(activation_specs, tuple), \
+            f'activation_specs type: {type(activation_specs)}'
         activation = self.init_activation_list([activation_specs], **kwargs)[0]
 
         return activation
-
-
 
     def init_standard_activations(self, activation_specs, **kwargs):
         """
@@ -186,11 +184,10 @@ class BaseModel(nn.Module):
                 activations.append(leaky_relu)
 
         else:
-            raise ValueError(f'{self.activation_type} is not in relu family...')
+            raise ValueError(f'{self.activation_type} '
+                             'is not in relu family...')
 
         return activations
-
-
 
     def initialization(self, init_type='He'):
         """
@@ -204,12 +201,12 @@ class BaseModel(nn.Module):
                 nonlinearity = self.activation_type
                 slope_init = 0.01 if nonlinearity == 'leaky_relu' else 0.
 
-            elif self.using_deepsplines and self.spline_init in ['leaky_relu', 'relu']:
+            elif self.using_deepsplines and \
+                    self.spline_init in ['leaky_relu', 'relu']:
                 nonlinearity = self.spline_init
                 slope_init = 0.01 if nonlinearity == 'leaky_relu' else 0.
             else:
-                init_type = 'Xavier' # overwrite init_type
-
+                init_type = 'Xavier'  # overwrite init_type
 
         for module in self.modules():
 
@@ -222,18 +219,19 @@ class BaseModel(nn.Module):
                     module.weight.data.normal_(0, 0.05)
                     module.bias.data.zero_()
 
-                else: # He initialization
-                    nn.init.kaiming_normal_(module.weight, a=slope_init, mode='fan_out',
-                                            nonlinearity=nonlinearity)
+                else:  # He initialization
+                    nn.init.kaiming_normal_(
+                        module.weight,
+                        a=slope_init,
+                        mode='fan_out',
+                        nonlinearity=nonlinearity)
 
             elif isinstance(module, nn.BatchNorm2d):
                 module.weight.data.fill_(1)
                 module.bias.data.zero_()
 
-
     ###########################################################################
     # Parameters
-
 
     def get_num_params(self):
         """
@@ -245,8 +243,6 @@ class BaseModel(nn.Module):
 
         return num_params
 
-
-
     def modules_deepspline(self):
         """
         Yields all deepspline modules in the network.
@@ -254,8 +250,6 @@ class BaseModel(nn.Module):
         for module in self.modules():
             if isinstance(module, self.deepspline):
                 yield module
-
-
 
     def named_parameters_no_deepspline(self, recurse=True):
         """
@@ -271,8 +265,6 @@ class BaseModel(nn.Module):
 
             if deepspline_param is False:
                 yield name, param
-
-
 
     def named_parameters_deepspline(self, recurse=True):
         """
@@ -291,8 +283,6 @@ class BaseModel(nn.Module):
             if deepspline_param is True:
                 yield name, param
 
-
-
     def parameters_no_deepspline(self):
         """
         Yields all parameters in the network,
@@ -301,16 +291,12 @@ class BaseModel(nn.Module):
         for name, param in self.named_parameters_no_deepspline(recurse=True):
             yield param
 
-
-
     def parameters_deepspline(self):
         """
         Yields all deepspline parameters in the network.
         """
         for name, param in self.named_parameters_deepspline(recurse=True):
             yield param
-
-
 
     def freeze_parameters(self):
         """
@@ -319,10 +305,8 @@ class BaseModel(nn.Module):
         for param in self.parameters():
             param.requires_grad = False
 
-
-    ############################################################################
+    ##########################################################################
     # Deepsplines: regularization and sparsification
-
 
     @property
     def using_deepsplines(self):
@@ -330,8 +314,6 @@ class BaseModel(nn.Module):
         True if using deepspline activations.
         """
         return (self.deepspline is not None)
-
-
 
     def l2sqsum_weights_biases(self):
         """
@@ -345,15 +327,15 @@ class BaseModel(nn.Module):
         l2sqsum = Tensor([0.]).to(self.device)
 
         for module in self.modules():
-            if hasattr(module, 'weight') and isinstance(module.weight, nn.Parameter):
+            if hasattr(module, 'weight') and \
+                    isinstance(module.weight, nn.Parameter):
                 l2sqsum = l2sqsum + module.weight.pow(2).sum()
 
-            if hasattr(module, 'bias') and isinstance(module.bias, nn.Parameter):
+            if hasattr(module, 'bias') and \
+                    isinstance(module.bias, nn.Parameter):
                 l2sqsum = l2sqsum + module.bias.pow(2).sum()
 
-        return l2sqsum[0] # 1-tap 1d tensor -> 0d tensor
-
-
+        return l2sqsum[0]  # 1-tap 1d tensor -> 0d tensor
 
     def TV2(self):
         """
@@ -371,9 +353,7 @@ class BaseModel(nn.Module):
                 module_tv2 = module.totalVariation(mode='additive')
                 tv2 = tv2 + module_tv2.norm(p=1)
 
-        return tv2[0] # 1-tap 1d tensor -> 0d tensor
-
-
+        return tv2[0]  # 1-tap 1d tensor -> 0d tensor
 
     def BV2(self):
         """
@@ -395,9 +375,7 @@ class BaseModel(nn.Module):
                 module_bv2 = module_tv2 + module.fZerofOneAbs(mode='additive')
                 bv2 = bv2 + module_bv2.norm(p=1)
 
-        return bv2[0] # 1-tap 1d tensor -> 0d tensor
-
-
+        return bv2[0]  # 1-tap 1d tensor -> 0d tensor
 
     def lipschitz_bound(self):
         """
@@ -405,13 +383,14 @@ class BaseModel(nn.Module):
 
         The lipschitz bound associated with C is:
         ||f_net(x_1) - f_net(x_2)||_1 <= C ||x_1 - x_2||_1,
-        for all x_1, x_2 \in R^{N_0}.
+        for all x_1, x_2 in R^{N_0}.
 
-        For l \in {1, ..., L}, n \in {1,..., N_l}:
+        For l in {1, ..., L}, n in {1,..., N_l}:
         w_{n, l} is the vector of weights from layer l-1 to layer l, neuron n;
         s_{n, l} is the activation function of layer l, neuron n.
 
-        C = (prod_{l=1}^{L} [max_{n,l} w_{n,l}]) * (prod_{l=1}^{L} ||s_l||_{BV(2)}),
+        C = (prod_{l=1}^{L} [max_{n,l} w_{n,l}]) * \
+            (prod_{l=1}^{L} ||s_l||_{BV(2)}),
         where ||s_l||_{BV(2)} = sum_{n=1}^{N_l} {BV(2)(s_{n,l})}.
 
         Returns:
@@ -425,16 +404,17 @@ class BaseModel(nn.Module):
             if isinstance(module, self.deepspline):
                 module_tv = module.totalVariation()
                 module_fzero_fone = module.fZerofOneAbs()
-                bv_product = bv_product * (module_tv.sum() + module_fzero_fone.sum())
+                bv_product = bv_product * \
+                    (module_tv.sum() + module_fzero_fone.sum())
 
-            elif isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d):
-                max_weights_product = max_weights_product * module.weight.data.abs().max()
+            elif isinstance(module, nn.Linear) or \
+                    isinstance(module, nn.Conv2d):
+                max_weights_product = \
+                    max_weights_product * module.weight.data.abs().max()
 
         lip_bound = max_weights_product * bv_product
 
-        return lip_bound[0] # 1-tap 1d tensor -> 0d tensor
-
-
+        return lip_bound[0]  # 1-tap 1d tensor -> 0d tensor
 
     def sparsify_activations(self):
         """
@@ -448,8 +428,6 @@ class BaseModel(nn.Module):
             if isinstance(module, self.deepspline):
                 module.apply_threshold(self.knot_threshold)
 
-
-
     def compute_sparsity(self):
         """
         Returns the sparsity of the activations, i.e. the number of
@@ -461,12 +439,11 @@ class BaseModel(nn.Module):
         sparsity = 0
         for module in self.modules():
             if isinstance(module, self.deepspline):
-                module_sparsity, _ = module.get_threshold_sparsity(self.knot_threshold)
+                module_sparsity, _ = \
+                    module.get_threshold_sparsity(self.knot_threshold)
                 sparsity += module_sparsity.sum().item()
 
         return sparsity
-
-
 
     def get_deepspline_activations(self):
         """
@@ -486,21 +463,27 @@ class BaseModel(nn.Module):
             for name, module in self.named_modules():
 
                 if isinstance(module, self.deepspline):
-                    locations = module.grid_tensor # (num_activations, size)
-                    input = locations.transpose(0,1).to(self.device) # (size, num_activations)
+                    locations = module.grid_tensor  # (num_activations, size)
+                    # (size, num_activations)
+                    input = locations.transpose(0, 1).to(self.device)
                     if module.mode == 'conv':
-                        input = input.unsqueeze(-1).unsqueeze(-1) # to 4D
+                        input = input.unsqueeze(-1).unsqueeze(-1)  # to 4D
 
                     output = module(input)
                     coefficients = output.transpose(0, 1)
                     if module.mode == 'conv':
-                        coefficients = coefficients.squeeze(-1).squeeze(-1) # to 2D
+                        coefficients = \
+                            coefficients.squeeze(-1).squeeze(-1)  # to 2D
                     # coefficients: (num_activations, size)
 
-                    _, threshold_sparsity_mask = module.get_threshold_sparsity(self.knot_threshold)
-                    activations_list.append({'name': '_'.join([name, module.mode]),
-                                            'locations': locations.clone().detach().cpu(),
-                                            'coefficients': coefficients.clone().detach().cpu(),
-                                            'sparsity_mask' : threshold_sparsity_mask.cpu()})
+                    _, threshold_sparsity_mask = \
+                        module.get_threshold_sparsity(self.knot_threshold)
+
+                    activations_list.append({
+                        'name': '_'.join([name, module.mode]),
+                        'locations': locations.clone().detach().cpu(),
+                        'coefficients': coefficients.clone().detach().cpu(),
+                        'sparsity_mask': threshold_sparsity_mask.cpu()
+                        })
 
         return activations_list
