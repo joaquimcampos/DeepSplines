@@ -8,7 +8,7 @@ subclass DSModule() instead. (see dsnn.py).
 
 
 import torch
-from torch import nn
+import torch.nn as nn
 from torch import Tensor
 
 from .deepBspline import DeepBSpline

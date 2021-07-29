@@ -1,5 +1,5 @@
 import torch
-from torch import nn
+import torch.nn as nn
 from abc import ABC, abstractproperty, abstractmethod
 
 from deepsplines.ds_utils import spline_grid_from_range

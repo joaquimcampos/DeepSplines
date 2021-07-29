@@ -7,8 +7,9 @@ in some contexts.
 """
 
 import torch
-from torch import nn
-from torch.nn import functional as F
+import torch.nn as nn
+import torch.nn.functional as F
+
 from .deepBspline_base import DeepBSplineBase
 
 

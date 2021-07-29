@@ -1,10 +1,10 @@
-import torch
 import os
 import glob
 import math
 import sys
 import collections
 import itertools
+import torch
 
 from deepsplines.ds_utils import size_str, dict_recursive_merge, flatten_structure
 from deepsplines.ds_utils import json_load, json_dump
@@ -25,7 +25,7 @@ class Project():
         self.training = (self.params["mode"]=='train')
         self.log_dir_model = os.path.join(self.params["log_dir"],
                                             self.params["model_name"])
-                                            
+
         self.best_train_acc = 0.
         self.best_valid_acc = 0.
 

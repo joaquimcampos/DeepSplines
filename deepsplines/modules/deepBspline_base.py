@@ -49,12 +49,10 @@ deepBspline without custom Autograd Fuction:
 """
 
 import torch
-from torch import nn
-from torch.nn import functional as F
+import torch.nn.functional as F
 from torch import Tensor
-import numpy as np
-from scipy.linalg import toeplitz
 from abc import abstractproperty
+
 from .deepspline_base import DeepSplineBase
 
 

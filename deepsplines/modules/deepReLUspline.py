@@ -21,8 +21,9 @@ an alternative B-spline representation for the linear spline.
 """
 
 import torch
-from torch import nn
-from torch.nn import functional as F
+import torch.nn as nn
+import torch.nn.functional as F
+
 from .deepspline_base import DeepSplineBase
 
 
