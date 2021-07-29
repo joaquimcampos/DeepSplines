@@ -1,10 +1,8 @@
 """ Simple convolutional network for MNIST. """
 
-import torch
 import torch.nn as nn
 
 from deepsplines.modules import BaseModel
-
 
 
 class ConvNetMnist(BaseModel):
@@ -28,11 +26,11 @@ class ConvNetMnist(BaseModel):
 
         super().__init__(**params)
 
-
-        c1, self.c2 = 2, 2 # conv: number of channels
+        c1, self.c2 = 2, 2  # conv: number of channels
         activation_specs = []
 
-        self.conv1 = nn.Conv2d(1, c1, 5) # (in_channels, out_channels, kernel_size)
+        # (in_channels, out_channels, kernel_size)
+        self.conv1 = nn.Conv2d(1, c1, 5)
         activation_specs.append(('conv', c1))
         self.pool = nn.MaxPool2d(2, 2)  # (kernel_size, stride)
         self.conv2 = nn.Conv2d(c1, self.c2, 5)
@@ -41,7 +39,6 @@ class ConvNetMnist(BaseModel):
 
         self.activations = self.init_activation_list(activation_specs)
         self.num_params = self.get_num_params()
-
 
     def forward(self, x):
         """ """
