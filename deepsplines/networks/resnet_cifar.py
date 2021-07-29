@@ -127,7 +127,7 @@ class ResNet(BaseModel):
             nn.BatchNorm2d(in_planes),
             self.init_activation(
                 ('conv', in_planes), bias=False)
-            )
+        )
 
         return layer0
 
@@ -147,7 +147,7 @@ class ResNet(BaseModel):
         layers.append(
             block(self.in_planes, planes,
                   stride, downsample, **params)
-            )
+        )
         self.in_planes = planes * block.expansion
 
         for _ in range(1, num_blocks):
