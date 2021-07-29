@@ -20,8 +20,8 @@ from .networks import *
 from .datasets import init_dataset
 
 
-##################################################################################################
-#### MANAGER
+##########################################################################
+# MANAGER
 
 class Manager(Project):
     """ Class that manages training and testing """
@@ -40,12 +40,12 @@ class Manager(Project):
         super().__init__(params, user_params)
 
         is_ckpt_loaded = False
-        if self.load_ckpt is True: # resuming training or testing
+        if self.load_ckpt is True:  # resuming training or testing
             # is_ckpt_loaded=True if a checkpoint was successfully loaded.
             is_ckpt_loaded = self.restore_ckpt_params()
 
-        self.init_device() # initalize device (e.g. 'cpu', 'cuda')
-        self.init_log() # initalize log directory
+        self.init_device()  # initalize device (e.g. 'cpu', 'cuda')
+        self.init_log()  # initalize log directory
 
         if self.params['verbose']:
             print('\n==> Parameters: ', self.params, sep='\n')
@@ -64,10 +64,10 @@ class Manager(Project):
 
         self.init_json()
 
-        # During testing, average the loss only at the end to get accurate value
-        # of the loss per sample. If using reduction='mean', when
-        # nb_test_samples % batch_size != 0 we can only average the loss per batch
-        # (as done in training for printing the losses) but not per sample.
+        # During testing, average the loss only at the end to get accurate
+        # value of the loss per sample. If using reduction='mean', when
+        # nb_test_samples % batch_size != 0 we can only average the loss per
+        # batch (as in training for printing the losses) but not per sample.
         if self.params['net'] == 'twoDnet':
             self.criterion = nn.BCELoss(reduction='mean')
             self.test_criterion = nn.BCELoss(reduction='sum')
@@ -80,8 +80,6 @@ class Manager(Project):
 
         # # uncomment for printing network architecture
         # print(self.net)
-
-
 
     @staticmethod
     def build_model(params, device='cuda:0'):
@@ -98,12 +96,13 @@ class Manager(Project):
         """
         print('\n==> Building model...')
 
-        networks_dict = {'twoDnet'      : TwoDNet,
-                        'resnet32_cifar'    : ResNet32Cifar,
-                        'nin_cifar'         : NiNCifar,
-                        'convnet_mnist'     : ConvNetMnist}
+        networks_dict = {'twoDnet': TwoDNet,
+                         'resnet32_cifar': ResNet32Cifar,
+                         'nin_cifar': NiNCifar,
+                         'convnet_mnist': ConvNetMnist}
 
-        assert params['net'] in networks_dict.keys(), 'network not found: please add net to networks_dict.'
+        assert params['net'] in networks_dict.keys(), \
+            'network not found: please add net to networks_dict.'
         net = networks_dict[params['net']](**params['model'])
 
         net = net.to(device)
@@ -113,8 +112,6 @@ class Manager(Project):
         print(f'[Network] Total number of parameters : {net.num_params}.')
 
         return net
-
-
 
     def set_optimization(self):
         """
@@ -146,8 +143,8 @@ class Manager(Project):
             main_params_iter = self.net.parameters()
 
         self.main_optimizer = self.construct_optimizer(main_params_iter,
-                                                        self.optim_names[0],
-                                                        self.params['lr'])
+                                                       self.optim_names[0],
+                                                       self.params['lr'])
 
         self.main_scheduler = self.construct_scheduler(self.main_optimizer)
 
@@ -162,17 +159,14 @@ class Manager(Project):
                 print('Cannot use aux optimizer.')
                 raise
 
-            self.aux_optimizer = self.construct_optimizer(aux_params_iter,
-                                                        self.optim_names[1],
-                                                        self.params['aux_lr'])
+            self.aux_optimizer = self.construct_optimizer(
+                aux_params_iter, self.optim_names[1], self.params['aux_lr'])
 
             # scheduler parameters are the same for the main and aux optimizers
             self.aux_scheduler = self.construct_scheduler(self.aux_optimizer)
 
         if self.params['verbose']:
             self.print_optimization_info()
-
-
 
     @staticmethod
     def construct_optimizer(params_iter, optim_name, lr):
@@ -194,13 +188,12 @@ class Manager(Project):
         if optim_name == 'Adam':
             optimizer = optim.Adam(params_iter, lr=lr)
         elif optim_name == 'SGD':
-            optimizer = optim.SGD(params_iter, lr=lr, momentum=0.9, nesterov=True)
+            optimizer = optim.SGD(
+                params_iter, lr=lr, momentum=0.9, nesterov=True)
         else:
             raise ValueError('Need to provide a valid optimizer type.')
 
         return optimizer
-
-
 
     def construct_scheduler(self, optimizer):
         """
@@ -209,40 +202,39 @@ class Manager(Project):
         Returns:
             scheduler (torch.optim.lr_scheduler)
         """
-        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, self.params['milestones'],
-                                                    gamma=self.params['gamma'])
+        scheduler = optim.lr_scheduler.MultiStepLR(
+            optimizer, self.params['milestones'], gamma=self.params['gamma'])
 
         return scheduler
 
-
-
-    #######################################################################################
-    #### TRAIN
+    ##########################################################################
+    # TRAIN
 
     def train(self):
         """ Training loop """
 
-        self.net.train() # set the network in training mode
+        self.net.train()  # set the network in training mode
 
         # Load the data
         print('\n==> Loading the data...')
         self.dataloader = DataLoader(self.dataset, **self.params['dataloader'])
-        self.trainloader, self.validloader = self.dataloader.get_train_valid_loader()
+        self.trainloader, self.validloader = \
+            self.dataloader.get_train_valid_loader()
 
         self.save_train_info()
         if self.params['verbose']:
             self.print_train_info()
 
-        ##### Set custom training and validation log steps
+        # Set custom training and validation log steps
 
-        if self.params['log_step'] is None: # default
+        if self.params['log_step'] is None:  # default
             # log at every epoch
             self.params['log_step'] = self.num_train_batches
 
-        if self.params['valid_log_step'] is None: # default
+        if self.params['valid_log_step'] is None:  # default
             # validation done halfway and at the end of training
-            self.params['valid_log_step'] = \
-                int(self.num_train_batches * self.params['num_epochs']*1./2.)
+            self.params['valid_log_step'] = int(
+                self.num_train_batches * self.params['num_epochs'] * 1. / 2.)
 
         elif self.params['valid_log_step'] < 0:
             # validation at every epoch
@@ -251,7 +243,8 @@ class Manager(Project):
         #####
 
         # Initialize the losses to log
-        self.losses_names = ['loss', 'df_loss'] # total loss and data fidelity loss
+        # total loss and data fidelity loss
+        self.losses_names = ['loss', 'df_loss']
 
         if self.net.using_deepsplines and self.params['lmbda'] > 0:
             if self.params['lipschitz'] is True:
@@ -272,10 +265,10 @@ class Manager(Project):
 
         for epoch in range(self.start_epoch, num_epochs):
 
-            if epoch == (num_epochs-1) and self.sparsify_activations is True:
+            if epoch == (num_epochs - 1) and self.sparsify_activations is True:
                 # sparsify activations and evaluate train accuracy.
                 print('\n==> Last epoch: sparsifying activations.')
-                self.net.eval() # set network in evaluation mode
+                self.net.eval()  # set network in evaluation mode
                 self.net.sparsify_activations()
                 # freeze network to evaluate train accuracy without training
                 self.net.freeze_parameters()
@@ -284,13 +277,12 @@ class Manager(Project):
 
             if self.dataset.is_user_dataset is True:
                 # shuffle training data
-                self.trainloader = self.dataloader.get_shuffled_trainloader_in_memory()
+                self.trainloader = \
+                    self.dataloader.get_shuffled_trainloader_in_memory()
 
         print('\n==> Training completed.')
 
         self.log_additional_info()
-
-
 
     def forward_backward_train_batch(self, inputs, labels):
         """
@@ -318,7 +310,8 @@ class Manager(Project):
         regularization = torch.zeros_like(data_fidelity)
         if self.params['weight_decay'] > 0:
             # weight decay regularization
-            wd_regularization = self.params['weight_decay']/2 * self.net.l2sqsum_weights_biases()
+            wd_regularization = self.params['weight_decay'] / \
+                2 * self.net.l2sqsum_weights_biases()
             regularization = regularization + wd_regularization
 
         if self.net.using_deepsplines and self.params['lmbda'] > 0:
@@ -339,8 +332,6 @@ class Manager(Project):
 
         return outputs, losses
 
-
-
     def count_correct(self, outputs, labels):
         """
         Count the number of correct predictions.
@@ -357,7 +348,7 @@ class Manager(Project):
 
         if isinstance(self.criterion, nn.BCELoss):
             predicted = (outputs > 0.5).to(dtype=torch.int64)
-            labels = (labels  > 0.5).to(dtype=torch.int64)
+            labels = (labels > 0.5).to(dtype=torch.int64)
         elif isinstance(self.criterion, nn.CrossEntropyLoss):
             _, predicted = outputs.max(1)
         else:
@@ -366,8 +357,6 @@ class Manager(Project):
         correct = (predicted == labels).sum().item()
 
         return correct
-
-
 
     def train_epoch(self, epoch):
         """
@@ -381,8 +370,8 @@ class Manager(Project):
         running_losses = [0.0] * len(self.losses_names)
 
         # for computing train accuracy
-        correct = 0 # number of correct predictions
-        total = 0 # total number of predictions
+        correct = 0  # number of correct predictions
+        total = 0  # total number of predictions
 
         for batch_idx, (inputs, labels) in enumerate(self.trainloader):
 
@@ -400,16 +389,22 @@ class Manager(Project):
             correct += self.count_correct(outputs, labels)
             total += labels.size(0)
 
-            if batch_idx % self.params['log_step'] == (self.params['log_step'] - 1):
+            if batch_idx % self.params['log_step'] == (
+                    self.params['log_step'] - 1):
                 # train log step
                 train_acc = 100.0 * correct / total
-                losses_dict = {key: (value / self.params['log_step']) for (key, value) in zip(self.losses_names, running_losses)}
+                losses_dict = {
+                    key: (value / self.params['log_step']) for
+                         (key, value) in zip(self.losses_names,
+                                             running_losses)
+                }
                 self.train_log_step(epoch, batch_idx, train_acc, losses_dict)
                 # reset values
                 running_losses = [0.0] * len(self.losses_names)
                 correct, total = 0, 0
 
-            if self.global_step % self.params['valid_log_step'] == (self.params['valid_log_step'] - 1):
+            if self.global_step % self.params['valid_log_step'] == (
+                    self.params['valid_log_step'] - 1):
                 # validation log step
                 self.validation_step(epoch)
                 self.net.train()
@@ -418,8 +413,6 @@ class Manager(Project):
 
         if self.net.training is True:
             self.scheduler_step(epoch)
-
-
 
     def scheduler_step(self, epoch):
         """
@@ -431,18 +424,20 @@ class Manager(Project):
         if self.main_scheduler is not None:
             self.main_scheduler.step()
             if self.params['verbose']:
-                main_lr = [group['lr'] for group in self.main_optimizer.param_groups]
-                print(f'main scheduler: epoch - {self.main_scheduler.last_epoch}; '
-                    f'learning rate - {main_lr}')
+                main_lr = \
+                    [group['lr'] for group in self.main_optimizer.param_groups]
+                print('main scheduler: epoch - '
+                      f'{self.main_scheduler.last_epoch}; '
+                      f'learning rate - {main_lr}')
 
         if self.aux_scheduler is not None:
             self.aux_scheduler.step()
             if self.params['verbose']:
-                aux_lr = [group['lr'] for group in self.aux_optimizer.param_groups]
-                print(f'aux scheduler: epoch - {self.aux_scheduler.last_epoch}; '
-                    f'learning rate - {aux_lr}')
-
-
+                aux_lr = \
+                    [group['lr'] for group in self.aux_optimizer.param_groups]
+                print('aux scheduler: epoch - '
+                      f'{self.aux_scheduler.last_epoch}; '
+                      f'learning rate - {aux_lr}')
 
     def optimizer_zero_grad(self):
         """ Sets parameter gradients to zero """
@@ -451,16 +446,12 @@ class Manager(Project):
         if self.aux_optimizer is not None:
             self.aux_optimizer.zero_grad()
 
-
-
     def optimizer_step(self):
         """ Updates parameters """
 
         self.main_optimizer.step()
         if self.aux_optimizer is not None:
             self.aux_optimizer.step()
-
-
 
     def validation_step(self, epoch):
         """
@@ -474,8 +465,8 @@ class Manager(Project):
         valid_running_loss = 0.
 
         # for computing validation accuracy
-        correct = 0 # number of correct predictions
-        total = 0 # total number of validation samples
+        correct = 0  # number of correct predictions
+        total = 0  # total number of validation samples
 
         if self.dataset.get_test_imgs:
             plot_dict = self.dataset.init_plot_dict()
@@ -494,25 +485,23 @@ class Manager(Project):
                 total += labels.size(0)
 
                 if self.dataset.get_test_imgs:
-                    self.dataset.add_to_plot_dict(plot_dict, (inputs.cpu(), outputs.cpu()))
-
+                    self.dataset.add_to_plot_dict(
+                        plot_dict, (inputs.cpu(), outputs.cpu()))
 
         valid_acc = 100.0 * correct / total
 
         # only add data fidelity loss
-        losses_dict = {self.losses_names[1] : (valid_running_loss / total)}
+        losses_dict = {self.losses_names[1]: (valid_running_loss / total)}
 
         self.valid_log_step(epoch, valid_acc, losses_dict)
-        self.ckpt_log_step(epoch, valid_acc) # save checkpoint
+        self.ckpt_log_step(epoch, valid_acc)  # save checkpoint
 
         if self.dataset.get_test_imgs:
             inputs, outputs = self.dataset.concatenate_plot_dict(plot_dict)
             self.dataset.plot_test_imgs(inputs, outputs)
 
-
-
-    #######################################################################################
-    #### TEST
+    ##########################################################################
+    # TEST
 
     def test(self):
         """ Test model """
@@ -529,16 +518,14 @@ class Manager(Project):
         self.forward_test()
         print('\n==> Testing completed.')
 
-
-
     def forward_test(self):
         """ Test loop """
 
-        running_loss = 0. # running test loss
+        running_loss = 0.  # running test loss
 
         # for computing test accuracy
-        correct = 0 # number of correct predictions
-        total = 0 # total number of test samples
+        correct = 0  # number of correct predictions
+        total = 0  # total number of test samples
 
         if self.dataset.get_test_imgs:
             plot_dict = self.dataset.init_plot_dict()
@@ -556,10 +543,10 @@ class Manager(Project):
                 total += labels.size(0)
 
                 if self.dataset.get_test_imgs:
-                    self.dataset.add_to_plot_dict(plot_dict, (inputs.cpu(), outputs.cpu()))
+                    self.dataset.add_to_plot_dict(
+                        plot_dict, (inputs.cpu(), outputs.cpu()))
 
-
-        test_acc  = 100.0 * correct / total
+        test_acc = 100.0 * correct / total
         test_loss = running_loss / total
         self.update_json('test_acc', test_acc)
         self.update_json('test_loss', test_loss)
