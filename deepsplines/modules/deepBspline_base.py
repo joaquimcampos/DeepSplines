@@ -358,7 +358,7 @@ class DeepBSplineBase(DeepSplineBase):
 
         for i in range(2, self.size):
             coefficients[:, i] = \
-                (coefficients[:, i-1] - coefficients[:, i-2]) \
-                + relu_slopes[:, i-2].mul(grid) + coefficients[:, i-1]
+                (coefficients[:, i - 1] - coefficients[:, i - 2]) \
+                + relu_slopes[:, i - 2].mul(grid) + coefficients[:, i - 1]
 
         return coefficients
