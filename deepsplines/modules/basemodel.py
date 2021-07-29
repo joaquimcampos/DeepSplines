@@ -484,6 +484,6 @@ class BaseModel(nn.Module):
                         'locations': locations.clone().detach().cpu(),
                         'coefficients': coefficients.clone().detach().cpu(),
                         'sparsity_mask': threshold_sparsity_mask.cpu()
-                        })
+                    })
 
         return activations_list
