@@ -7,7 +7,6 @@ import torch.nn as nn
 from deepsplines.modules import BaseModel
 
 
-
 class TwoDNet(BaseModel):
     """
     - Input size:
@@ -38,15 +37,15 @@ class TwoDNet(BaseModel):
         activation_specs.append(('fc', self.num_hidden_neurons))
 
         if num_hidden_layers > 1:
-            self.fc2 = nn.Linear(self.num_hidden_neurons, self.num_hidden_neurons)
+            self.fc2 = nn.Linear(
+                self.num_hidden_neurons,
+                self.num_hidden_neurons)
             activation_specs.append(('fc', self.num_hidden_neurons))
 
         self.fc_last = nn.Linear(self.num_hidden_neurons, 1)
 
-
         self.activations = self.init_activation_list(activation_specs)
         self.num_params = self.get_num_params()
-
 
     def forward(self, x):
         """ """
