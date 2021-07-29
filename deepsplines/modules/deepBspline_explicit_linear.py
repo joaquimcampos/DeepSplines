@@ -45,6 +45,7 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
 
         if self.init == 'leaky_relu':
             spline_weight.fill_(0.01)  # b1 = 0.01
+
             coefficients = F.leaky_relu(grid_tensor, negative_slope=0.01) \
                 - (0.01 * grid_tensor)
 
@@ -55,13 +56,16 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
             # initalize half of the activations with an even function (abs) and
             # and the other half with an odd function (soft threshold).
             half = self.num_activations // 2
+
             # absolute value
             spline_weight[0:half].fill_(-1.)
             coefficients[0:half, :] = (grid_tensor[0:half, :]).abs() \
                 - (-1. * grid_tensor[0:half, :])
+
             # soft threshold
             spline_weight[half::].fill_(1.)  # for soft threshold
             spline_bias[half::].fill_(0.5)
+
             coefficients[half::, :] = \
                 F.softshrink(grid_tensor[half::, :], lambd=0.5) \
                 - (1. * grid_tensor[half::, :] + 0.5)

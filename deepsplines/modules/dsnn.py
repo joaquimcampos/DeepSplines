@@ -20,16 +20,14 @@ class DSModule(nn.Module):
 
     # dictionary with names and classes of deepspline modules
     deepsplines = {'deepBspline': DeepBSpline,
-                    'deepBspline_explicit_linear': DeepBSplineExplicitLinear,
-                    'deepReLUspline': DeepReLUSpline
-                    }
+                   'deepBspline_explicit_linear': DeepBSplineExplicitLinear,
+                   'deepReLUspline': DeepReLUSpline
+                   }
 
     def __init__(self, **kwargs):
         """ """
 
         super().__init__()
-
-
 
     @classmethod
     def is_deepspline_module(cls, module):
@@ -45,8 +43,6 @@ class DSModule(nn.Module):
 
         return False
 
-
-
     @property
     def device(self):
         """
@@ -55,8 +51,6 @@ class DSModule(nn.Module):
         Returns the device of the first found parameter.
         """
         return next(self.parameters()).device
-
-
 
     def initialization(self, spline_init, init_type='He'):
         """
@@ -76,8 +70,7 @@ class DSModule(nn.Module):
                 nonlinearity = spline_init
                 slope_init = 0.01 if nonlinearity == 'leaky_relu' else 0.
             else:
-                init_type = 'Xavier' # overwrite init_type
-
+                init_type = 'Xavier'  # overwrite init_type
 
         for module in self.modules():
 
@@ -90,18 +83,19 @@ class DSModule(nn.Module):
                     module.weight.data.normal_(0, 0.05)
                     module.bias.data.zero_()
 
-                else: # He initialization
-                    nn.init.kaiming_normal_(module.weight, a=slope_init, mode='fan_out',
-                                            nonlinearity=nonlinearity)
+                else:  # He initialization
+                    nn.init.kaiming_normal_(
+                        module.weight,
+                        a=slope_init,
+                        mode='fan_out',
+                        nonlinearity=nonlinearity)
 
             elif isinstance(module, nn.BatchNorm2d):
                 module.weight.data.fill_(1)
                 module.bias.data.zero_()
 
-
     ###########################################################################
     # Parameters
-
 
     def get_num_params(self):
         """
@@ -113,8 +107,6 @@ class DSModule(nn.Module):
 
         return num_params
 
-
-
     def modules_deepspline(self):
         """
         Yields all deepspline modules in the network.
@@ -122,8 +114,6 @@ class DSModule(nn.Module):
         for module in self.modules():
             if self.is_deepspline_module(module):
                 yield module
-
-
 
     def named_parameters_no_deepspline(self, recurse=True):
         """
@@ -141,8 +131,6 @@ class DSModule(nn.Module):
             if deepspline_param is False:
                 yield name, param
 
-
-
     def named_parameters_deepspline(self, recurse=True):
         """
         Yields all deepspline named_parameters in the network.
@@ -158,8 +146,6 @@ class DSModule(nn.Module):
             if deepspline_param is True:
                 yield name, param
 
-
-
     def parameters_no_deepspline(self):
         """
         Yields all parameters in the network,
@@ -168,16 +154,12 @@ class DSModule(nn.Module):
         for name, param in self.named_parameters_no_deepspline(recurse=True):
             yield param
 
-
-
     def parameters_deepspline(self):
         """
         Yields all deepspline parameters in the network.
         """
         for name, param in self.named_parameters_deepspline(recurse=True):
             yield param
-
-
 
     def freeze_parameters(self):
         """
@@ -186,10 +168,8 @@ class DSModule(nn.Module):
         for param in self.parameters():
             param.requires_grad = False
 
-
-    ############################################################################
+    ##########################################################################
     # Deepsplines: regularization and sparsification
-
 
     def l2sqsum_weights_biases(self):
         """
@@ -203,15 +183,15 @@ class DSModule(nn.Module):
         l2sqsum = Tensor([0.]).to(self.device)
 
         for module in self.modules():
-            if hasattr(module, 'weight') and isinstance(module.weight, nn.Parameter):
+            if hasattr(module, 'weight') and \
+                    isinstance(module.weight, nn.Parameter):
                 l2sqsum = l2sqsum + module.weight.pow(2).sum()
 
-            if hasattr(module, 'bias') and isinstance(module.bias, nn.Parameter):
+            if hasattr(module, 'bias') and \
+                    isinstance(module.bias, nn.Parameter):
                 l2sqsum = l2sqsum + module.bias.pow(2).sum()
 
-        return l2sqsum[0] # 1-tap 1d tensor -> 0d tensor
-
-
+        return l2sqsum[0]  # 1-tap 1d tensor -> 0d tensor
 
     def TV2(self):
         """
@@ -229,9 +209,7 @@ class DSModule(nn.Module):
                 module_tv2 = module.totalVariation(mode='additive')
                 tv2 = tv2 + module_tv2.norm(p=1)
 
-        return tv2[0] # 1-tap 1d tensor -> 0d tensor
-
-
+        return tv2[0]  # 1-tap 1d tensor -> 0d tensor
 
     def BV2(self):
         """
@@ -253,9 +231,7 @@ class DSModule(nn.Module):
                 module_bv2 = module_tv2 + module.fZerofOneAbs(mode='additive')
                 bv2 = bv2 + module_bv2.norm(p=1)
 
-        return bv2[0] # 1-tap 1d tensor -> 0d tensor
-
-
+        return bv2[0]  # 1-tap 1d tensor -> 0d tensor
 
     def lipschitz_bound(self):
         """
@@ -263,13 +239,14 @@ class DSModule(nn.Module):
 
         The lipschitz bound associated with C is:
         ||f_net(x_1) - f_net(x_2)||_1 <= C ||x_1 - x_2||_1,
-        for all x_1, x_2 \in R^{N_0}.
+        for all x_1, x_2 \\in R^{N_0}.
 
-        For l \in {1, ..., L}, n \in {1,..., N_l}:
+        For l \\in {1, ..., L}, n \\in {1,..., N_l}:
         w_{n, l} is the vector of weights from layer l-1 to layer l, neuron n;
         s_{n, l} is the activation function of layer l, neuron n.
 
-        C = (prod_{l=1}^{L} [max_{n,l} w_{n,l}]) * (prod_{l=1}^{L} ||s_l||_{BV(2)}),
+        C = (prod_{l=1}^{L} [max_{n,l} w_{n,l}]) * \
+            (prod_{l=1}^{L} ||s_l||_{BV(2)}),
         where ||s_l||_{BV(2)} = sum_{n=1}^{N_l} {BV(2)(s_{n,l})}.
 
         Returns:
@@ -283,16 +260,17 @@ class DSModule(nn.Module):
             if self.is_deepspline_module(module):
                 module_tv = module.totalVariation()
                 module_fzero_fone = module.fZerofOneAbs()
-                bv_product = bv_product * (module_tv.sum() + module_fzero_fone.sum())
+                bv_product = bv_product * \
+                    (module_tv.sum() + module_fzero_fone.sum())
 
-            elif isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d):
-                max_weights_product = max_weights_product * module.weight.data.abs().max()
+            elif isinstance(module, nn.Linear) or \
+                    isinstance(module, nn.Conv2d):
+                max_weights_product = max_weights_product * \
+                    module.weight.data.abs().max()
 
         lip_bound = max_weights_product * bv_product
 
-        return lip_bound[0] # 1-tap 1d tensor -> 0d tensor
-
-
+        return lip_bound[0]  # 1-tap 1d tensor -> 0d tensor
 
     def sparsify_activations(self, knot_threshold):
         """
@@ -314,8 +292,6 @@ class DSModule(nn.Module):
             if self.is_deepspline_module(module):
                 module.apply_threshold(float(knot_threshold))
 
-
-
     def compute_sparsity(self, knot_threshold):
         """
         Returns the sparsity of the activations, i.e. the number of
@@ -335,12 +311,11 @@ class DSModule(nn.Module):
         sparsity = 0
         for module in self.modules():
             if self.is_deepspline_module(module):
-                module_sparsity, _ = module.get_threshold_sparsity(float(knot_threshold))
+                module_sparsity, _ = module.get_threshold_sparsity(
+                    float(knot_threshold))
                 sparsity += module_sparsity.sum().item()
 
         return sparsity
-
-
 
     def get_deepspline_activations(self, knot_threshold=0.):
         """
@@ -366,21 +341,29 @@ class DSModule(nn.Module):
             for name, module in self.named_modules():
 
                 if self.is_deepspline_module(module):
-                    locations = module.grid_tensor # (num_activations, size)
-                    input = locations.transpose(0,1).to(self.device) # (size, num_activations)
+                    locations = module.grid_tensor  # (num_activations, size)
+                    # (size, num_activations)
+                    input = locations.transpose(0, 1).to(self.device)
+
                     if module.mode == 'conv':
-                        input = input.unsqueeze(-1).unsqueeze(-1) # to 4D
+                        input = input.unsqueeze(-1).unsqueeze(-1)  # to 4D
 
                     output = module(input)
                     coefficients = output.transpose(0, 1)
+
                     if module.mode == 'conv':
-                        coefficients = coefficients.squeeze(-1).squeeze(-1) # to 2D
+                        coefficients = \
+                            coefficients.squeeze(-1).squeeze(-1)  # to 2D
                     # coefficients: (num_activations, size)
 
-                    _, threshold_sparsity_mask = module.get_threshold_sparsity(float(knot_threshold))
-                    activations_list.append({'name': '_'.join([name, module.mode]),
-                                            'locations': locations.clone().detach().cpu(),
-                                            'coefficients': coefficients.clone().detach().cpu(),
-                                            'sparsity_mask' : threshold_sparsity_mask.cpu()})
+                    _, threshold_sparsity_mask = module.get_threshold_sparsity(
+                        float(knot_threshold))
+
+                    activations_list.append({
+                        'name': '_'.join([name, module.mode]),
+                        'locations': locations.clone().detach().cpu(),
+                        'coefficients': coefficients.clone().detach().cpu(),
+                        'sparsity_mask': threshold_sparsity_mask.cpu()
+                    })
 
         return activations_list

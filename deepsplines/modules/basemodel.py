@@ -466,11 +466,13 @@ class BaseModel(nn.Module):
                     locations = module.grid_tensor  # (num_activations, size)
                     # (size, num_activations)
                     input = locations.transpose(0, 1).to(self.device)
+
                     if module.mode == 'conv':
                         input = input.unsqueeze(-1).unsqueeze(-1)  # to 4D
 
                     output = module(input)
                     coefficients = output.transpose(0, 1)
+
                     if module.mode == 'conv':
                         coefficients = \
                             coefficients.squeeze(-1).squeeze(-1)  # to 2D
