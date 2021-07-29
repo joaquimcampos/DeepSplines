@@ -3,7 +3,6 @@
 import os
 import argparse
 import copy
-import math
 import json
 from datetime import datetime
 import torch
@@ -22,9 +21,9 @@ class ArgCheck():
         """
         ivalue = int(value)
         if ivalue <= 0:
-            raise argparse.ArgumentTypeError(f'{value} is an invalid positive int value')
+            raise argparse.ArgumentTypeError(
+                f'{value} is an invalid positive int value')
         return ivalue
-
 
     @staticmethod
     def p_odd_int(value):
@@ -33,10 +32,10 @@ class ArgCheck():
         and raise error if not.
         """
         ivalue = int(value)
-        if (ivalue <= 0) or ((ivalue + 1) % 2 != 0) :
-            raise argparse.ArgumentTypeError(f'{value} is an invalid positive odd int value')
+        if (ivalue <= 0) or ((ivalue + 1) % 2 != 0):
+            raise argparse.ArgumentTypeError(
+                f'{value} is an invalid positive odd int value')
         return ivalue
-
 
     @staticmethod
     def nn_int(value):
@@ -46,10 +45,9 @@ class ArgCheck():
         """
         ivalue = int(value)
         if ivalue < 0:
-            raise argparse.ArgumentTypeError(f'{value} is an invalid non-negative int value')
+            raise argparse.ArgumentTypeError(
+                f'{value} is an invalid non-negative int value')
         return ivalue
-
-
 
     @staticmethod
     def p_float(value):
@@ -59,10 +57,9 @@ class ArgCheck():
         """
         ivalue = float(value)
         if ivalue <= 0:
-             raise argparse.ArgumentTypeError(f'{value} is an invalid positive float value')
+            raise argparse.ArgumentTypeError(
+                f'{value} is an invalid positive float value')
         return ivalue
-
-
 
     @staticmethod
     def n_float(value):
@@ -72,10 +69,9 @@ class ArgCheck():
         """
         ivalue = float(value)
         if ivalue >= 0:
-             raise argparse.ArgumentTypeError(f'{value} is an invalid negative float value')
+            raise argparse.ArgumentTypeError(
+                f'{value} is an invalid negative float value')
         return ivalue
-
-
 
     @staticmethod
     def frac_float(value):
@@ -85,9 +81,11 @@ class ArgCheck():
         """
         ivalue = float(value)
         if ivalue < 0 or ivalue > 1:
-             raise argparse.ArgumentTypeError(f'{value} is an invalid fraction float value (should be in [0, 1])')
+            raise argparse.ArgumentTypeError(
+                f'{value} is an invalid fraction float value '
+                '(should be in [0, 1])'
+            )
         return ivalue
-
 
     @staticmethod
     def nn_float(value):
@@ -97,9 +95,9 @@ class ArgCheck():
         """
         ivalue = float(value)
         if not np.allclose(np.clip(ivalue, -1.0, 0.0), 0.0):
-            raise argparse.ArgumentTypeError(f'{value} is an invalid non-negative float value')
+            raise argparse.ArgumentTypeError(
+                f'{value} is an invalid non-negative float value')
         return ivalue
-
 
 
 def size_str(input):
@@ -114,7 +112,6 @@ def size_str(input):
 
     out_str = '[' + ', '.join(str(i) for i in input.size()) + ']'
     return out_str
-
 
 
 def update_running_losses(running_losses, losses):
@@ -133,7 +130,6 @@ def update_running_losses(running_losses, losses):
     return running_losses
 
 
-
 def denormalize(img_tensor, mean_tuple, std_tuple):
     """
     Denormalize input images.
@@ -147,15 +143,17 @@ def denormalize(img_tensor, mean_tuple, std_tuple):
             C-tuple with standard deviation for each channel
     """
     assert len(img_tensor.size()) == 4, f'{len(img_tensor.size())} != 4.'
-    assert img_tensor.size(1) == len(mean_tuple), f'{img_tensor.size(1)} != {len(mean_tuple)}.'
-    assert img_tensor.size(1) == len(std_tuple), f'{img_tensor.size(1)} != {len(std_tuple)}.'
+    assert img_tensor.size(1) == len(mean_tuple), \
+        f'{img_tensor.size(1)} != {len(mean_tuple)}.'
+    assert img_tensor.size(1) == len(std_tuple), \
+        f'{img_tensor.size(1)} != {len(std_tuple)}.'
+
     mean = Tensor([mean_tuple]).view(1, -1, 1, 1)
-    std  = Tensor([std_tuple]).view(1, -1, 1, 1)
+    std = Tensor([std_tuple]).view(1, -1, 1, 1)
 
     img_tensor = img_tensor * std + mean
 
     return img_tensor
-
 
 
 def dict_recursive_merge(params_root, merger_root, base=True):
@@ -176,15 +174,15 @@ def dict_recursive_merge(params_root, merger_root, base=True):
         assert isinstance(merger_root, dict)
         merger_root = copy.deepcopy(merger_root)
 
-    if merger_root: # non-empty dict
+    if merger_root:  # non-empty dict
         for key, val in merger_root.items():
             if isinstance(val, dict) and key in params_root:
-                merger_root[key] = dict_recursive_merge(params_root[key], merger_root[key], base=False)
+                merger_root[key] = dict_recursive_merge(
+                    params_root[key], merger_root[key], base=False)
 
         merger_root = {**params_root, **merger_root}
 
     return merger_root
-
 
 
 def assign_tree_structure(assign_root, structure, base=True):
@@ -203,16 +201,18 @@ def assign_tree_structure(assign_root, structure, base=True):
         assert isinstance(structure, dict)
         assign_root = copy.deepcopy(assign_root)
         global assign_orig
-        assign_orig = assign_root # keep the original dict
+        assign_orig = assign_root  # keep the original dict
         global leaves
-        leaves = [] # leaves on dict tree levels deeper than base
+        leaves = []  # leaves on dict tree levels deeper than base
 
-    if structure: # non-empty dict
+    if structure:  # non-empty dict
         for key, val in structure.items():
             if isinstance(val, dict):
                 assign_root[key] = {}
-                assign_root[key] = assign_tree_structure(assign_root[key], structure[key], base=False)
-                if len(assign_root[key]) < 1: # do not have empty dictionaries in assign_root
+                assign_root[key] = assign_tree_structure(
+                    assign_root[key], structure[key], base=False)
+                if len(assign_root[key]) < 1:
+                    # do not have empty dictionaries in assign_root
                     del assign_root[key]
             else:
                 assert val is None, 'leaf values in structure should be None'
@@ -221,15 +221,14 @@ def assign_tree_structure(assign_root, structure, base=True):
                     if not base:
                         leaves.append(key)
 
-    # delete duplicated leaves in base root if they are not in first level of structure dict
+    # delete duplicated leaves in base root if they are not in first level of
+    # structure dict
     if base:
         for key in leaves:
             if key not in structure and key in assign_root:
                 del assign_root[key]
 
-
     return assign_root
-
 
 
 def flatten_structure(assign_root, base=True):
@@ -258,13 +257,11 @@ def flatten_structure(assign_root, base=True):
     return flattened
 
 
-
 def check_device(*tensors, dev='cpu'):
     """ Check if tensors are in device 'dev' """
 
     for t in tensors:
         assert t.device == torch.device(dev), f'tensor is not in device {dev}'
-
 
 
 def spline_grid_from_range(spline_size, spline_range, round_to=1e-6):
@@ -285,10 +282,10 @@ def spline_grid_from_range(spline_size, spline_range, round_to=1e-6):
     if float(spline_range) <= 0:
         raise TypeError('spline_range needs to be a positive float...')
 
-    spline_grid = ((float(spline_range) / (int(spline_size)//2)) // round_to) * round_to
+    spline_grid = (
+        (float(spline_range) / (int(spline_size) // 2)) // round_to) * round_to
 
     return spline_grid
-
 
 
 def init_sub_dir(top_dir, sub_dir_name):
@@ -301,7 +298,6 @@ def init_sub_dir(top_dir, sub_dir_name):
         os.makedirs(sub_dir)
 
     return sub_dir
-
 
 
 def json_load(json_filename):
@@ -325,7 +321,6 @@ def json_load(json_filename):
     return results_dict
 
 
-
 def json_dump(results_dict, json_filename):
     """
     Save results in a json file.
@@ -342,7 +337,6 @@ def json_dump(results_dict, json_filename):
     except FileNotFoundError:
         print(f'File {json_filename} not found...')
         raise
-
 
 
 def add_date_to_filename(filename):
