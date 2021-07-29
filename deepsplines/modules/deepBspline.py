@@ -13,7 +13,6 @@ import torch.nn.functional as F
 from .deepBspline_base import DeepBSplineBase
 
 
-
 class DeepBSpline(DeepBSplineBase):
     """ nn.Module for DeepBspline activation functions. """
 
@@ -32,8 +31,8 @@ class DeepBSpline(DeepBSplineBase):
         super().__init__(mode, num_activations, **kwargs)
 
         # tensor with locations of spline coefficients
-        grid_tensor = self.grid_tensor # size: (num_activations, size)
-        coefficients = torch.zeros_like(grid_tensor) # spline coefficients
+        grid_tensor = self.grid_tensor  # size: (num_activations, size)
+        coefficients = torch.zeros_like(grid_tensor)  # spline coefficients
 
         # The coefficients are initialized with the value of the activation
         # at each knot (c[k] = f[k], since B1 splines are interpolators).
@@ -49,28 +48,25 @@ class DeepBSpline(DeepBSplineBase):
             # and the other half with an odd function (soft threshold).
             half = self.num_activations // 2
             coefficients[0:half, :] = (grid_tensor[0:half, :]).abs()
-            coefficients[half::, :] = F.softshrink(grid_tensor[half::, :], lambd=0.5)
+            coefficients[half::, :] = F.softshrink(
+                grid_tensor[half::, :], lambd=0.5)
         else:
             raise ValueError('init should be in [leaky_relu, relu, even_odd].')
 
         # Need to vectorize coefficients to perform specific operations
         # size: (num_activations*size)
-        self._coefficients_vect = nn.Parameter(coefficients.contiguous().view(-1))
-
-
+        self._coefficients_vect = nn.Parameter(
+            coefficients.contiguous().view(-1))
 
     @property
     def coefficients_vect(self):
         """ B-spline vectorized coefficients. """
         return self._coefficients_vect
 
-
     @staticmethod
     def parameter_names():
         """ Yield names of the module parameters """
         yield 'coefficients_vect'
-
-
 
     def forward(self, input):
         """
@@ -86,12 +82,10 @@ class DeepBSpline(DeepBSplineBase):
 
         return output
 
-
-
     def extra_repr(self):
         """ repr for print(model) """
 
         s = ('mode={mode}, num_activations={num_activations}, '
-            'init={init}, size={size}, grid={grid[0]}.')
+             'init={init}, size={size}, grid={grid[0]}.')
 
         return s.format(**self.__dict__)
