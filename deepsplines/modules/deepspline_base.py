@@ -5,7 +5,6 @@ from abc import ABC, abstractproperty, abstractmethod
 from deepsplines.ds_utils import spline_grid_from_range
 
 
-
 class DeepSplineBase(ABC, nn.Module):
     """
     Abstract class for DeepSpline activations (deepReLUspline/deepBspline*)
@@ -40,18 +39,20 @@ class DeepSplineBase(ABC, nn.Module):
     """
 
     def __init__(self, mode, num_activations, size=51, range_=4, grid=None,
-                init='leaky_relu', **kwargs):
+                 init='leaky_relu', **kwargs):
 
         if mode not in ['conv', 'fc']:
             raise ValueError('Mode should be either "conv" or "fc".')
         if int(num_activations) < 1:
-            raise TypeError('num_activations needs to be a positive integer...')
+            raise TypeError(
+                'num_activations needs to be a positive integer...')
         if int(size) % 2 == 0:
             raise TypeError('size should be an odd number.')
 
         if range_ is None:
             if grid is None:
-                raise ValueError('One of the two args (range_ or grid) required.')
+                raise ValueError(
+                    'One of the two args (range_ or grid) required.')
             elif float(grid) <= 0:
                 raise TypeError('grid should be a positive float...')
         elif grid is not None:
@@ -70,8 +71,6 @@ class DeepSplineBase(ABC, nn.Module):
             grid = spline_grid_from_range(size, range_)
             self.grid = torch.Tensor([grid])
 
-
-
     @property
     def device(self):
         """
@@ -81,20 +80,16 @@ class DeepSplineBase(ABC, nn.Module):
         """
         return getattr(self, next(self.parameter_names())).device
 
-
     @staticmethod
     @abstractmethod
     def parameter_names():
         """ Yield names of the module parameters """
         pass
 
-
     @abstractproperty
     def relu_slopes(self):
         """ ReLU slopes of activations """
         pass
-
-
 
     def reshape_forward(self, input):
         """
@@ -105,19 +100,20 @@ class DeepSplineBase(ABC, nn.Module):
         if self.mode == 'fc':
             if len(input_size) == 2:
                 # one activation per conv channel
-                x = input.view(*input_size, 1, 1) # transform to 4D size (N, num_units=num_activations, 1, 1)
+                # transform to 4D size (N, num_units=num_activations, 1, 1)
+                x = input.view(*input_size, 1, 1)
             elif len(input_size) == 4:
                 # one activation per conv output unit
                 x = input.view(input_size[0], -1).unsqueeze(-1).unsqueeze(-1)
             else:
-                raise ValueError(f'input size is {len(input_size)}D but should be 2D or 4D...')
+                raise ValueError(f'input size is {len(input_size)}D '
+                                 'but should be 2D or 4D...')
         else:
-            assert len(input_size) == 4, 'input to activation should be 4D (N, C, H, W) if mode="conv".'
+            assert len(input_size) == 4, \
+                'input to activation should be 4D (N, C, H, W) if mode="conv".'
             x = input
 
         return x
-
-
 
     def reshape_back(self, output, input_size):
         """
@@ -125,11 +121,10 @@ class DeepSplineBase(ABC, nn.Module):
         depending on mode ('conv' or 'fc').
         """
         if self.mode == 'fc':
-            output = output.view(*input_size) # transform back to 2D size (N, num_units)
+            # transform back to 2D size (N, num_units)
+            output = output.view(*input_size)
 
         return output
-
-
 
     def totalVariation(self, **kwargs):
         """
@@ -140,8 +135,6 @@ class DeepSplineBase(ABC, nn.Module):
         TV(2)(deepsline) = ||a||_1.
         """
         return self.relu_slopes.norm(1, dim=1)
-
-
 
     def get_epsilon_sparsity(self, eps=1e-4):
         """
@@ -156,8 +149,6 @@ class DeepSplineBase(ABC, nn.Module):
 
         return sparsity, sparsity_mask
 
-
-
     def get_threshold_sparsity(self, threshold):
         """
         Computes the number of activated relus (|a_k| > threshold)
@@ -167,8 +158,6 @@ class DeepSplineBase(ABC, nn.Module):
         threshold_sparsity = threshold_sparsity_mask.sum(dim=1)
 
         return threshold_sparsity, threshold_sparsity_mask
-
-
 
     def apply_threshold(self, threshold):
         """
@@ -186,7 +175,9 @@ class DeepSplineBase(ABC, nn.Module):
         """
         with torch.no_grad():
             new_relu_slopes = self.relu_slopes
-            threshold_sparsity, threshold_sparsity_mask = self.get_threshold_sparsity(threshold)
+            threshold_sparsity, threshold_sparsity_mask = \
+                self.get_threshold_sparsity(threshold)
+
             new_relu_slopes[~threshold_sparsity_mask] = 0.
 
             eps = 1e-4
@@ -194,13 +185,14 @@ class DeepSplineBase(ABC, nn.Module):
                 # sanity test: check that the relu slopes below threshold were
                 # indeed eliminated, i.e., smaller than epsilon, where
                 # 0 < epsilon <= threshold.
-                epsilon_sparsity, epsilon_sparsity_mask = self.get_epsilon_sparsity(eps)
+                epsilon_sparsity, epsilon_sparsity_mask = \
+                    self.get_epsilon_sparsity(eps)
+
                 assert epsilon_sparsity.sum() == threshold_sparsity.sum()
-                assert torch.all(~epsilon_sparsity_mask[~threshold_sparsity_mask])
+                assert torch.all(
+                    ~epsilon_sparsity_mask[~threshold_sparsity_mask])
 
         return new_relu_slopes
-
-
 
     def fZerofOneAbs(self, **kwargs):
         """
@@ -212,12 +204,13 @@ class DeepSplineBase(ABC, nn.Module):
         zero_one_vec = zero_one_vec.expand((-1, self.num_activations))
 
         if self.mode == 'conv':
-            zero_one_vec = zero_one_vec.unsqueeze(-1).unsqueeze(-1) # 4D
+            zero_one_vec = zero_one_vec.unsqueeze(-1).unsqueeze(-1)  # 4D
 
         fzero_fone = self.forward(zero_one_vec)
 
         if self.mode == 'conv':
-            fzero_fone = fzero_fone.squeeze(-1).squeeze(-1) # (2, num_activations)
+            # (2, num_activations)
+            fzero_fone = fzero_fone.squeeze(-1).squeeze(-1)
         assert fzero_fone.size() == (2, self.num_activations)
 
         return fzero_fone.abs().sum(0)
