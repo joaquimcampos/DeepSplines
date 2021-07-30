@@ -144,10 +144,11 @@ For full details, please consult the [tutorial](scripts/deepsplines_tutorial.py)
 To reproduce the results shown in the research papers [[1]](#2) and [[2]](#2)
 one can run the following scripts:
 
--    ./deepsplines/scripts/run_resnet32_cifar.py
--    ./deepsplines/scripts/run_nin_cifar.py
--    ./deepsplines/scripts/run_twoDnet.py
+-    ``./deepsplines/scripts/run_resnet32_cifar.py``
+-    ``./deepsplines/scripts/run_nin_cifar.py``
+-    ``./deepsplines/scripts/run_twoDnet.py``
 
+To see the running options, please add ``--help`` to the commands above.
 
 <a id="org4"></a>
 # Authors and contributors
