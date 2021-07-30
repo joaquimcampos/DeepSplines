@@ -33,7 +33,6 @@ class DeepReLUSpline(DeepSplineBase):
     This activation is a sum of ReLUs with learnable slopes and
     a learnable linear term.
     """
-
     def __init__(self, mode, num_activations, bias=True, **kwargs):
         """
         Args:
@@ -128,15 +127,15 @@ class DeepReLUSpline(DeepSplineBase):
         # the deepReLUspline implementation is badly-conditioned: in order to
         # compute the output value at a location x, you need the value
         # (at x) of all the ReLUs that have knots before it.
-        knot_loc_view = self.knot_loc.view(
-            1, self.num_activations, 1, 1, self.num_relus)
+        knot_loc_view = self.knot_loc.view(1, self.num_activations, 1, 1,
+                                           self.num_relus)
 
         # (x - \tau_k)_+
         clamped_xknotdiff = (x.unsqueeze(-1) - knot_loc_view)\
             .clamp(min=0)
 
-        relu_slopes_view = self.relu_slopes.view(
-            1, self.num_activations, 1, 1, self.num_relus)
+        relu_slopes_view = self.relu_slopes.view(1, self.num_activations, 1, 1,
+                                                 self.num_relus)
         # sum over ReLUs
         out_relu = (relu_slopes_view * clamped_xknotdiff).sum(-1)
         del clamped_xknotdiff

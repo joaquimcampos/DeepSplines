@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 Dataloader module.
 
@@ -16,9 +15,14 @@ import numpy as np
 
 
 class DataLoader():
-
-    def __init__(self, dataset, data_dir='./data', batch_size=64,
-                 test_as_valid=False, seed=-1, num_workers=4, **kwargs):
+    def __init__(self,
+                 dataset,
+                 data_dir='./data',
+                 batch_size=64,
+                 test_as_valid=False,
+                 seed=-1,
+                 num_workers=4,
+                 **kwargs):
         """
         Args:
             dataset (Dataset):
@@ -58,8 +62,8 @@ class DataLoader():
                 loader batch size. If None, self.batch_size is used.
         """
         minibatch = self.batch_size if batch_size is None else batch_size
-        dataloader = list(
-            zip(inputs.split(minibatch), labels.split(minibatch)))
+        dataloader = list(zip(inputs.split(minibatch),
+                              labels.split(minibatch)))
 
         return dataloader
 
@@ -127,8 +131,9 @@ class DataLoader():
 
             # shuffle self.train_inputs/label pairs
             trainloader = self.get_shuffled_trainloader_in_memory()
-            validloader = self.get_loader_in_memory(
-                valid_inputs, valid_labels, batch_size=100)
+            validloader = self.get_loader_in_memory(valid_inputs,
+                                                    valid_labels,
+                                                    batch_size=100)
 
             return trainloader, validloader
 
@@ -136,12 +141,10 @@ class DataLoader():
             self.dataset.get_train_valid_transforms()
 
         torchvision_dataset = self.dataset.get_torchvision_dataset()
-        train_dataset = torchvision_dataset(
-            self.get_dataset_dir(),
-            train=True,
-            download=True,
-            transform=train_transform
-        )
+        train_dataset = torchvision_dataset(self.get_dataset_dir(),
+                                            train=True,
+                                            download=True,
+                                            transform=train_transform)
 
         if self.test_as_valid:
             # use test dataset for validation
@@ -150,18 +153,15 @@ class DataLoader():
                 batch_size=self.batch_size,
                 shuffle=True,
                 num_workers=self.num_workers,
-                pin_memory=self.pin_memory
-            )
+                pin_memory=self.pin_memory)
             validloader = self.get_test_loader()
         else:
             # sampler train/val split: valid_dataset will be a subset of the
             # training data
-            valid_dataset = torchvision_dataset(
-                self.get_dataset_dir(),
-                train=True,
-                download=True,
-                transform=valid_transform
-            )
+            valid_dataset = torchvision_dataset(self.get_dataset_dir(),
+                                                train=True,
+                                                download=True,
+                                                transform=valid_transform)
 
             train_indices, valid_indices = self.get_split_indices(
                 train_dataset, shuffle)
@@ -178,16 +178,14 @@ class DataLoader():
                 batch_size=self.batch_size,
                 sampler=train_sampler,
                 num_workers=self.num_workers,
-                pin_memory=self.pin_memory
-            )
+                pin_memory=self.pin_memory)
 
             validloader = torch.utils.data.DataLoader(
                 valid_dataset,
                 batch_size=self.batch_size,
                 sampler=valid_sampler,
                 num_workers=self.num_workers,
-                pin_memory=self.pin_memory
-            )
+                pin_memory=self.pin_memory)
 
         if self.dataset.plot_imgs:
             self.dataset.plot_train_imgs(trainloader)
@@ -236,27 +234,24 @@ class DataLoader():
 
         if self.dataset.is_user_dataset is True:
             test_inputs, test_labels = self.load_dataset_in_memory('test')
-            testloader = self.get_loader_in_memory(
-                test_inputs, test_labels, batch_size=100)
+            testloader = self.get_loader_in_memory(test_inputs,
+                                                   test_labels,
+                                                   batch_size=100)
 
             return testloader
 
         test_transform = self.dataset.get_test_transform()
 
         torchvision_dataset = self.dataset.get_torchvision_dataset()
-        test_dataset = torchvision_dataset(
-            self.get_dataset_dir(),
-            train=False,
-            download=True,
-            transform=test_transform
-        )
+        test_dataset = torchvision_dataset(self.get_dataset_dir(),
+                                           train=False,
+                                           download=True,
+                                           transform=test_transform)
 
-        testloader = torch.utils.data.DataLoader(
-            test_dataset,
-            batch_size=self.batch_size,
-            shuffle=False,
-            num_workers=self.num_workers,
-            pin_memory=self.pin_memory
-        )
+        testloader = torch.utils.data.DataLoader(test_dataset,
+                                                 batch_size=self.batch_size,
+                                                 shuffle=False,
+                                                 num_workers=self.num_workers,
+                                                 pin_memory=self.pin_memory)
 
         return testloader

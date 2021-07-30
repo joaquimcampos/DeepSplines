@@ -37,9 +37,14 @@ class DeepSplineBase(ABC, nn.Module):
             For deepBsplines: 'leaky_relu', 'relu' or 'even_odd';
             For deepReLUspline: 'leaky_relu', 'relu'.
     """
-
-    def __init__(self, mode, num_activations, size=51, range_=4, grid=None,
-                 init='leaky_relu', **kwargs):
+    def __init__(self,
+                 mode,
+                 num_activations,
+                 size=51,
+                 range_=4,
+                 grid=None,
+                 init='leaky_relu',
+                 **kwargs):
 
         if mode not in ['conv', 'fc']:
             raise ValueError('Mode should be either "conv" or "fc".')

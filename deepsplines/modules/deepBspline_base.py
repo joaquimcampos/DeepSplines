@@ -65,10 +65,9 @@ class DeepBSpline_Func(torch.autograd.Function):
     If save_memory=True, use a memory efficient version at the expense of
     additional running time. (see module's docstring for details)
     """
-
     @staticmethod
-    def forward(ctx, x, coefficients_vect, grid,
-                zero_knot_indexes, size, save_memory):
+    def forward(ctx, x, coefficients_vect, grid, zero_knot_indexes, size,
+                save_memory):
 
         # First, we clamp the input to the range
         # [leftmost coefficient, second righmost coefficient].
@@ -99,8 +98,8 @@ class DeepBSpline_Func(torch.autograd.Function):
             ctx.save_for_backward(fracs, coefficients_vect, indexes, grid)
         else:
             ctx.size = size
-            ctx.save_for_backward(
-                x, coefficients_vect, grid, zero_knot_indexes)
+            ctx.save_for_backward(x, coefficients_vect, grid,
+                                  zero_knot_indexes)
 
             # compute leftmost and rightmost slopes for linear extrapolations
             # outside B-spline range
@@ -157,25 +156,31 @@ class DeepBSpline_Func(torch.autograd.Function):
 
         grad_coefficients_vect = torch.zeros_like(coefficients_vect)
         # right coefficients gradients
-        grad_coefficients_vect.scatter_add_(
-            0, indexes.view(-1) + 1, (fracs * grad_out).view(-1))
+        grad_coefficients_vect.scatter_add_(0,
+                                            indexes.view(-1) + 1,
+                                            (fracs * grad_out).view(-1))
         # left coefficients gradients
-        grad_coefficients_vect.scatter_add_(
-            0, indexes.view(-1), ((1 - fracs) * grad_out).view(-1))
+        grad_coefficients_vect.scatter_add_(0,
+                                            indexes.view(-1),
+                                            ((1 - fracs) * grad_out).view(-1))
 
         if save_memory is True:
             # Add gradients from the linear extrapolations
             tmp1 = ((x.detach() + grid * (size // 2)).clamp(max=0)) / grid
-            grad_coefficients_vect.scatter_add_(
-                0, indexes.view(-1), (-tmp1 * grad_out).view(-1))
-            grad_coefficients_vect.scatter_add_(
-                0, indexes.view(-1) + 1, (tmp1 * grad_out).view(-1))
+            grad_coefficients_vect.scatter_add_(0,
+                                                indexes.view(-1),
+                                                (-tmp1 * grad_out).view(-1))
+            grad_coefficients_vect.scatter_add_(0,
+                                                indexes.view(-1) + 1,
+                                                (tmp1 * grad_out).view(-1))
 
             tmp2 = ((x.detach() - grid * (size // 2 - 1)).clamp(min=0)) / grid
-            grad_coefficients_vect.scatter_add_(
-                0, indexes.view(-1), (-tmp2 * grad_out).view(-1))
-            grad_coefficients_vect.scatter_add_(
-                0, indexes.view(-1) + 1, (tmp2 * grad_out).view(-1))
+            grad_coefficients_vect.scatter_add_(0,
+                                                indexes.view(-1),
+                                                (-tmp2 * grad_out).view(-1))
+            grad_coefficients_vect.scatter_add_(0,
+                                                indexes.view(-1) + 1,
+                                                (tmp2 * grad_out).view(-1))
 
         return grad_x, grad_coefficients_vect, None, None, None, None
 
@@ -185,7 +190,6 @@ class DeepBSplineBase(DeepSplineBase):
     Parent class for DeepBSpline activations
     (deepBspline/deepBspline_explicit_Linear)
     """
-
     def __init__(self, mode, num_activations, save_memory=False, **kwargs):
         """
         Args:
@@ -213,8 +217,8 @@ class DeepBSplineBase(DeepSplineBase):
         # self.zero_knot_indexes[i] gives index of knot 0 for filter/neuron_i.
         # size: (num_activations,)
         activation_arange = torch.arange(0, self.num_activations)
-        self.zero_knot_indexes = (
-            activation_arange * self.size + (self.size // 2))
+        self.zero_knot_indexes = (activation_arange * self.size +
+                                  (self.size // 2))
 
     @property
     def grid_tensor(self):
@@ -273,9 +277,9 @@ class DeepBSplineBase(DeepSplineBase):
         grid = self.grid.to(self.coefficients_vect.device)
         zero_knot_indexes = self.zero_knot_indexes.to(grid.device)
 
-        output = DeepBSpline_Func.apply(x, self.coefficients_vect,
-                                        grid, zero_knot_indexes,
-                                        self.size, self.save_memory)
+        output = DeepBSpline_Func.apply(x, self.coefficients_vect, grid,
+                                        zero_knot_indexes, self.size,
+                                        self.save_memory)
 
         if self.save_memory is False:
             # Linear extrapolations:

@@ -19,8 +19,13 @@ def init_dataset(**params):
     """
 
     # add your datasets here and create a corresponding Dataset class
-    dataset_dict = {'s_shape': S_shape, 'circle': Circle,
-                    'cifar10': Cifar10, 'cifar100': Cifar100, 'mnist': MNIST}
+    dataset_dict = {
+        's_shape': S_shape,
+        'circle': Circle,
+        'cifar10': Cifar10,
+        'cifar100': Cifar100,
+        'mnist': MNIST
+    }
 
     if params['dataset_name'] not in dataset_dict.keys():
         raise ValueError('Chosen dataset is not available... Exiting.')
@@ -32,9 +37,13 @@ def init_dataset(**params):
 
 class Dataset(ABC):
     """ Abstract class for datasets """
-
-    def __init__(self, dataset_name=None, log_dir=None, model_name=None,
-                 plot_imgs=False, save_imgs=False, **kwargs):
+    def __init__(self,
+                 dataset_name=None,
+                 log_dir=None,
+                 model_name=None,
+                 plot_imgs=False,
+                 save_imgs=False,
+                 **kwargs):
         """
         Args:
             dataset_name (str):
@@ -81,7 +90,6 @@ class Dataset(ABC):
 
 class TorchDataset(Dataset):
     """ Abstract class for Torchvision datasets """
-
     def __init__(self, **params):
         """ """
         super().__init__(**params)
@@ -138,8 +146,8 @@ class TorchDataset(Dataset):
         train_transform_list = self.get_augment_transform_list()
         minimal_transform_list = self.get_minimal_transform_list()
 
-        train_transform = transforms.Compose(
-            train_transform_list + minimal_transform_list)
+        train_transform = transforms.Compose(train_transform_list +
+                                             minimal_transform_list)
         valid_transform = transforms.Compose(minimal_transform_list)
 
         return train_transform, valid_transform
@@ -171,10 +179,12 @@ class TorchDataset(Dataset):
         images = denormalize(images, self.norm_mean, self.norm_std)\
             .clamp(min=0, max=1)
 
-        self.plot_torch_dataset_samples(
-            images[0:self.sample_batch], labels[0:self.sample_batch])
+        self.plot_torch_dataset_samples(images[0:self.sample_batch],
+                                        labels[0:self.sample_batch])
 
-    def plot_torch_dataset_samples(self, images, true_labels,
+    def plot_torch_dataset_samples(self,
+                                   images,
+                                   true_labels,
                                    pred_labels=None):
         """
         Plot images/labels from a torchvision dataset.
@@ -206,9 +216,8 @@ class TorchDataset(Dataset):
                 xlabel = "{0} ({1})".format(true_labels_name, true_labels[i])
             else:
                 pred_labels_name = self.classes[pred_labels[i]]
-                xlabel = "True: {0}\nPred: {1}".format(
-                    true_labels_name, pred_labels_name
-                )
+                xlabel = "True: {0}\nPred: {1}".format(true_labels_name,
+                                                       pred_labels_name)
             ax.set_xlabel(xlabel)
             ax.set_xticks([])
             ax.set_yticks([])
@@ -218,7 +227,6 @@ class TorchDataset(Dataset):
 
 class Cifar10(TorchDataset):
     """ Class for CIFAR10 Dataset """
-
     def __init__(self, **params):
         """ """
         super().__init__(**params)
@@ -263,35 +271,30 @@ class Cifar10(TorchDataset):
 
 class Cifar100(TorchDataset):
     """ Class for CIFAR100 Dataset """
-
     def __init__(self, **params):
         """ """
         super().__init__(**params)
         self._num_classes = 100
         self._norm_mean = (0.5072, 0.4867, 0.4412)
         self._norm_std = (0.2673, 0.2564, 0.2762)
-        self._classes = ('apple', 'aquarium_fish', 'baby', 'bear', 'beaver',
-                         'bed', 'bee', 'beetle', 'bicycle', 'bottle',
-                         'bowl', 'boy', 'bridge', 'bus', 'butterfly',
-                         'camel', 'can', 'castle', 'caterpillar', 'cattle',
-                         'chair', 'chimpanzee', 'clock', 'cloud', 'cockroach',
-                         'couch', 'crab', 'crocodile', 'cup', 'dinosaur',
-                         'dolphin', 'elephant', 'flatfish', 'forest', 'fox',
-                         'girl', 'hamster', 'house', 'kangaroo', 'keyboard',
-                         'lamp', 'lawn_mower', 'leopard', 'lion', 'lizard',
-                         'lobster', 'man', 'maple_tree', 'motorcycle',
-                         'mountain', 'mouse', 'mushroom', 'oak_tree', 'orange',
-                         'orchid', 'otter', 'palm_tree', 'pear',
-                         'pickup_truck', 'pine_tree', 'plain', 'plate',
-                         'poppy', 'porcupine', 'possum',
-                         'rabbit', 'raccoon', 'ray', 'road', 'rocket',
-                         'rose', 'sea', 'seal', 'shark', 'shrew',
-                         'skunk', 'skyscraper', 'snail', 'snake', 'spider',
-                         'squirrel', 'streetcar', 'sunflower', 'sweet_pepper',
-                         'table', 'tank', 'telephone', 'television',
-                         'tiger', 'tractor', 'train', 'trout',
-                         'tulip', 'turtle', 'wardrobe',
-                         'whale', 'willow_tree', 'wolf', 'woman', 'worm')
+        self._classes = (
+            'apple', 'aquarium_fish', 'baby', 'bear', 'beaver', 'bed', 'bee',
+            'beetle', 'bicycle', 'bottle', 'bowl', 'boy', 'bridge', 'bus',
+            'butterfly', 'camel', 'can', 'castle', 'caterpillar', 'cattle',
+            'chair', 'chimpanzee', 'clock', 'cloud', 'cockroach', 'couch',
+            'crab', 'crocodile', 'cup', 'dinosaur', 'dolphin', 'elephant',
+            'flatfish', 'forest', 'fox', 'girl', 'hamster', 'house',
+            'kangaroo', 'keyboard', 'lamp', 'lawn_mower', 'leopard', 'lion',
+            'lizard', 'lobster', 'man', 'maple_tree', 'motorcycle', 'mountain',
+            'mouse', 'mushroom', 'oak_tree', 'orange', 'orchid', 'otter',
+            'palm_tree', 'pear', 'pickup_truck', 'pine_tree', 'plain', 'plate',
+            'poppy', 'porcupine', 'possum', 'rabbit', 'raccoon', 'ray', 'road',
+            'rocket', 'rose', 'sea', 'seal', 'shark', 'shrew', 'skunk',
+            'skyscraper', 'snail', 'snake', 'spider', 'squirrel', 'streetcar',
+            'sunflower', 'sweet_pepper', 'table', 'tank', 'telephone',
+            'television', 'tiger', 'tractor', 'train', 'trout', 'tulip',
+            'turtle', 'wardrobe', 'whale', 'willow_tree', 'wolf', 'woman',
+            'worm')
 
     @property
     def num_classes(self):
@@ -327,17 +330,15 @@ class Cifar100(TorchDataset):
 
 
 class MNIST(TorchDataset):
-
     def __init__(self, **params):
         """ """
         super().__init__(**params)
         self._num_classes = 10
-        self._norm_mean = (0.1307,)
-        self._norm_std = (0.3081,)
-        self._classes = ('0 - zero', '1 - one', '2 - two',
-                         '3 - three', '4 - four', '5 - five',
-                         '6 - six', '7 - seven', '8 - eight',
-                         '9 - nine')
+        self._norm_mean = (0.1307, )
+        self._norm_std = (0.3081, )
+        self._classes = ('0 - zero', '1 - one', '2 - two', '3 - three',
+                         '4 - four', '5 - five', '6 - six', '7 - seven',
+                         '8 - eight', '9 - nine')
 
     @property
     def num_classes(self):
@@ -373,7 +374,6 @@ class twoD(Dataset):
     Abstract class for 2D datasets that can be fitted in memory and do not
     require torchvision.
     """
-
     def __init__(self, **params):
         """ """
         super().__init__(**params)
@@ -381,8 +381,8 @@ class twoD(Dataset):
         self._num_classes = 2
         self.rect_side = 2
         self.test_grid = 0.01
-        self.grid_arange = torch.arange(
-            -1 + self.test_grid / 2, 1, self.test_grid)
+        self.grid_arange = torch.arange(-1 + self.test_grid / 2, 1,
+                                        self.test_grid)
 
     @property
     def is_user_dataset(self):
@@ -425,11 +425,8 @@ class twoD(Dataset):
 
         grid_x, grid_y = torch.meshgrid(self.grid_arange, self.grid_arange)
 
-        inputs = torch.cat(
-            (grid_x.reshape(-1, 1),
-             grid_y.reshape(-1, 1)),
-            dim=1
-        )
+        inputs = torch.cat((grid_x.reshape(-1, 1), grid_y.reshape(-1, 1)),
+                           dim=1)
         labels = self.get_labels(inputs)
 
         return inputs, labels
@@ -480,10 +477,20 @@ class twoD(Dataset):
         cm = plt.cm.get_cmap('RdYlBu')
 
         zero_mask = (labels < 0.5)
-        plt.scatter(x[~zero_mask], y[~zero_mask], c=labels[~zero_mask],
-                    vmin=0, vmax=1, s=40, cmap=cm)
-        plt.scatter(x[zero_mask], y[zero_mask], c=labels[zero_mask],
-                    vmin=0, vmax=1, s=8, cmap=cm)
+        plt.scatter(x[~zero_mask],
+                    y[~zero_mask],
+                    c=labels[~zero_mask],
+                    vmin=0,
+                    vmax=1,
+                    s=40,
+                    cmap=cm)
+        plt.scatter(x[zero_mask],
+                    y[zero_mask],
+                    c=labels[zero_mask],
+                    vmin=0,
+                    vmax=1,
+                    s=8,
+                    cmap=cm)
 
         ax.set_aspect(aspect='equal')
 
@@ -508,8 +515,12 @@ class twoD(Dataset):
         self.add_gtruth_contour(ax, 'test')
 
         cm = plt.cm.get_cmap('GnBu')
-        plt.imshow(z, vmin=0, vmax=1, cmap=cm,
-                   extent=(-1, 1, -1, 1), aspect='equal')
+        plt.imshow(z,
+                   vmin=0,
+                   vmax=1,
+                   cmap=cm,
+                   extent=(-1, 1, -1, 1),
+                   aspect='equal')
 
         self.finalize_imgs(ax, 'test')
 
@@ -533,10 +544,8 @@ class twoD(Dataset):
         fig.set_size_inches(img_size, img_size)
 
         if self.save_imgs:
-            plt.savefig(
-                os.path.join(self.log_dir_model, mode + '_img.pdf'),
-                bbox_inches='tight'
-            )
+            plt.savefig(os.path.join(self.log_dir_model, mode + '_img.pdf'),
+                        bbox_inches='tight')
 
         if self.plot_imgs:
             plt.show()
@@ -546,12 +555,11 @@ class twoD(Dataset):
 
 class Circle(twoD):
     """ Class for a 2D circle dataset """
-
     def __init__(self, **params):
         """ """
         super().__init__(**params)
         # circle_area = rect_area/2
-        self.radius_sq = self.rect_side ** 2 / (2 * math.pi)
+        self.radius_sq = self.rect_side**2 / (2 * math.pi)
 
     def get_labels(self, inputs):
         """
@@ -562,7 +570,7 @@ class Circle(twoD):
         Returns:
             labels (torch.Tensor).
         """
-        inputs_radius_sq = (inputs ** 2).sum(1)
+        inputs_radius_sq = (inputs**2).sum(1)
         labels = (inputs_radius_sq < self.radius_sq).to(torch.float32)
 
         return labels
@@ -582,14 +590,15 @@ class Circle(twoD):
         color = 'black' if mode == 'train' else 'chocolate'
         circle = plt.Circle((0, 0),
                             radius=math.sqrt(self.radius_sq),
-                            color=color, linewidth=3, fill=False)
+                            color=color,
+                            linewidth=3,
+                            fill=False)
 
         ax.add_artist(circle)
 
 
 class S_shape(twoD):
     """ Class for a 2D circle dataset """
-
     def __init__(self, **params):
         """ """
         super().__init__(**params)
@@ -655,7 +664,11 @@ class S_shape(twoD):
         ax.plot(self.sin_func(t_sin, 'lower'), t_sin, c=color, linewidth=3)
         ax.plot(self.sin_func(t_sin, 'upper'), t_sin, c=color, linewidth=3)
 
-        ax.plot(t_left, np.full_like(t_left, -self.y_cutoff),
-                c=color, linewidth=3)
-        ax.plot(t_right, np.full_like(t_right, self.y_cutoff),
-                c=color, linewidth=3)
+        ax.plot(t_left,
+                np.full_like(t_left, -self.y_cutoff),
+                c=color,
+                linewidth=3)
+        ax.plot(t_right,
+                np.full_like(t_right, self.y_cutoff),
+                c=color,
+                linewidth=3)

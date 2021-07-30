@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from deepsplines.manager import Manager
 from deepsplines.project import Project
 from deepsplines.ds_utils import json_load
-
 '''
 This script plots sparsity, error_rate and lipschitz_bound vs lambda.
 It takes a results_json file as input which should be located
@@ -113,21 +112,18 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(
         description='Plot sparsity, error rate and lipschitz bound '
-                    'vs TV2/BV2 regularization weight.',
+        'vs TV2/BV2 regularization weight.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument(
-        'results_json',
-        metavar='FILE[STR]',
-        type=str,
-        help='json file with train/test results.'
-    )
+    parser.add_argument('results_json',
+                        metavar='FILE[STR]',
+                        type=str,
+                        help='json file with train/test results.')
     parser.add_argument(
         '--save_dir',
         metavar='STR',
         type=str,
-        help='directory for saving plots. If not given, plots are not saved.'
-    )
+        help='directory for saving plots. If not given, plots are not saved.')
     args = parser.parse_args()
 
     if not os.path.isfile(args.results_json):

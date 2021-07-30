@@ -12,7 +12,6 @@ import numpy as np
 
 class ArgCheck():
     """ Class for input argument verification """
-
     @staticmethod
     def p_int(value):
         """
@@ -83,8 +82,7 @@ class ArgCheck():
         if ivalue < 0 or ivalue > 1:
             raise argparse.ArgumentTypeError(
                 f'{value} is an invalid fraction float value '
-                '(should be in [0, 1])'
-            )
+                '(should be in [0, 1])')
         return ivalue
 
     @staticmethod
@@ -176,8 +174,9 @@ def dict_recursive_merge(params_root, merger_root, base=True):
     if merger_root:  # non-empty dict
         for key, val in merger_root.items():
             if isinstance(val, dict) and key in params_root:
-                merger_root[key] = dict_recursive_merge(
-                    params_root[key], merger_root[key], base=False)
+                merger_root[key] = dict_recursive_merge(params_root[key],
+                                                        merger_root[key],
+                                                        base=False)
 
         merger_root = {**params_root, **merger_root}
 
@@ -208,8 +207,9 @@ def assign_tree_structure(assign_root, structure, base=True):
         for key, val in structure.items():
             if isinstance(val, dict):
                 assign_root[key] = {}
-                assign_root[key] = assign_tree_structure(
-                    assign_root[key], structure[key], base=False)
+                assign_root[key] = assign_tree_structure(assign_root[key],
+                                                         structure[key],
+                                                         base=False)
                 if len(assign_root[key]) < 1:
                     # do not have empty dictionaries in assign_root
                     del assign_root[key]
@@ -281,8 +281,8 @@ def spline_grid_from_range(spline_size, spline_range, round_to=1e-6):
     if float(spline_range) <= 0:
         raise TypeError('spline_range needs to be a positive float...')
 
-    spline_grid = (
-        (float(spline_range) / (int(spline_size) // 2)) // round_to) * round_to
+    spline_grid = ((float(spline_range) /
+                    (int(spline_size) // 2)) // round_to) * round_to
 
     return spline_grid
 

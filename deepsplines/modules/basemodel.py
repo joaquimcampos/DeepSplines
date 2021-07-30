@@ -19,12 +19,15 @@ class BaseModel(nn.Module):
     """
     Parent class for DeepSpline networks in this project.
     """
-
-    def __init__(self, activation_type=None,
+    def __init__(self,
+                 activation_type=None,
                  num_classes=None,
-                 spline_size=None, spline_range=None,
-                 spline_init=None, save_memory=False,
-                 knot_threshold=None, **kwargs):
+                 spline_size=None,
+                 spline_range=None,
+                 spline_init=None,
+                 save_memory=False,
+                 knot_threshold=None,
+                 **kwargs):
         """
         Args:
             ------ general -----------------------
@@ -126,7 +129,8 @@ class BaseModel(nn.Module):
             activations = nn.ModuleList()
             for mode, num_activations in activation_specs:
                 activations.append(
-                    self.deepspline(mode, num_activations,
+                    self.deepspline(mode,
+                                    num_activations,
                                     size=self.spline_size,
                                     range_=self.spline_range,
                                     init=self.spline_init,
@@ -220,12 +224,10 @@ class BaseModel(nn.Module):
                     module.bias.data.zero_()
 
                 else:  # He initialization
-                    nn.init.kaiming_normal_(
-                        module.weight,
-                        a=slope_init,
-                        mode='fan_out',
-                        nonlinearity=nonlinearity
-                    )
+                    nn.init.kaiming_normal_(module.weight,
+                                            a=slope_init,
+                                            mode='fan_out',
+                                            nonlinearity=nonlinearity)
 
             elif isinstance(module, nn.BatchNorm2d):
                 module.weight.data.fill_(1)
@@ -483,10 +485,14 @@ class BaseModel(nn.Module):
                         module.get_threshold_sparsity(self.knot_threshold)
 
                     activations_list.append({
-                        'name': '_'.join([name, module.mode]),
-                        'locations': locations.clone().detach().cpu(),
-                        'coefficients': coefficients.clone().detach().cpu(),
-                        'sparsity_mask': threshold_sparsity_mask.cpu()
+                        'name':
+                        '_'.join([name, module.mode]),
+                        'locations':
+                        locations.clone().detach().cpu(),
+                        'coefficients':
+                        coefficients.clone().detach().cpu(),
+                        'sparsity_mask':
+                        threshold_sparsity_mask.cpu()
                     })
 
         return activations_list

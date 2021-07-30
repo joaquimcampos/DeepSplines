@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-
 """
 Script to approximate a parabola using a single deepsplines
 activation funcion.
 
 Used for testing purposes.
 """
-
 
 import os
 import time
@@ -16,18 +14,15 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
 
-from deepsplines.modules import (
-    DeepBSpline,
-    DeepBSplineExplicitLinear,
-    DeepReLUSpline
-)
+from deepsplines.modules import (DeepBSpline, DeepBSplineExplicitLinear,
+                                 DeepReLUSpline)
 from deepsplines.ds_utils import ArgCheck, add_date_to_filename
 
 
 def parabola_func(x):
     """ Parabola function """
 
-    return x ** 2
+    return x**2
 
 
 def approximate_parabola(args):
@@ -37,10 +32,15 @@ def approximate_parabola(args):
     """
     parab_range = 1  # one-sided range of parabola function
 
-    deepspline_params = {'mode': 'fc', 'size': args.spline_size,
-                         'range_': args.spline_range, 'init': args.spline_init,
-                         'bias': True, 'num_activations': 1,
-                         'save_memory': args.save_memory}
+    deepspline_params = {
+        'mode': 'fc',
+        'size': args.spline_size,
+        'range_': args.spline_range,
+        'init': args.spline_init,
+        'bias': True,
+        'num_activations': 1,
+        'save_memory': args.save_memory
+    }
 
     if args.activation_type == 'deepBspline':
         activation = DeepBSpline(**deepspline_params)
@@ -63,8 +63,8 @@ def approximate_parabola(args):
 
     # setup testing data
     num_test_samples = 10000
-    test_x = torch.zeros(num_test_samples,
-                         1).uniform_(-parab_range, parab_range)
+    test_x = torch.zeros(num_test_samples, 1).uniform_(-parab_range,
+                                                       parab_range)
     test_y = parabola_func(test_x)  # values
     # move to device
     test_x = test_x.to(args.device)
@@ -76,12 +76,15 @@ def approximate_parabola(args):
     optim = torch.optim.Adam(activ.parameters(), lr=args.lr)
 
     num_epochs = args.num_epochs
-    milestones = [int(6 * num_epochs / 10),
-                  int(8 * num_epochs / 10),
-                  int(9 * num_epochs / 10)]
+    milestones = [
+        int(6 * num_epochs / 10),
+        int(8 * num_epochs / 10),
+        int(9 * num_epochs / 10)
+    ]
 
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        optim, milestones, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optim,
+                                                     milestones,
+                                                     gamma=0.1)
 
     print(f'\n==> Training {activ.__class__.__name__}')
 
@@ -106,7 +109,8 @@ def approximate_parabola(args):
         if i % int(num_epochs / 10) == 0:
             loss = df_loss + tv_bv_loss
             print(f'\nepoch: {i+1}/{num_epochs}; ',
-                  'loss: {:.8f}'.format(loss.item()), sep='')
+                  'loss: {:.8f}'.format(loss.item()),
+                  sep='')
 
             lr = [group['lr'] for group in optim.param_groups]
             print(f'scheduler: learning rate - {lr}')
@@ -158,91 +162,66 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(
         description='Approximate a parabola in [-1, 1] '
-                    'with a single activation.',
+        'with a single activation.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # for details on the arguments, see main.py
-    activation_choices = {'deepBspline', 'deepReLUspline',
-                          'deepBspline_explicit_linear'}
-    parser.add_argument(
-        '--activation_type',
-        choices=activation_choices,
-        type=str,
-        default='deepBspline_explicit_linear',
-        help=' '
-    )
-    parser.add_argument(
-        '--spline_init',
-        choices=['leaky_relu', 'relu', 'even_odd'],
-        type=str,
-        default='leaky_relu',
-        help=' '
-    )
-    parser.add_argument(
-        '--spline_size',
-        metavar='INT>0',
-        type=ArgCheck.p_odd_int,
-        default=31,
-        help=' '
-    )
-    parser.add_argument(
-        '--spline_range',
-        metavar='FLOAT,>0',
-        type=ArgCheck.p_float,
-        default=1.,
-        help=' '
-    )
-    parser.add_argument(
-        '--save_memory',
-        action='store_true',
-        help=' '
-    )
-    parser.add_argument(
-        '--lmbda',
-        metavar='FLOAT,>=0',
-        type=ArgCheck.nn_float,
-        default=1e-4,
-        help=' '
-    )
-    parser.add_argument(
-        '--lipschitz',
-        action='store_true',
-        help=' '
-    )
-    parser.add_argument(
-        '--num_epochs',
-        metavar='INT,>0',
-        type=ArgCheck.p_int,
-        default=10000,
-        help=' '
-    )
-    parser.add_argument(
-        '--lr',
-        metavar='FLOAT,>0',
-        type=ArgCheck.p_float,
-        default=1e-3,
-        help=' '
-    )
-    parser.add_argument(
-        '--num_train_samples',
-        metavar='INT,>0',
-        type=ArgCheck.p_int,
-        default=10000,
-        help=' '
-    )
+    activation_choices = {
+        'deepBspline', 'deepReLUspline', 'deepBspline_explicit_linear'
+    }
+    parser.add_argument('--activation_type',
+                        choices=activation_choices,
+                        type=str,
+                        default='deepBspline_explicit_linear',
+                        help=' ')
+    parser.add_argument('--spline_init',
+                        choices=['leaky_relu', 'relu', 'even_odd'],
+                        type=str,
+                        default='leaky_relu',
+                        help=' ')
+    parser.add_argument('--spline_size',
+                        metavar='INT>0',
+                        type=ArgCheck.p_odd_int,
+                        default=31,
+                        help=' ')
+    parser.add_argument('--spline_range',
+                        metavar='FLOAT,>0',
+                        type=ArgCheck.p_float,
+                        default=1.,
+                        help=' ')
+    parser.add_argument('--save_memory',
+                        action='store_true',
+                        help=' ')
+    parser.add_argument('--lmbda',
+                        metavar='FLOAT,>=0',
+                        type=ArgCheck.nn_float,
+                        default=1e-4,
+                        help=' ')
+    parser.add_argument('--lipschitz',
+                        action='store_true',
+                        help=' ')
+    parser.add_argument('--num_epochs',
+                        metavar='INT,>0',
+                        type=ArgCheck.p_int,
+                        default=10000,
+                        help=' ')
+    parser.add_argument('--lr',
+                        metavar='FLOAT,>0',
+                        type=ArgCheck.p_float,
+                        default=1e-3,
+                        help=' ')
+    parser.add_argument('--num_train_samples',
+                        metavar='INT,>0',
+                        type=ArgCheck.p_int,
+                        default=10000,
+                        help=' ')
 
-    parser.add_argument(
-        '--save_dir',
-        metavar='STR',
-        type=str
-    )
-    parser.add_argument(
-        '--device',
-        choices=['cuda:0', 'cpu'],
-        type=str,
-        default='cpu',
-        help=' '
-    )
+    parser.add_argument('--save_dir', metavar='STR', type=str)
+    parser.add_argument('--device',
+                        choices=['cuda:0', 'cpu'],
+                        type=str,
+                        default='cpu',
+                        help=' ')
 
     args = parser.parse_args()
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 '''
 This script is illustrative. It plots an example of a deepspline
 along with its B-spline and boundary basis elements.
@@ -108,11 +107,12 @@ def plot_deepspline_basis(args):
     ax.yaxis.set_ticks_position('left')
     ax.set_yticks([1, 2, 4, 5])
     ax.set_xticks([-4, -3, -2, -1, 1, 2, 3, 4])
-    ax.set_xticklabels(
-        np.concatenate((np.arange(-4, 0), np.arange(1, 5))),
-        fontdict={'horizontalalignment': 'center', 'fontsize': 10},
-        minor=False
-    )
+    ax.set_xticklabels(np.concatenate((np.arange(-4, 0), np.arange(1, 5))),
+                       fontdict={
+                           'horizontalalignment': 'center',
+                           'fontsize': 10
+                       },
+                       minor=False)
 
     ax.tick_params(axis='both', which='major', labelsize=12)
     ax.tick_params(axis='both', which='minor', labelsize=12)
@@ -131,9 +131,8 @@ def plot_deepspline_basis(args):
             mode = 'left'
 
         # evaluate B-spline basis element on a grid
-        bspline_x = np.linspace(-(range_ + 2) + i *
-                                grid, -(range_ + 2) + (i + 2) * grid,
-                                nb_points)
+        bspline_x = np.linspace(-(range_ + 2) + i * grid,
+                                -(range_ + 2) + (i + 2) * grid, nb_points)
         bspline_y = Bspline(bspline_x, center, grid, coeff[i], mode=mode)
 
         if mode == 'left':
@@ -161,14 +160,13 @@ def plot_deepspline_basis(args):
     plt.plot(x_right, f_right(x_right), color='black')
 
     # plot boundary elements
-    plt.plot(x_left, f_left_straight(x_left),
-             color='lightsteelblue', ls='--')
-    plt.plot(x_right, f_right_straight(x_right),
-             color='lightsteelblue', ls='--')
-    plt.plot(x_left, f_left_relu(x_left),
-             color='lightsteelblue', ls='--')
-    plt.plot(x_right, f_right_relu(x_right),
-             color='lightsteelblue', ls='--')
+    plt.plot(x_left, f_left_straight(x_left), color='lightsteelblue', ls='--')
+    plt.plot(x_right,
+             f_right_straight(x_right),
+             color='lightsteelblue',
+             ls='--')
+    plt.plot(x_left, f_left_relu(x_left), color='lightsteelblue', ls='--')
+    plt.plot(x_right, f_right_relu(x_right), color='lightsteelblue', ls='--')
 
     plt.xlim(-(range_ + extrap - 0.2), (range_ + extrap - 0.2))
     plt.ylim(-0.8, 5.5)
@@ -192,8 +190,7 @@ if __name__ == "__main__":
         '--save_dir',
         metavar='STR',
         type=str,
-        help='directory for saving plots. If not given, plots are not saved.'
-    )
+        help='directory for saving plots. If not given, plots are not saved.')
 
     args = parser.parse_args()
 

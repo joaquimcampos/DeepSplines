@@ -15,7 +15,6 @@ from .deepBspline_base import DeepBSplineBase
 
 class DeepBSpline(DeepBSplineBase):
     """ nn.Module for DeepBspline activation functions. """
-
     def __init__(self, mode, num_activations, **kwargs):
         """
         Args:
@@ -55,8 +54,8 @@ class DeepBSpline(DeepBSplineBase):
 
         # Need to vectorize coefficients to perform specific operations
         # size: (num_activations*size)
-        self._coefficients_vect = nn.Parameter(coefficients.contiguous()
-                                               .view(-1))
+        self._coefficients_vect = nn.Parameter(
+            coefficients.contiguous().view(-1))
 
     @property
     def coefficients_vect(self):

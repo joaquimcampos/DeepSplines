@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 '''
 This script sparsifies the deepspline activations in a network.
 
@@ -95,7 +94,8 @@ def sparsify_with_optimal_knot_threshold(args):
             base_train_acc = model_dict['latest_train_acc']
 
         acc_drop = np.clip((model_dict['latest_train_acc'] - base_train_acc),
-                           a_max=100, a_min=-100)
+                           a_max=100,
+                           a_min=-100)
 
         print('\nThreshold: {:.4f}'.format(threshold))
         print('Accuracy drop: {:.3f}%'.format(acc_drop))
@@ -144,26 +144,20 @@ if __name__ == "__main__":
                     'accuracy drop is within a specification). ',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument(
-        'ckpt_filename',
-        metavar='CKPT_FILENAME[STR]',
-        type=str,
-        help=''
-    )
-    parser.add_argument(
-        'out_log_dir',
-        metavar='out_log_dir[STR]',
-        type=str,
-        help='Output log directory for sparsified model.'
-    )
-    parser.add_argument(
-        'acc_drop_threshold',
-        metavar='FLOAT(-1, 0)',
-        type=ArgCheck.n_float,
-        default=-0.25,
-        help='Maximum train accuracy percentage drop '
-             'allowed for sparsification. (default: %(default)s)'
-    )
+    parser.add_argument('ckpt_filename',
+                        metavar='CKPT_FILENAME[STR]',
+                        type=str,
+                        help='')
+    parser.add_argument('out_log_dir',
+                        metavar='out_log_dir[STR]',
+                        type=str,
+                        help='Output log directory for sparsified model.')
+    parser.add_argument('acc_drop_threshold',
+                        metavar='FLOAT(-1, 0)',
+                        type=ArgCheck.n_float,
+                        default=-0.25,
+                        help='Maximum train accuracy percentage drop '
+                        'allowed for sparsification. (default: %(default)s)')
 
     args = parser.parse_args()
 

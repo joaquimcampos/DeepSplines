@@ -22,7 +22,6 @@ class NiNCifar(BaseModel):
 
     CIFAR input size: N x 3 x 32 x 32.
     """
-
     def __init__(self, **params):
 
         super().__init__(**params)
@@ -36,7 +35,6 @@ class NiNCifar(BaseModel):
             self.init_activation(('conv', 96), bias=False),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             nn.Dropout(0.5),
-
             nn.Conv2d(96, 192, kernel_size=5, stride=1, padding=2),
             self.init_activation(('conv', 192), bias=False),
             nn.Conv2d(192, 192, kernel_size=1, stride=1, padding=0),
@@ -45,16 +43,17 @@ class NiNCifar(BaseModel):
             self.init_activation(('conv', 192), bias=False),
             nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
             nn.Dropout(0.5),
-
             nn.Conv2d(192, 192, kernel_size=3, stride=1, padding=1),
             self.init_activation(('conv', 192), bias=False),
             nn.Conv2d(192, 192, kernel_size=1, stride=1, padding=0),
             self.init_activation(('conv', 192), bias=False),
-            nn.Conv2d(192, self.num_classes, kernel_size=1, stride=1,
+            nn.Conv2d(192,
+                      self.num_classes,
+                      kernel_size=1,
+                      stride=1,
                       padding=0),
             self.init_activation(('conv', self.num_classes), bias=False),
             nn.AvgPool2d(kernel_size=8, stride=1, padding=0),
-
         )
 
         self.initialization(init_type='custom_normal')

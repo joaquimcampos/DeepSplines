@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 '''
 This script generates and saves a 2D circle or s_shape dataset
 with a given number of training and validation samples.
@@ -13,7 +12,9 @@ from deepsplines.datasets import init_dataset
 from deepsplines.ds_utils import ArgCheck, init_sub_dir
 
 
-def generate_save_dataset(dataset_name, data_dir, num_train_samples=1500,
+def generate_save_dataset(dataset_name,
+                          data_dir,
+                          num_train_samples=1500,
                           num_valid_samples=1500):
     """
     Args:
@@ -28,8 +29,12 @@ def generate_save_dataset(dataset_name, data_dir, num_train_samples=1500,
 
     dataset_dir = init_sub_dir(data_dir, dataset_name)
 
-    params = {'dataset_name': dataset_name, 'log_dir': dataset_dir,
-              'plot_imgs': False, 'save_imgs': True}
+    params = {
+        'dataset_name': dataset_name,
+        'log_dir': dataset_dir,
+        'plot_imgs': False,
+        'save_imgs': True
+    }
 
     dataset = init_dataset(**params)
 
@@ -62,39 +67,27 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     dataset_choices = {'s_shape', 'circle'}
-    parser.add_argument(
-        'dataset_name',
-        metavar='DATASET_NAME[STR]',
-        choices=dataset_choices,
-        type=str,
-        help=f'{dataset_choices}'
-    )
-    parser.add_argument(
-        '--data_dir',
-        metavar='STR',
-        type=str,
-        default='./data',
-        help=' '
-    )
-    parser.add_argument(
-        '--num_train_samples',
-        metavar='INT,>0',
-        type=ArgCheck.p_int,
-        default=1500,
-        help=' '
-    )
-    parser.add_argument(
-        '--num_valid_samples',
-        metavar='INT,>0',
-        type=ArgCheck.p_int,
-        default=1500,
-        help=' '
-    )
+    parser.add_argument('dataset_name',
+                        metavar='DATASET_NAME[STR]',
+                        choices=dataset_choices,
+                        type=str,
+                        help=f'{dataset_choices}')
+    parser.add_argument('--data_dir',
+                        metavar='STR',
+                        type=str,
+                        default='./data',
+                        help=' ')
+    parser.add_argument('--num_train_samples',
+                        metavar='INT,>0',
+                        type=ArgCheck.p_int,
+                        default=1500,
+                        help=' ')
+    parser.add_argument('--num_valid_samples',
+                        metavar='INT,>0',
+                        type=ArgCheck.p_int,
+                        default=1500,
+                        help=' ')
     args = parser.parse_args()
 
-    generate_save_dataset(
-        args.dataset_name,
-        args.data_dir,
-        args.num_train_samples,
-        args.num_valid_samples
-    )
+    generate_save_dataset(args.dataset_name, args.data_dir,
+                          args.num_train_samples, args.num_valid_samples)

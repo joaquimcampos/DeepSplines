@@ -96,8 +96,9 @@ class Project():
 
         json_dump(results_dict, self.results_json)
 
-        comb_list = list(itertools.product(['latest', 'best'], [
-                         'train', 'valid'], ['acc', 'loss']))
+        comb_list = list(
+            itertools.product(['latest', 'best'], ['train', 'valid'],
+                              ['acc', 'loss']))
         self.info_list = ['_'.join(k)
                           for k in comb_list] + ['test_acc', 'test_loss']
 
@@ -141,8 +142,8 @@ class Project():
         Returns True if loading a checkpoint and restoring its parameters,
         for resuming training or testing a model. Otherwise, returns False.
         """
-        if (self.params["ckpt_filename"] is not None) or (
-                self.params["resume"] is True):
+        if (self.params["ckpt_filename"]
+                is not None) or (self.params["resume"] is True):
             return True
         else:
             return False
@@ -277,11 +278,8 @@ class Project():
         try:
             # TODO: Check if model is always loaded on cpu.
             # Use net.to(device) after.
-            ckpt = torch.load(
-                ckpt_filename,
-                map_location=lambda storage,
-                loc: storage
-            )
+            ckpt = torch.load(ckpt_filename,
+                              map_location=lambda storage, loc: storage)
 
         except FileNotFoundError:
             print('\nCheckpoint file not found... Unable '
@@ -472,18 +470,18 @@ class Project():
         """
         base_ckpt_filename = os.path.join(
             self.log_dir_model,
-            self.params["model_name"] + '_net_{:04d}'.format(epoch + 1)
-        )
+            self.params["model_name"] + '_net_{:04d}'.format(epoch + 1))
         regexp_ckpt = os.path.join(self.log_dir_model, "*_net_*.pth")
-        regexp_best_valid_acc_ckpt = os.path.join(
-            self.log_dir_model, "*_best_valid_acc.pth")
+        regexp_best_valid_acc_ckpt = os.path.join(self.log_dir_model,
+                                                  "*_best_valid_acc.pth")
 
         # save checkpoint as *_net_{epoch+1}.pth
         ckpt_filename = base_ckpt_filename + '.pth'
 
         # remove best_valid_acc ckpt from files
-        files = list(set(glob.glob(regexp_ckpt)) -
-                     set(glob.glob(regexp_best_valid_acc_ckpt)))
+        files = list(
+            set(glob.glob(regexp_ckpt)) -
+            set(glob.glob(regexp_best_valid_acc_ckpt)))
         # sort from newest to oldest
         files.sort(key=os.path.getmtime, reverse=True)
 
@@ -553,8 +551,8 @@ class Project():
         """ """
         assert (self.trainloader is not None)
         if self.dataset.is_user_dataset is True:
-            self.num_train_samples = sum(inputs.size(0)
-                                         for inputs, _ in self.trainloader)
+            self.num_train_samples = sum(
+                inputs.size(0) for inputs, _ in self.trainloader)
         else:
             self.num_train_samples = len(self.trainloader.sampler)
 
@@ -568,8 +566,8 @@ class Project():
         assert hasattr(self, 'num_train_batches')
 
         if self.dataset.is_user_dataset is True:
-            num_valid_samples = sum(inputs.size(0)
-                                    for inputs, _ in self.validloader)
+            num_valid_samples = sum(
+                inputs.size(0) for inputs, _ in self.validloader)
             sample_data, sample_target = self.trainloader[0]
         else:
             num_valid_samples = len(self.validloader.sampler)
@@ -593,8 +591,8 @@ class Project():
         assert (self.testloader is not None)
 
         if self.dataset.is_user_dataset is True:
-            num_test_samples = sum(inputs.size(0)
-                                   for inputs, _ in self.testloader)
+            num_test_samples = sum(
+                inputs.size(0) for inputs, _ in self.testloader)
             sample_data, sample_target = self.testloader[0]
         else:
             num_test_samples = len(self.testloader.dataset)
@@ -602,8 +600,8 @@ class Project():
             dataiter = iter(self.testloader)
             sample_data, sample_target = dataiter.next()
 
-        num_test_batches = math.ceil(
-            num_test_samples / self.dataloader.batch_size)
+        num_test_batches = math.ceil(num_test_samples /
+                                     self.dataloader.batch_size)
 
         print('\n==> Test info:')
         print('batch (data, target) size : '

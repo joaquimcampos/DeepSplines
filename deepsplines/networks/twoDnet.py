@@ -1,6 +1,5 @@
 """ 2D-input-single-output fully-connected network with one or two layers """
 
-
 import torch
 import torch.nn as nn
 
@@ -16,7 +15,6 @@ class TwoDNet(BaseModel):
         ((fc2 -> N x h))
         fc_last -> N x 1
     """
-
     def __init__(self, num_hidden_layers=2, num_hidden_neurons=4, **params):
 
         super().__init__(**params)

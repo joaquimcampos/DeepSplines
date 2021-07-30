@@ -21,7 +21,6 @@ class ConvNetMnist(BaseModel):
 
     The convolutions are valid convolutions with filter size = 5.
     """
-
     def __init__(self, **params):
 
         super().__init__(**params)

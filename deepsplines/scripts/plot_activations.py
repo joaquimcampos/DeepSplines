@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 '''
 This script plots the activation functions of a deepspline network.
 The model is fetched from a checkpoint file (.pth) given as input.
@@ -103,18 +102,14 @@ def plot_activations(args):
                     non_sparse_relu_slopes = (sparsity_mask[k, :])
                     # relu slopes locations range from the second (idx=1) to
                     # second to last (idx=-1) B-spline coefficients
-                    ax.scatter(
-                        locations[1:-1][non_sparse_relu_slopes],
-                        coefficients[k, 1:-1][non_sparse_relu_slopes],
-                        s=2 * (ls**2)
-                    )
+                    ax.scatter(locations[1:-1][non_sparse_relu_slopes],
+                               coefficients[k, 1:-1][non_sparse_relu_slopes],
+                               s=2 * (ls**2))
 
                     sparse_relu_slopes = (sparsity_mask[k, :] is False)
-                    ax.scatter(
-                        locations[1:-1][sparse_relu_slopes],
-                        coefficients[k, 1:-1][sparse_relu_slopes],
-                        s=2 * (ls**2)
-                    )
+                    ax.scatter(locations[1:-1][sparse_relu_slopes],
+                               coefficients[k, 1:-1][sparse_relu_slopes],
+                               s=2 * (ls**2))
 
             x_range = ax.get_xlim()
             assert x_range[0] < 0 and x_range[1] > 0, f'x_range: {x_range}.'
@@ -149,37 +144,28 @@ if __name__ == "__main__":
         description='Plots the activations of a deepspline network.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument(
-        'ckpt_filename',
-        metavar='CKPT_FILENAME[STR]',
-        type=str,
-        help=''
-    )
+    parser.add_argument('ckpt_filename',
+                        metavar='CKPT_FILENAME[STR]',
+                        type=str,
+                        help='')
     parser.add_argument(
         '--save_dir',
         metavar='STR',
         type=str,
-        help='directory for saving plots. If not given, plots are not saved.'
-    )
-    parser.add_argument(
-        '--num_activations_per_plot',
-        '-napp',
-        metavar='INT,>=0',
-        default=4,
-        type=ArgCheck.p_int,
-        help='Number of activations per plot.'
-    )
-    parser.add_argument(
-        '--layer',
-        metavar='INT,>=0',
-        type=ArgCheck.p_int,
-        help='Plot activations in this layer alone.'
-    )
-    parser.add_argument(
-        '--plot_sparsity',
-        action='store_true',
-        help='Plot sparse/nonsparse knots'
-    )
+        help='directory for saving plots. If not given, plots are not saved.')
+    parser.add_argument('--num_activations_per_plot',
+                        '-napp',
+                        metavar='INT,>=0',
+                        default=4,
+                        type=ArgCheck.p_int,
+                        help='Number of activations per plot.')
+    parser.add_argument('--layer',
+                        metavar='INT,>=0',
+                        type=ArgCheck.p_int,
+                        help='Plot activations in this layer alone.')
+    parser.add_argument('--plot_sparsity',
+                        action='store_true',
+                        help='Plot sparse/nonsparse knots')
 
     args = parser.parse_args()
 

@@ -1,7 +1,6 @@
 # References :
 # https://github.com/kuangliu/pytorch-cifar
 # https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
-
 """
 Module for managing the training and testing.
 """
@@ -16,21 +15,15 @@ from .dataloader import DataLoader
 from .project import Project
 from .ds_utils import update_running_losses
 
-from .networks import (
-    TwoDNet,
-    ResNet32Cifar,
-    NiNCifar,
-    ConvNetMnist
-)
+from .networks import (TwoDNet, ResNet32Cifar, NiNCifar, ConvNetMnist)
 from .datasets import init_dataset
-
 
 ##########################################################################
 # MANAGER
 
+
 class Manager(Project):
     """ Class that manages training and testing """
-
     def __init__(self, params, user_params):
         """
         Args:
@@ -101,10 +94,12 @@ class Manager(Project):
         """
         print('\n==> Building model...')
 
-        networks_dict = {'twoDnet': TwoDNet,
-                         'resnet32_cifar': ResNet32Cifar,
-                         'nin_cifar': NiNCifar,
-                         'convnet_mnist': ConvNetMnist}
+        networks_dict = {
+            'twoDnet': TwoDNet,
+            'resnet32_cifar': ResNet32Cifar,
+            'nin_cifar': NiNCifar,
+            'convnet_mnist': ConvNetMnist
+        }
 
         assert params['net'] in networks_dict.keys(), \
             'network not found: please add net to networks_dict.'
@@ -193,8 +188,10 @@ class Manager(Project):
         if optim_name == 'Adam':
             optimizer = optim.Adam(params_iter, lr=lr)
         elif optim_name == 'SGD':
-            optimizer = optim.SGD(
-                params_iter, lr=lr, momentum=0.9, nesterov=True)
+            optimizer = optim.SGD(params_iter,
+                                  lr=lr,
+                                  momentum=0.9,
+                                  nesterov=True)
         else:
             raise ValueError('Need to provide a valid optimizer type.')
 
@@ -207,8 +204,9 @@ class Manager(Project):
         Returns:
             scheduler (torch.optim.lr_scheduler)
         """
-        scheduler = optim.lr_scheduler.MultiStepLR(
-            optimizer, self.params['milestones'], gamma=self.params['gamma'])
+        scheduler = optim.lr_scheduler.MultiStepLR(optimizer,
+                                                   self.params['milestones'],
+                                                   gamma=self.params['gamma'])
 
         return scheduler
 
@@ -399,9 +397,8 @@ class Manager(Project):
                 # train log step
                 train_acc = 100.0 * correct / total
                 losses_dict = {
-                    key: (value / self.params['log_step']) for
-                         (key, value) in zip(self.losses_names,
-                                             running_losses)
+                    key: (value / self.params['log_step'])
+                    for (key, value) in zip(self.losses_names, running_losses)
                 }
                 self.train_log_step(epoch, batch_idx, train_acc, losses_dict)
                 # reset values
@@ -429,8 +426,9 @@ class Manager(Project):
         if self.main_scheduler is not None:
             self.main_scheduler.step()
             if self.params['verbose']:
-                main_lr = [group['lr']
-                           for group in self.main_optimizer.param_groups]
+                main_lr = [
+                    group['lr'] for group in self.main_optimizer.param_groups
+                ]
                 print('main scheduler: epoch - '
                       f'{self.main_scheduler.last_epoch}; '
                       f'learning rate - {main_lr}')
@@ -438,8 +436,9 @@ class Manager(Project):
         if self.aux_scheduler is not None:
             self.aux_scheduler.step()
             if self.params['verbose']:
-                aux_lr = [group['lr']
-                          for group in self.aux_optimizer.param_groups]
+                aux_lr = [
+                    group['lr'] for group in self.aux_optimizer.param_groups
+                ]
                 print('aux scheduler: epoch - '
                       f'{self.aux_scheduler.last_epoch}; '
                       f'learning rate - {aux_lr}')

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 '''
 This script prints the parameters and validation accuracy of a model.
 The model is fetched from a checkpoint file (.pth) given as input.
@@ -54,12 +53,10 @@ if __name__ == "__main__":
         description='Load parameters from checkpoint file.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument(
-        'ckpt_filename',
-        metavar='CKPT_FILENAME[STR]',
-        type=str,
-        help=''
-    )
+    parser.add_argument('ckpt_filename',
+                        metavar='CKPT_FILENAME[STR]',
+                        type=str,
+                        help='')
     args = parser.parse_args()
 
     print_ckpt_params_acc(args)

@@ -18,7 +18,6 @@ class DeepBSplineExplicitLinear(DeepBSplineBase):
     nn.Module for DeepBspline activation functions with an added
     linear term.
     """
-
     def __init__(self, mode, num_activations, bias=True, **kwargs):
         """
         Args:

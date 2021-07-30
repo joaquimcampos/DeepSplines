@@ -17,14 +17,22 @@ from deepsplines.modules import BaseModel
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1):
     """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=1, groups=groups, bias=False)
+    return nn.Conv2d(in_planes,
+                     out_planes,
+                     kernel_size=3,
+                     stride=stride,
+                     padding=1,
+                     groups=groups,
+                     bias=False)
 
 
 def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
-    return nn.Conv2d(in_planes, out_planes,
-                     kernel_size=1, stride=stride, bias=False)
+    return nn.Conv2d(in_planes,
+                     out_planes,
+                     kernel_size=1,
+                     stride=stride,
+                     bias=False)
 
 
 class BasicBlock(BaseModel):
@@ -89,7 +97,6 @@ class ResNet(BaseModel):
 
     CIFAR input size: N x 3 x 32 x 32.
     '''
-
     def __init__(self, block, num_blocks, in_planes=64, **params):
         """ """
         super().__init__(**params)
@@ -100,18 +107,27 @@ class ResNet(BaseModel):
                                        **params)
 
         planes = in_planes * 2
-        self.layer2 = self._make_layer(block, planes, num_blocks[1],
-                                       stride=2, **params)
+        self.layer2 = self._make_layer(block,
+                                       planes,
+                                       num_blocks[1],
+                                       stride=2,
+                                       **params)
 
         planes *= 2
-        self.layer3 = self._make_layer(block, planes, num_blocks[2],
-                                       stride=2, **params)
+        self.layer3 = self._make_layer(block,
+                                       planes,
+                                       num_blocks[2],
+                                       stride=2,
+                                       **params)
 
         self.layer4 = None
         if len(num_blocks) > 3:
             planes *= 2
-            self.layer4 = self._make_layer(block, planes, num_blocks[3],
-                                           stride=2, **params)
+            self.layer4 = self._make_layer(block,
+                                           planes,
+                                           num_blocks[3],
+                                           stride=2,
+                                           **params)
 
         self.avgpool2d = nn.AdaptiveAvgPool2d((1, 1))
         self.linear = nn.Linear(planes * block.expansion, self.num_classes)
@@ -122,11 +138,14 @@ class ResNet(BaseModel):
     def _make_layer0(self, in_planes):
         """ """
         layer0 = nn.Sequential(
-            nn.Conv2d(3, in_planes, kernel_size=3,
-                      stride=1, padding=1, bias=False),
+            nn.Conv2d(3,
+                      in_planes,
+                      kernel_size=3,
+                      stride=1,
+                      padding=1,
+                      bias=False),
             nn.BatchNorm2d(in_planes),
-            self.init_activation(('conv', in_planes), bias=False)
-        )
+            self.init_activation(('conv', in_planes), bias=False))
 
         return layer0
 
@@ -136,15 +155,14 @@ class ResNet(BaseModel):
         if stride != 1 or self.in_planes != planes * block.expansion:
             downsample = nn.Sequential(
                 conv1x1(self.in_planes, block.expansion * planes, stride),
-                nn.BatchNorm2d(planes * block.expansion)
-            )
+                nn.BatchNorm2d(planes * block.expansion))
 
         layers = []
         # First layer block, before adding to output in the skip-connection:
         # layers 2,3,4 - need to increase number of filters of identity +
         # downsample.
-        layers.append(block(self.in_planes, planes,
-                            stride, downsample, **params))
+        layers.append(
+            block(self.in_planes, planes, stride, downsample, **params))
         self.in_planes = planes * block.expansion
 
         for _ in range(1, num_blocks):

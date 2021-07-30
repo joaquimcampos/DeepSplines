@@ -19,10 +19,11 @@ class DSModule(nn.Module):
     """
 
     # dictionary with names and classes of deepspline modules
-    deepsplines = {'deepBspline': DeepBSpline,
-                   'deepBspline_explicit_linear': DeepBSplineExplicitLinear,
-                   'deepReLUspline': DeepReLUSpline
-                   }
+    deepsplines = {
+        'deepBspline': DeepBSpline,
+        'deepBspline_explicit_linear': DeepBSplineExplicitLinear,
+        'deepReLUspline': DeepReLUSpline
+    }
 
     def __init__(self, **kwargs):
         """ """
@@ -84,12 +85,10 @@ class DSModule(nn.Module):
                     module.bias.data.zero_()
 
                 else:  # He initialization
-                    nn.init.kaiming_normal_(
-                        module.weight,
-                        a=slope_init,
-                        mode='fan_out',
-                        nonlinearity=nonlinearity
-                    )
+                    nn.init.kaiming_normal_(module.weight,
+                                            a=slope_init,
+                                            mode='fan_out',
+                                            nonlinearity=nonlinearity)
 
             elif isinstance(module, nn.BatchNorm2d):
                 module.weight.data.fill_(1)
@@ -361,10 +360,14 @@ class DSModule(nn.Module):
                         float(knot_threshold))
 
                     activations_list.append({
-                        'name': '_'.join([name, module.mode]),
-                        'locations': locations.clone().detach().cpu(),
-                        'coefficients': coefficients.clone().detach().cpu(),
-                        'sparsity_mask': threshold_sparsity_mask.cpu()
+                        'name':
+                        '_'.join([name, module.mode]),
+                        'locations':
+                        locations.clone().detach().cpu(),
+                        'coefficients':
+                        coefficients.clone().detach().cpu(),
+                        'sparsity_mask':
+                        threshold_sparsity_mask.cpu()
                     })
 
         return activations_list
