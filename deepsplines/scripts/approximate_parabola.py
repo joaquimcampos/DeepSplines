@@ -16,9 +16,12 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
 
-from deepsplines.modules import *
+from deepsplines.modules import (
+    DeepBSpline,
+    DeepBSplineExplicitLinear,
+    DeepReLUSpline
+)
 from deepsplines.ds_utils import ArgCheck, add_date_to_filename
-
 
 
 def parabola_func(x):
@@ -27,19 +30,23 @@ def parabola_func(x):
     return x ** 2
 
 
-
 if __name__ == "__main__":
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Approximate a parabola in [-1, 1] with a single activation',
-                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description='Approximate a parabola in [-1, 1] '
+                    'with a single activation',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # for details on the arguments, see main.py
-    activation_choices = {'deepBspline', 'deepReLUspline', 'deepBspline_explicit_linear'}
+    activation_choices = {'deepBspline', 'deepReLUspline',
+                          'deepBspline_explicit_linear'}
     parser.add_argument('--activation_type', choices=activation_choices,
-                        type=str, default='deepBspline_explicit_linear', help=' ')
+                        type=str, default='deepBspline_explicit_linear',
+                        help=' ')
 
-    parser.add_argument('--spline_init', choices=['leaky_relu', 'relu', 'even_odd'],
+    parser.add_argument('--spline_init',
+                        choices=['leaky_relu', 'relu', 'even_odd'],
                         type=str, default='leaky_relu', help=' ')
     parser.add_argument('--spline_size', metavar='INT>0',
                         type=ArgCheck.p_odd_int, default=31, help=' ')
@@ -71,15 +78,17 @@ if __name__ == "__main__":
         print(f'\nDirectory {args.save_dir} not found. Creating it.')
         os.makedirs(args.save_dir)
 
-    if args.save_memory is True and not args.activation_type.startswith('deepBspline'):
-        raise ValueError('--save_memory can only be set when using deepBsplines.')
+    if args.save_memory is True and \
+            not args.activation_type.startswith('deepBspline'):
+        raise ValueError(
+            '--save_memory can only be set when using deepBsplines.')
 
-    parab_range = 1 # one-sided range of parabola function
+    parab_range = 1  # one-sided range of parabola function
 
     deepspline_params = {'mode': 'fc', 'size': args.spline_size,
-                        'range_': args.spline_range, 'init': args.spline_init,
-                        'bias': True, 'num_activations': 1,
-                        'save_memory': args.save_memory}
+                         'range_': args.spline_range, 'init': args.spline_init,
+                         'bias': True, 'num_activations': 1,
+                         'save_memory': args.save_memory}
 
     if args.activation_type == 'deepBspline':
         activation = DeepBSpline(**deepspline_params)
@@ -93,16 +102,18 @@ if __name__ == "__main__":
     activation = activation.to(args.device)
 
     # setup training data
-    train_x = torch.zeros(args.num_train_samples, 1).uniform_(-parab_range, parab_range)
-    train_y = parabola_func(train_x) # values
+    train_x = torch.zeros(args.num_train_samples,
+                          1).uniform_(-parab_range, parab_range)
+    train_y = parabola_func(train_x)  # values
     # move to device
     train_x = train_x.to(args.device)
     train_y = train_y.to(args.device)
 
     # setup testing data
     num_test_samples = 10000
-    test_x = torch.zeros(num_test_samples, 1).uniform_(-parab_range, parab_range)
-    test_y = parabola_func(test_x) # values
+    test_x = torch.zeros(num_test_samples,
+                         1).uniform_(-parab_range, parab_range)
+    test_y = parabola_func(test_x)  # values
     # move to device
     test_x = test_x.to(args.device)
     test_y = test_y.to(args.device)
@@ -113,11 +124,12 @@ if __name__ == "__main__":
     optim = torch.optim.Adam(activ.parameters(), lr=args.lr)
 
     num_epochs = args.num_epochs
-    milestones = [int(6*num_epochs/10),
-                int(8*num_epochs/10),
-                int(9*num_epochs/10)]
+    milestones = [int(6 * num_epochs / 10),
+                  int(8 * num_epochs / 10),
+                  int(9 * num_epochs / 10)]
 
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optim, milestones, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optim, milestones, gamma=0.1)
 
     print(f'\n==> Training {activ.__class__.__name__}')
 
@@ -128,7 +140,7 @@ if __name__ == "__main__":
 
         optim.zero_grad()
         pred = activ(train_x)
-        df_loss = criterion(pred, train_y) # data fidelity
+        df_loss = criterion(pred, train_y)  # data fidelity
         df_loss.backward()
 
         tv_bv_loss = args.lmbda * activ.totalVariation().sum()
@@ -139,7 +151,7 @@ if __name__ == "__main__":
         optim.step()
         scheduler.step()
 
-        if i % int(num_epochs/10) == 0:
+        if i % int(num_epochs / 10) == 0:
             loss = df_loss + tv_bv_loss
             print(f'\nepoch: {i+1}/{num_epochs}; ',
                   'loss: {:.8f}'.format(loss.item()), sep='')
@@ -147,15 +159,14 @@ if __name__ == "__main__":
             lr = [group['lr'] for group in optim.param_groups]
             print(f'scheduler: learning rate - {lr}')
 
-
     end_time = time.time()
     print('\nRun time: {:.5f}'.format(end_time - start_time))
 
     # Testing
     print(f'\n==> Start testing {activ.__class__.__name__}.\n')
 
-    pred = activ(test_x) # prediction
-    loss = criterion(pred, test_y) # data fidelity
+    pred = activ(test_x)  # prediction
+    loss = criterion(pred, test_y)  # data fidelity
     tv = activ.totalVariation().sum()
 
     test_mse_str = 'Test mse loss: {:.8f}'.format(loss.item())
@@ -170,13 +181,13 @@ if __name__ == "__main__":
     pred = pred.detach().cpu().numpy()[:, 0]
 
     # plot gtruth, learned function
-    idx = np.argsort(test_x) # sort data
+    idx = np.argsort(test_x)  # sort data
 
     plt.plot(test_x[idx], test_y[idx])
     plt.plot(test_x[idx], pred[idx], '--')
     legend_list = ['gtruth', 'learned']
 
-    plt.plot((-1, 1), (1/3, 1/3), 'k-')
+    plt.plot((-1, 1), (1 / 3, 1 / 3), 'k-')
     legend_list += ['best linear approximator']
 
     ax = plt.gca()

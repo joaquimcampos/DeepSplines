@@ -16,7 +16,12 @@ from .dataloader import DataLoader
 from .project import Project
 from .ds_utils import update_running_losses
 
-from .networks import TwoDNet, ResNet32Cifar, NiNCifar, ConvNetMnist
+from .networks import (
+    TwoDNet,
+    ResNet32Cifar,
+    NiNCifar,
+    ConvNetMnist
+)
 from .datasets import init_dataset
 
 
@@ -311,7 +316,7 @@ class Manager(Project):
         if self.params['weight_decay'] > 0:
             # weight decay regularization
             wd_regularization = self.params['weight_decay'] / 2 * \
-                                self.net.l2sqsum_weights_biases()
+                self.net.l2sqsum_weights_biases()
             regularization = regularization + wd_regularization
 
         if self.net.using_deepsplines and self.params['lmbda'] > 0:
