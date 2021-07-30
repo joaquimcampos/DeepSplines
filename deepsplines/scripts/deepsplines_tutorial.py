@@ -64,12 +64,11 @@ class Net(nn.Module):
 
         self.num_params = sum(p.numel() for p in self.parameters())
 
-
     def forward(self, x):
 
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
-        x = torch.flatten(x, 1) # flatten all dimensions except batch
+        x = torch.flatten(x, 1)  # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
@@ -106,12 +105,12 @@ class DSNet(dsnn.DSModule):
         # We define some optional parameters for the deepspline
         # (see DeepBSpline.__init__())
         opt_params = {'size': 51, 'range_': 4, 'init': 'leaky_relu',
-                        'save_memory': False}
+                      'save_memory': False}
 
         # we generally do not need biases since DeepSplines can do them
         self.conv1 = nn.Conv2d(3, 6, 5, bias=False)
-        # 1st parameter (mode): 'conv' (convolutional) or 'fc' (fully-connected);
-        # 2nd parameter: nb. channels (mode='conv') / nb. neurons (mode='fc').
+        # 1st parameter (mode): 'conv' (convolutional) / 'fc' (fully-connected)
+        # 2nd parameter: nb. channels (mode='conv') / nb. neurons (mode='fc')
         self.conv_ds.append(dsnn.DeepBSpline('conv', 6, **opt_params))
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
@@ -126,12 +125,11 @@ class DSNet(dsnn.DSModule):
         self.initialization(opt_params['init'], init_type='He')
         self.num_params = self.get_num_params()
 
-
     def forward(self, x):
 
         x = self.pool(self.conv_ds[0](self.conv1(x)))
         x = self.pool(self.conv_ds[1](self.conv2(x)))
-        x = torch.flatten(x, 1) # flatten all dimensions except batch
+        x = torch.flatten(x, 1)  # flatten all dimensions except batch
         x = self.fc_ds[0](self.fc1(x))
         x = self.fc_ds[1](self.fc2(x))
         x = self.fc3(x)
@@ -142,13 +140,13 @@ class DSNet(dsnn.DSModule):
 ########################################################################
 # Network, optimizer, loss
 
-net = Net() # relu network
+net = Net()  # relu network
 net.to(device)
 print('ReLU: nb. parameters - {:d}'.format(net.num_params))
 
 optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-dsnet = DSNet() # deepsplines network
+dsnet = DSNet()  # deepsplines network
 dsnet.to(device)
 print('DeepSpline: nb. parameters - {:d}'.format(dsnet.num_params))
 
@@ -158,7 +156,8 @@ print('DeepSpline: nb. parameters - {:d}'.format(dsnet.num_params))
 # require an auxiliary one for the deepspline parameters.
 # Inherenting from DSModule allows us to use the parameters_deepspline()
 # and parameters_no_deepspline() methods for this.
-main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(), lr=0.001, momentum=0.9)
+main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(),
+                           lr=0.001, momentum=0.9)
 aux_optimizer = optim.Adam(dsnet.parameters_deepspline())
 
 criterion = nn.CrossEntropyLoss()
@@ -197,7 +196,7 @@ for epoch in range(2):  # loop over the dataset multiple times
 end_time = time.time()
 
 print('Finished Training ReLU network. \n'
-        'Took {:d} seconds. '.format(int(end_time - start_time)))
+      'Took {:d} seconds. '.format(int(end_time - start_time)))
 
 
 ########################################################################
@@ -251,7 +250,7 @@ for epoch in range(2):  # loop over the dataset multiple times
 end_time = time.time()
 
 print('Finished Training DeepSpline network. \n'
-        'Took {:d} seconds. '.format(int(end_time - start_time)))
+      'Took {:d} seconds. '.format(int(end_time - start_time)))
 
 
 ########################################################################
@@ -263,7 +262,8 @@ for model, name in zip([net, dsnet], ['ReLU', 'DeepSpline']):
 
     correct = 0
     total = 0
-    # since we're not training, we don't need to calculate the gradients for our outputs
+    # since we're not training, we don't need to calculate the gradients
+    # for our outputs
     with torch.no_grad():
         for data in testloader:
             images, labels = data[0].to(device), data[1].to(device)
@@ -274,5 +274,5 @@ for model, name in zip([net, dsnet], ['ReLU', 'DeepSpline']):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-    print(f'Accuracy of the {name} ' + 'network on the 10000 test images: %d %%' % (
-        100 * correct / total))
+    print(f'Accuracy of the {name} '
+          'network on the 10000 test images: %d %%' % (100 * correct / total))

@@ -69,7 +69,7 @@ class DSNet(dsnn.DSModule):
 
         # deepspline parameters
         opt_params = {'size': 51, 'range_': 4, 'init': 'leaky_relu',
-                        'save_memory': False}
+                      'save_memory': False}
 
         # convolutional layer with 6 output channels
         self.conv1 = nn.Conv2d(3, 6, 5)
@@ -87,28 +87,26 @@ class DSNet(dsnn.DSModule):
         self.fc_ds.append(dsnn.DeepBSpline('fc', 84, **opt_params))
         self.fc3 = nn.Linear(84, 10)
 
-
     def forward(self, x):
 
         x = self.pool(self.conv_ds[0](self.conv1(x)))
         x = self.pool(self.conv_ds[1](self.conv2(x)))
-        x = torch.flatten(x, 1) # flatten all dimensions except batch
+        x = torch.flatten(x, 1)  # flatten all dimensions except batch
         x = self.fc_ds[0](self.fc1(x))
         x = self.fc_ds[1](self.fc2(x))
         x = self.fc3(x)
 
         return x
 
-
 dsnet = DSNet()
 dsnet.to(device)
 
-main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(), lr=0.001, momentum=0.9)
+main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(),
+                           lr=0.001, momentum=0.9)
 aux_optimizer = optim.Adam(dsnet.parameters_deepspline())
 
 lmbda = 1e-4 # regularization weight
 lipschitz = False # lipschitz control
-
 
 for epoch in range(2):
 
