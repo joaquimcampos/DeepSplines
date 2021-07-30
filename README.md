@@ -19,7 +19,7 @@ The proposed scheme is based on the theoretical work of
 
 2.  [Installation](#org2)
 3.  [Usage](#org3)
-    1.  [Example](#org31)
+    1.  [Reproducing results](#org31)
 4.  [Authors and contributors](#org4)
 
 
@@ -28,15 +28,18 @@ The proposed scheme is based on the theoretical work of
 
 A minimal installation requires:
 
--   python >= 3.6
+-   numpy >= 1.10
+-   pytorch >= 1.5.1
+-   torchvision >= 0.2.2
+-   matplotlib >= 3.3.1
 -   CUDA
 
-These requirements can be installed using conda (replace `<X.X>` by your
+<!-- These requirements can be installed using conda (replace `<X.X>` by your
 CUDA version)
 
     conda create -y -n deepsplines python=3.8 cudatoolkit=<X.X>
     pip install git+https://github.com/joaquimcampos/DeepSplines@develop
-    source activate deepsplines
+    source activate deepsplines -->
 
 To use DeepSplines with PyTorch install:
 
@@ -48,7 +51,6 @@ To use DeepSplines with PyTorch install:
 
 
 <a id="org3"></a>
-
 # Usage
 
 Example on how to adapt the [PyTorch CIFAR-10 tutorial](https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html)
@@ -59,7 +61,6 @@ from deepsplines.modules import dsnn
 
 
 class DSNet(dsnn.DSModule):
-
     def __init__(self):
 
         super().__init__()
@@ -68,13 +69,16 @@ class DSNet(dsnn.DSModule):
         self.fc_ds = nn.ModuleList()
 
         # deepspline parameters
-        opt_params = {'size': 51, 'range_': 4, 'init': 'leaky_relu',
-                      'save_memory': False}
+        opt_params = {
+            'size': 51,
+            'range_': 4,
+            'init': 'leaky_relu',
+            'save_memory': False
+        }
 
         # convolutional layer with 6 output channels
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.conv_ds.append(dsnn.DeepBSpline('conv', 6, **opt_params))
-
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.conv_ds.append(dsnn.DeepBSpline('conv', 16, **opt_params))
@@ -82,7 +86,6 @@ class DSNet(dsnn.DSModule):
         # fully-connected layer with 120 output units
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
         self.fc_ds.append(dsnn.DeepBSpline('fc', 120, **opt_params))
-
         self.fc2 = nn.Linear(120, 84)
         self.fc_ds.append(dsnn.DeepBSpline('fc', 84, **opt_params))
         self.fc3 = nn.Linear(84, 10)
@@ -102,7 +105,8 @@ dsnet = DSNet()
 dsnet.to(device)
 
 main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(),
-                           lr=0.001, momentum=0.9)
+                           lr=0.001,
+                           momentum=0.9)
 aux_optimizer = optim.Adam(dsnet.parameters_deepspline())
 
 lmbda = 1e-4 # regularization weight
@@ -134,13 +138,18 @@ for epoch in range(2):
 
 For full details, please consult the [tutorial](scripts/deepsplines_tutorial.py).
 
+<a id="org31"></a>
+## Reproducing results
+
+To reproduce the results shown in the research papers [[1]](#2) and [[2]](#2)
+one can run the following scripts:
+
+-    ./deepsplines/scripts/run_resnet32_cifar.py
+-    ./deepsplines/scripts/run_nin_cifar.py
+-    ./deepsplines/scripts/run_twoDnet.py
+
+
 <a id="org4"></a>
-
-## Examples
-
-
-<a id="org4"></a>
-
 # Authors and contributors
 
 DeepSplines is developed by the Biomedical Imaging Group at BIG. Original authors:
