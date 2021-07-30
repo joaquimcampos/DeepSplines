@@ -31,7 +31,10 @@ def parabola_func(x):
 
 
 def approximate_parabola(args):
-    """ """
+    """
+    Args:
+        args: verified arguments from arparser
+    """
     parab_range = 1  # one-sided range of parabola function
 
     deepspline_params = {'mode': 'fc', 'size': args.spline_size,

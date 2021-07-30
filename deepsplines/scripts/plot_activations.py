@@ -22,7 +22,10 @@ from deepsplines.ds_utils import ArgCheck
 
 
 def plot_activations(args):
-    """ """
+    """
+    Args:
+        args: verified arguments from arparser
+    """
     ckpt, params = Project.load_ckpt_params(args.ckpt_filename)
 
     activ_type = params['model']['activation_type']
