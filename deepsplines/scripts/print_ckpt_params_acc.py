@@ -9,20 +9,18 @@ If params['knot_threshold'] > 0., it also prints:
 - lipschitz_bound
 '''
 
+import torch
 import argparse
 
 from deepsplines.project import Project
 from deepsplines.manager import Manager
 
 
-if __name__ == "__main__":
-
-    # parse arguments
-    parser = argparse.ArgumentParser(description='Load parameters from checkpoint file.',
-                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('ckpt_filename', metavar='CKPT_FILENAME[STR]', type=str, help='')
-    args = parser.parse_args()
-
+def print_ckpt_params_acc(args):
+    """
+    Args:
+        args: verified arguments from arparser
+    """
     ckpt, params = Project.load_ckpt_params(args.ckpt_filename)
 
     print('\nLoading checkpoint :', args.ckpt_filename, sep='\n')
@@ -36,7 +34,7 @@ if __name__ == "__main__":
             # TODO: Test how to load model on cpu trained on gpu
             raise OSError('cuda not available...')
 
-        net  = Manager.build_model(params, device=device)
+        net = Manager.build_model(params, device=device)
         net.load_state_dict(ckpt['model_state'], strict=True)
         net.eval()
 
@@ -47,3 +45,21 @@ if __name__ == "__main__":
 
         lipschitz_bound = net.lipschitz_bound()
         print('lipschitz_bound : {:.3f}'.format(lipschitz_bound))
+
+
+if __name__ == "__main__":
+
+    # parse arguments
+    parser = argparse.ArgumentParser(
+        description='Load parameters from checkpoint file.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument(
+        'ckpt_filename',
+        metavar='CKPT_FILENAME[STR]',
+        type=str,
+        help=''
+    )
+    args = parser.parse_args()
+
+    print_ckpt_params_acc(args)
