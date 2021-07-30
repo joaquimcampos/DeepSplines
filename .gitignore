@@ -6,3 +6,5 @@ output*/
 figs*/
 tmp*/
 __pycache__/
+dist/
+*.egg*
