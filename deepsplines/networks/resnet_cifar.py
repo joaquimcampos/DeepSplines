@@ -143,8 +143,7 @@ class ResNet(BaseModel):
                       kernel_size=3,
                       stride=1,
                       padding=1,
-                      bias=False),
-            nn.BatchNorm2d(in_planes),
+                      bias=False), nn.BatchNorm2d(in_planes),
             self.init_activation(('conv', in_planes), bias=False))
 
         return layer0

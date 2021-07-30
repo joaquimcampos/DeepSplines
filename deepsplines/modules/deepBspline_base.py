@@ -160,23 +160,20 @@ class DeepBSpline_Func(torch.autograd.Function):
                                             indexes.view(-1) + 1,
                                             (fracs * grad_out).view(-1))
         # left coefficients gradients
-        grad_coefficients_vect.scatter_add_(0,
-                                            indexes.view(-1),
+        grad_coefficients_vect.scatter_add_(0, indexes.view(-1),
                                             ((1 - fracs) * grad_out).view(-1))
 
         if save_memory is True:
             # Add gradients from the linear extrapolations
             tmp1 = ((x.detach() + grid * (size // 2)).clamp(max=0)) / grid
-            grad_coefficients_vect.scatter_add_(0,
-                                                indexes.view(-1),
+            grad_coefficients_vect.scatter_add_(0, indexes.view(-1),
                                                 (-tmp1 * grad_out).view(-1))
             grad_coefficients_vect.scatter_add_(0,
                                                 indexes.view(-1) + 1,
                                                 (tmp1 * grad_out).view(-1))
 
             tmp2 = ((x.detach() - grid * (size // 2 - 1)).clamp(min=0)) / grid
-            grad_coefficients_vect.scatter_add_(0,
-                                                indexes.view(-1),
+            grad_coefficients_vect.scatter_add_(0, indexes.view(-1),
                                                 (-tmp2 * grad_out).view(-1))
             grad_coefficients_vect.scatter_add_(0,
                                                 indexes.view(-1) + 1,

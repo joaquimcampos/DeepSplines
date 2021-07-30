@@ -189,17 +189,13 @@ if __name__ == "__main__":
                         type=ArgCheck.p_float,
                         default=1.,
                         help=' ')
-    parser.add_argument('--save_memory',
-                        action='store_true',
-                        help=' ')
+    parser.add_argument('--save_memory', action='store_true', help=' ')
     parser.add_argument('--lmbda',
                         metavar='FLOAT,>=0',
                         type=ArgCheck.nn_float,
                         default=1e-4,
                         help=' ')
-    parser.add_argument('--lipschitz',
-                        action='store_true',
-                        help=' ')
+    parser.add_argument('--lipschitz', action='store_true', help=' ')
     parser.add_argument('--num_epochs',
                         metavar='INT,>0',
                         type=ArgCheck.p_int,

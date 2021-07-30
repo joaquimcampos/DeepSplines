@@ -416,7 +416,8 @@ class Project():
                 A dictionary of the form {loss name (str) : loss value (float)}
         """
         print('[{:3d}, {:6d} / {:6d}] '.format(epoch + 1, batch_idx + 1,
-                                               self.num_train_batches), end='')
+                                               self.num_train_batches),
+              end='')
         for key, value in losses_dict.items():
             print('{}: {:7.3f} | '.format(key, value), end='')
 

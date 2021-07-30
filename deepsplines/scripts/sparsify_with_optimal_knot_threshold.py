@@ -67,12 +67,10 @@ def sparsify_with_optimal_knot_threshold(args):
 
     # training accuracy maximum allowed percentage drop
     acc_drop_threshold = args.acc_drop_threshold
-    threshold_list = np.concatenate((np.zeros(1),
-                                     np.arange(0.0002, 0.004, 0.0002),
-                                     np.arange(0.004, 1, 0.05),
-                                     np.arange(1, 3, 0.2),
-                                     np.arange(3, 10, 0.5),
-                                     np.arange(10, 100, 2)))
+    threshold_list = np.concatenate(
+        (np.zeros(1), np.arange(0.0002, 0.004,
+                                0.0002), np.arange(0.004, 1, 0.05),
+         np.arange(1, 3, 0.2), np.arange(3, 10, 0.5), np.arange(10, 100, 2)))
 
     for k in range(threshold_list.shape[0]):
 
@@ -140,8 +138,8 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(
         description='Sparsify ckpt model using an "optimal" slope '
-                    'threshold (highest threshold for which the train '
-                    'accuracy drop is within a specification). ',
+        'threshold (highest threshold for which the train '
+        'accuracy drop is within a specification). ',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('ckpt_filename',
