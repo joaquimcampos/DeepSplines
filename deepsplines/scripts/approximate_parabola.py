@@ -158,7 +158,7 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(
         description='Approximate a parabola in [-1, 1] '
-                    'with a single activation',
+                    'with a single activation.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # for details on the arguments, see main.py
