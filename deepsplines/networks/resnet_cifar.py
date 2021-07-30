@@ -58,8 +58,8 @@ class BasicBlock(BaseModel):
 
         self.downsample = downsample
         self.stride = stride
-        self.activations = self.init_activation_list(
-            activation_specs, bias=False)
+        self.activations = self.init_activation_list(activation_specs,
+                                                     bias=False)
 
     def forward(self, x):
         """ """
@@ -96,22 +96,22 @@ class ResNet(BaseModel):
 
         self.in_planes = in_planes
         self.layer0 = self._make_layer0(in_planes)
-        self.layer1 = self._make_layer(
-            block, in_planes, num_blocks[0], **params)
+        self.layer1 = self._make_layer(block, in_planes, num_blocks[0],
+                                       **params)
 
         planes = in_planes * 2
-        self.layer2 = self._make_layer(
-            block, planes, num_blocks[1], stride=2, **params)
+        self.layer2 = self._make_layer(block, planes, num_blocks[1],
+                                       stride=2, **params)
 
         planes *= 2
-        self.layer3 = self._make_layer(
-            block, planes, num_blocks[2], stride=2, **params)
+        self.layer3 = self._make_layer(block, planes, num_blocks[2],
+                                       stride=2, **params)
 
         self.layer4 = None
         if len(num_blocks) > 3:
             planes *= 2
-            self.layer4 = self._make_layer(
-                block, planes, num_blocks[3], stride=2, **params)
+            self.layer4 = self._make_layer(block, planes, num_blocks[3],
+                                           stride=2, **params)
 
         self.avgpool2d = nn.AdaptiveAvgPool2d((1, 1))
         self.linear = nn.Linear(planes * block.expansion, self.num_classes)
@@ -125,8 +125,7 @@ class ResNet(BaseModel):
             nn.Conv2d(3, in_planes, kernel_size=3,
                       stride=1, padding=1, bias=False),
             nn.BatchNorm2d(in_planes),
-            self.init_activation(
-                ('conv', in_planes), bias=False)
+            self.init_activation(('conv', in_planes), bias=False)
         )
 
         return layer0
@@ -144,10 +143,8 @@ class ResNet(BaseModel):
         # First layer block, before adding to output in the skip-connection:
         # layers 2,3,4 - need to increase number of filters of identity +
         # downsample.
-        layers.append(
-            block(self.in_planes, planes,
-                  stride, downsample, **params)
-        )
+        layers.append(block(self.in_planes, planes,
+                            stride, downsample, **params))
         self.in_planes = planes * block.expansion
 
         for _ in range(1, num_blocks):

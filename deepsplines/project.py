@@ -176,12 +176,11 @@ class Project():
 
         elif self.params["resume"] is True:
 
-            log_dir_model = os.path.join(
-                self.params["log_dir"],
-                self.params["model_name"])
+            log_dir_model = os.path.join(self.params["log_dir"],
+                                         self.params["model_name"])
             if self.params["resume_from_best"] is True:
-                regexp_ckpt = os.path.join(
-                    log_dir_model, '*_best_valid_acc.pth')
+                regexp_ckpt = os.path.join(log_dir_model,
+                                           '*_best_valid_acc.pth')
             else:
                 regexp_ckpt = os.path.join(log_dir_model, '*_net_*.pth')
 
@@ -281,7 +280,8 @@ class Project():
             ckpt = torch.load(
                 ckpt_filename,
                 map_location=lambda storage,
-                loc: storage)
+                loc: storage
+            )
 
         except FileNotFoundError:
             print('\nCheckpoint file not found... Unable '
@@ -553,8 +553,8 @@ class Project():
         """ """
         assert (self.trainloader is not None)
         if self.dataset.is_user_dataset is True:
-            self.num_train_samples = \
-                sum(inputs.size(0) for inputs, _ in self.trainloader)
+            self.num_train_samples = sum(inputs.size(0)
+                                         for inputs, _ in self.trainloader)
         else:
             self.num_train_samples = len(self.trainloader.sampler)
 

@@ -48,15 +48,15 @@ class DeepBSpline(DeepBSplineBase):
             # and the other half with an odd function (soft threshold).
             half = self.num_activations // 2
             coefficients[0:half, :] = (grid_tensor[0:half, :]).abs()
-            coefficients[half::, :] = F.softshrink(
-                grid_tensor[half::, :], lambd=0.5)
+            coefficients[half::, :] = F.softshrink(grid_tensor[half::, :],
+                                                   lambd=0.5)
         else:
             raise ValueError('init should be in [leaky_relu, relu, even_odd].')
 
         # Need to vectorize coefficients to perform specific operations
         # size: (num_activations*size)
-        self._coefficients_vect = nn.Parameter(
-            coefficients.contiguous().view(-1))
+        self._coefficients_vect = nn.Parameter(coefficients.contiguous()
+                                               .view(-1))
 
     @property
     def coefficients_vect(self):

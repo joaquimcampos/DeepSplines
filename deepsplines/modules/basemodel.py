@@ -6,7 +6,6 @@ For using DeepSplines in other projects, the model should
 subclass DSModule() instead. (see dsnn.py).
 """
 
-
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -155,6 +154,7 @@ class BaseModel(nn.Module):
         """
         assert isinstance(activation_specs, tuple), \
             f'activation_specs type: {type(activation_specs)}'
+
         activation = self.init_activation_list([activation_specs], **kwargs)[0]
 
         return activation
@@ -224,7 +224,8 @@ class BaseModel(nn.Module):
                         module.weight,
                         a=slope_init,
                         mode='fan_out',
-                        nonlinearity=nonlinearity)
+                        nonlinearity=nonlinearity
+                    )
 
             elif isinstance(module, nn.BatchNorm2d):
                 module.weight.data.fill_(1)
@@ -409,8 +410,8 @@ class BaseModel(nn.Module):
 
             elif isinstance(module, nn.Linear) or \
                     isinstance(module, nn.Conv2d):
-                max_weights_product = \
-                    max_weights_product * module.weight.data.abs().max()
+                max_weights_product = max_weights_product * \
+                    module.weight.data.abs().max()
 
         lip_bound = max_weights_product * bv_product
 

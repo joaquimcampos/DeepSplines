@@ -135,8 +135,8 @@ class DeepBSpline_Func(torch.autograd.Function):
             size = ctx.size
             x, coefficients_vect, grid, zero_knot_indexes = ctx.saved_tensors
 
-            # compute fracs and indexes again (do not save them in ctx) to save
-            # memory
+            # compute fracs and indexes again (do not save them in ctx)
+            # to save memory
             x_clamped = x.clamp(min=-(grid.item() * (size // 2)),
                                 max=(grid.item() * (size // 2 - 1)))
 
@@ -332,7 +332,7 @@ class DeepBSplineBase(DeepSplineBase):
             new_relu_slopes = super().apply_threshold(threshold)
             self.coefficients_vect.data = \
                 self.iterative_relu_slopes_to_coefficients(new_relu_slopes)\
-                    .view(-1)
+                .view(-1)
 
     def iterative_relu_slopes_to_coefficients(self, relu_slopes):
         """

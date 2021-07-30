@@ -381,8 +381,8 @@ class twoD(Dataset):
         self._num_classes = 2
         self.rect_side = 2
         self.test_grid = 0.01
-        self.grid_arange = \
-            torch.arange(-1 + self.test_grid / 2, 1, self.test_grid)
+        self.grid_arange = torch.arange(
+            -1 + self.test_grid / 2, 1, self.test_grid)
 
     @property
     def is_user_dataset(self):
@@ -426,7 +426,10 @@ class twoD(Dataset):
         grid_x, grid_y = torch.meshgrid(self.grid_arange, self.grid_arange)
 
         inputs = torch.cat(
-            (grid_x.reshape(-1, 1), grid_y.reshape(-1, 1)), dim=1)
+            (grid_x.reshape(-1, 1),
+             grid_y.reshape(-1, 1)),
+            dim=1
+        )
         labels = self.get_labels(inputs)
 
         return inputs, labels

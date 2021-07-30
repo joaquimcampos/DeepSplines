@@ -310,8 +310,8 @@ class Manager(Project):
         regularization = torch.zeros_like(data_fidelity)
         if self.params['weight_decay'] > 0:
             # weight decay regularization
-            wd_regularization = self.params['weight_decay'] / \
-                2 * self.net.l2sqsum_weights_biases()
+            wd_regularization = self.params['weight_decay'] / 2 * \
+                                self.net.l2sqsum_weights_biases()
             regularization = regularization + wd_regularization
 
         if self.net.using_deepsplines and self.params['lmbda'] > 0:
@@ -424,8 +424,8 @@ class Manager(Project):
         if self.main_scheduler is not None:
             self.main_scheduler.step()
             if self.params['verbose']:
-                main_lr = \
-                    [group['lr'] for group in self.main_optimizer.param_groups]
+                main_lr = [group['lr']
+                           for group in self.main_optimizer.param_groups]
                 print('main scheduler: epoch - '
                       f'{self.main_scheduler.last_epoch}; '
                       f'learning rate - {main_lr}')
@@ -433,8 +433,8 @@ class Manager(Project):
         if self.aux_scheduler is not None:
             self.aux_scheduler.step()
             if self.params['verbose']:
-                aux_lr = \
-                    [group['lr'] for group in self.aux_optimizer.param_groups]
+                aux_lr = [group['lr']
+                          for group in self.aux_optimizer.param_groups]
                 print('aux scheduler: epoch - '
                       f'{self.aux_scheduler.last_epoch}; '
                       f'learning rate - {aux_lr}')
@@ -522,7 +522,6 @@ class Manager(Project):
         """ Test loop """
 
         running_loss = 0.  # running test loss
-
         # for computing test accuracy
         correct = 0  # number of correct predictions
         total = 0  # total number of test samples

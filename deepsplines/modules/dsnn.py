@@ -88,7 +88,8 @@ class DSModule(nn.Module):
                         module.weight,
                         a=slope_init,
                         mode='fan_out',
-                        nonlinearity=nonlinearity)
+                        nonlinearity=nonlinearity
+                    )
 
             elif isinstance(module, nn.BatchNorm2d):
                 module.weight.data.fill_(1)
@@ -311,8 +312,8 @@ class DSModule(nn.Module):
         sparsity = 0
         for module in self.modules():
             if self.is_deepspline_module(module):
-                module_sparsity, _ = module.get_threshold_sparsity(
-                    float(knot_threshold))
+                module_sparsity, _ = \
+                    module.get_threshold_sparsity(float(knot_threshold))
                 sparsity += module_sparsity.sum().item()
 
         return sparsity

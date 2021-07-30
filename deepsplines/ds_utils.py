@@ -109,7 +109,6 @@ def size_str(input):
     Returns:
         out_str (str)
     """
-
     out_str = '[' + ', '.join(str(i) for i in input.size()) + ']'
     return out_str
 

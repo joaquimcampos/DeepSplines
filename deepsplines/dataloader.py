@@ -83,8 +83,8 @@ class DataLoader():
 
         Shuffles the data and splits it in batches.
         """
-        train_inputs, train_labels = self.shuffle_data_in_memory(
-            self.train_inputs, self.train_labels)
+        train_inputs, train_labels = \
+            self.shuffle_data_in_memory(self.train_inputs, self.train_labels)
         trainloader = self.get_loader_in_memory(train_inputs, train_labels)
 
         return trainloader

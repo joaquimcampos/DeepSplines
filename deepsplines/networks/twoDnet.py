@@ -37,9 +37,8 @@ class TwoDNet(BaseModel):
         activation_specs.append(('fc', self.num_hidden_neurons))
 
         if num_hidden_layers > 1:
-            self.fc2 = nn.Linear(
-                self.num_hidden_neurons,
-                self.num_hidden_neurons)
+            self.fc2 = nn.Linear(self.num_hidden_neurons,
+                                 self.num_hidden_neurons)
             activation_specs.append(('fc', self.num_hidden_neurons))
 
         self.fc_last = nn.Linear(self.num_hidden_neurons, 1)
