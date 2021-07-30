@@ -15,22 +15,11 @@ import torch
 from main import main_prog
 
 
-if __name__ == "__main__":
-
-    # parse arguments
-    parser = argparse.ArgumentParser(description='Run ResNet32 on the CIFAR10 dataset.',
-                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-    parser.add_argument('--log_dir', metavar='STR', type=str, default='./ckpt',
-                        help='Model log directory.')
-
-    activ_choices = ['deepspline', 'relu']
-    parser.add_argument('--activation_type', default='deepspline',
-                        type=str, choices=activ_choices, help=' ')
-
-    args = parser.parse_args()
-
-
+def run_resnet32_cifar(args):
+    """
+    Args:
+        args: verified arguments from arparser
+    """
     if not os.path.isdir(args.log_dir):
         print(f'\nLog directory {args.log_dir} not found. Creating it.')
         os.makedirs(args.log_dir)
@@ -43,34 +32,61 @@ if __name__ == "__main__":
         activation_type = 'relu'
 
     params = {'net': 'resnet32_cifar',
-                'device': device,
-                'log_dir': args.log_dir,
-                'num_epochs': 300,
-                'milestones' : [150, 225, 262],
-                'activation_type': activation_type,
-                'spline_init': 'leaky_relu',
-                'spline_size': 51,
-                'spline_range': 4,
-                'save_memory': False,
-                'lipschitz': False,
-                'lmbda': 1e-4,
-                'optimizer': ['SGD', 'Adam'],
-                'lr': 1e-1,
-                'aux_lr': 1e-3,
-                'weight_decay': 5e-4,
-                'log_step': 44, # 8 times per epoch
-                'valid_log_step': -1, # once every epoch
-                'test_as_valid': True, # print test loss at validation
-                'dataset_name' : 'cifar10',
-                'batch_size': 128,
-                'plot_imgs': False,
-                'verbose' : False}
+              'device': device,
+              'log_dir': args.log_dir,
+              'num_epochs': 300,
+              'milestones': [150, 225, 262],
+              'activation_type': activation_type,
+              'spline_init': 'leaky_relu',
+              'spline_size': 51,
+              'spline_range': 4,
+              'save_memory': False,
+              'lipschitz': False,
+              'lmbda': 1e-4,
+              'optimizer': ['SGD', 'Adam'],
+              'lr': 1e-1,
+              'aux_lr': 1e-3,
+              'weight_decay': 5e-4,
+              'log_step': 44,  # 8 times per epoch
+              'valid_log_step': -1,  # once every epoch
+              'test_as_valid': True,  # print test loss at validation
+              'dataset_name': 'cifar10',
+              'batch_size': 128,
+              'plot_imgs': False,
+              'verbose': False}
 
     params['model_name'] = f'{params["net"]}_{params["activation_type"]}_' + \
-                            'lambda_{:.1E}'.format(params["lmbda"])
+        'lambda_{:.1E}'.format(params["lmbda"])
 
     params['mode'] = 'train'
     main_prog(copy.deepcopy(params))
 
     # params['mode'] = 'test'
     # main_prog(copy.deepcopy(params))
+
+
+if __name__ == "__main__":
+
+    # parse arguments
+    parser = argparse.ArgumentParser(
+        description='Run ResNet32 on the CIFAR10 dataset.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument(
+        '--log_dir',
+        metavar='STR',
+        type=str,
+        default='./ckpt',
+        help='Model log directory.'
+    )
+    parser.add_argument(
+        '--activation_type',
+        choices=['deepspline', 'relu'],
+        type=str,
+        default='deepspline',
+        help=' '
+    )
+
+    args = parser.parse_args()
+
+    run_resnet32_cifar(args)
