@@ -173,8 +173,7 @@ def plot_deepspline_basis(args):
     plt.gca().set_position([0, 0, 1, 1])
 
     if args.save_dir is not None:
-        plt.savefig(os.path.join(args.save_dir, 'deepspline_basis.svg'),
-                    format="svg")
+        plt.savefig(os.path.join(args.save_dir, 'deepspline_basis.png'))
 
     plt.show()
 
