@@ -62,15 +62,34 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     dataset_choices = {'s_shape', 'circle'}
-    parser.add_argument('dataset_name', metavar='DATASET_NAME[STR]',
-                        choices=dataset_choices, type=str,
-                        help=f'{dataset_choices}')
-    parser.add_argument('--data_dir', metavar='STR', default='./data',
-                        type=str, help=' ')
-    parser.add_argument('--num_train_samples', metavar='INT,>0', default=1500,
-                        type=ArgCheck.p_int, help=' ')
-    parser.add_argument('--num_valid_samples', metavar='INT,>0', default=1500,
-                        type=ArgCheck.p_int, help=' ')
+    parser.add_argument(
+        'dataset_name',
+        metavar='DATASET_NAME[STR]',
+        choices=dataset_choices,
+        type=str,
+        help=f'{dataset_choices}'
+    )
+    parser.add_argument(
+        '--data_dir',
+        metavar='STR',
+        type=str,
+        default='./data',
+        help=' '
+    )
+    parser.add_argument(
+        '--num_train_samples',
+        metavar='INT,>0',
+        type=ArgCheck.p_int,
+        default=1500,
+        help=' '
+    )
+    parser.add_argument(
+        '--num_valid_samples',
+        metavar='INT,>0',
+        type=ArgCheck.p_int,
+        default=1500,
+        help=' '
+    )
     args = parser.parse_args()
 
     generate_save_dataset(

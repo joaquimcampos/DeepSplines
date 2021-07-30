@@ -27,17 +27,18 @@ def plot_activations(args):
 
     activ_type = params['model']['activation_type']
     if 'deep' not in activ_type:
-        raise ValueError(f'Activations are of type {activ_type} and not deepspline.')
+        raise ValueError(
+            f'Activations are of type {activ_type} and not deepspline.')
 
     if args.save_dir is not None and not os.path.isdir(args.save_dir):
-        raise OSError(f'Save directory {save_dir} does not exist.')
+        raise OSError(f'Save directory {args.save_dir} does not exist.')
 
     device = params['device']
     if device.startswith('cuda') and not torch.cuda.is_available():
         # TODO: Test how to load model on cpu trained on gpu
         raise OSError('cuda not available...')
 
-    net  = Manager.build_model(params, device=device)
+    net = Manager.build_model(params, device=device)
     net.load_state_dict(ckpt['model_state'], strict=True)
     net.eval()
     # net.to(device)
@@ -47,14 +48,14 @@ def plot_activations(args):
 
     if args.layer is not None:
         if args.layer > len(num_activation_layers):
-            raise ValueError(f'layer [{args.layer}] is greater than the total '
-                            f'number of activation layers [{num_activation_layers}].')
+            raise ValueError(
+                f'layer [{args.layer}] is greater than the total '
+                f'number of activation layers [{num_activation_layers}].')
 
         print(f'\nPlotting only layer {args.layer}/{num_activation_layers}.')
-        activations_list = [activations_list[args.layer-1]]
+        activations_list = [activations_list[args.layer - 1]]
     else:
         print(f'\nNumber of activation layers: {len(activations_list)}.')
-
 
     num_activ_per_plot = args.num_activations_per_plot
     plt.rc('text', usetex=True)
@@ -71,7 +72,7 @@ def plot_activations(args):
         locations = activation_layer['locations'][0].numpy()
         coefficients = activation_layer['coefficients'].numpy()
 
-        div = coefficients.shape[0]*1./ num_activ_per_plot
+        div = coefficients.shape[0] * 1. / num_activ_per_plot
         # number of plots for this activation layer
         total = int(np.ceil(div))
         # number of plots with num_activ_per_plot activations
@@ -81,14 +82,14 @@ def plot_activations(args):
 
         for j in range(total):
             # plot half dashed and half full
-            fig = plt.figure()
+            plt.figure()
             ax = plt.gca()
             ax.grid()
 
             # start/end indexes of activations to plot in this layer
-            start_k = j*num_activ_per_plot
+            start_k = j * num_activ_per_plot
             end_k = start_k + num_activ_per_plot
-            if remainder != 0 and j >= total-1:
+            if remainder != 0 and j >= total - 1:
                 end_k = start_k + remainder
 
             for k in range(start_k, end_k):
@@ -96,22 +97,28 @@ def plot_activations(args):
 
                 if args.plot_sparsity:
                     ls = matplotlib.rcParams['lines.markersize']
-                    non_sparse_relu_slopes = (sparsity_mask[k, :] == True)
+                    non_sparse_relu_slopes = (sparsity_mask[k, :])
                     # relu slopes locations range from the second (idx=1) to
                     # second to last (idx=-1) B-spline coefficients
-                    ax.scatter(locations[1:-1][non_sparse_relu_slopes],
-                            coefficients[k, 1:-1][non_sparse_relu_slopes], s = 2*(ls**2))
+                    ax.scatter(
+                        locations[1:-1][non_sparse_relu_slopes],
+                        coefficients[k, 1:-1][non_sparse_relu_slopes],
+                        s=2 * (ls**2)
+                    )
 
-                    sparse_relu_slopes = (sparsity_mask[k, :] == False)
-                    ax.scatter(locations[1:-1][sparse_relu_slopes],
-                            coefficients[k, 1:-1][sparse_relu_slopes], s = 2*(ls**2))
+                    sparse_relu_slopes = (sparsity_mask[k, :] is False)
+                    ax.scatter(
+                        locations[1:-1][sparse_relu_slopes],
+                        coefficients[k, 1:-1][sparse_relu_slopes],
+                        s=2 * (ls**2)
+                    )
 
             x_range = ax.get_xlim()
             assert x_range[0] < 0 and x_range[1] > 0, f'x_range: {x_range}.'
             y_tmp = ax.get_ylim()
-            assert y_tmp[0] < y_tmp[1], f'y_range: {y_range}.'
+            assert y_tmp[0] < y_tmp[1], f'y_tmp: {y_tmp}.'
 
-            y_range = x_range # square axes by default
+            y_range = x_range  # square axes by default
             if y_tmp[0] < x_range[0]:
                 y_range[0] = y_tmp[0]
             if y_tmp[1] > x_range[1]:
@@ -132,22 +139,44 @@ def plot_activations(args):
             plt.close()
 
 
-
 if __name__ == "__main__":
 
     # parse arguments
-    parser = argparse.ArgumentParser(description='Plots the activations of a deepspline network.',
-                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description='Plots the activations of a deepspline network.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('ckpt_filename', metavar='CKPT_FILENAME[STR]', type=str, help='')
-    parser.add_argument('--save_dir', metavar='STR', type=str,
-                        help='directory for saving plots. If not given, plots are not saved.')
-    parser.add_argument('--num_activations_per_plot', '-napp', metavar='INT,>=0', default=4,
-                        type=ArgCheck.p_int, help='Number of activations per plot.')
-    parser.add_argument('--layer', metavar='INT,>=0', type=ArgCheck.p_int,
-                        help='Plot activations in this layer alone.')
-    parser.add_argument('--plot_sparsity', action='store_true',
-                        help='Plot sparse/nonsparse knots')
+    parser.add_argument(
+        'ckpt_filename',
+        metavar='CKPT_FILENAME[STR]',
+        type=str,
+        help=''
+    )
+    parser.add_argument(
+        '--save_dir',
+        metavar='STR',
+        type=str,
+        help='directory for saving plots. If not given, plots are not saved.'
+    )
+    parser.add_argument(
+        '--num_activations_per_plot',
+        '-napp',
+        metavar='INT,>=0',
+        default=4,
+        type=ArgCheck.p_int,
+        help='Number of activations per plot.'
+    )
+    parser.add_argument(
+        '--layer',
+        metavar='INT,>=0',
+        type=ArgCheck.p_int,
+        help='Plot activations in this layer alone.'
+    )
+    parser.add_argument(
+        '--plot_sparsity',
+        action='store_true',
+        help='Plot sparse/nonsparse knots'
+    )
 
     args = parser.parse_args()
 

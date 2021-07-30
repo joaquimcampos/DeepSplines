@@ -30,59 +30,8 @@ def parabola_func(x):
     return x ** 2
 
 
-if __name__ == "__main__":
-
-    # parse arguments
-    parser = argparse.ArgumentParser(
-        description='Approximate a parabola in [-1, 1] '
-                    'with a single activation',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-    # for details on the arguments, see main.py
-    activation_choices = {'deepBspline', 'deepReLUspline',
-                          'deepBspline_explicit_linear'}
-    parser.add_argument('--activation_type', choices=activation_choices,
-                        type=str, default='deepBspline_explicit_linear',
-                        help=' ')
-
-    parser.add_argument('--spline_init',
-                        choices=['leaky_relu', 'relu', 'even_odd'],
-                        type=str, default='leaky_relu', help=' ')
-    parser.add_argument('--spline_size', metavar='INT>0',
-                        type=ArgCheck.p_odd_int, default=31, help=' ')
-    parser.add_argument('--spline_range', metavar='FLOAT,>0',
-                        type=ArgCheck.p_float, default=1., help=' ')
-    parser.add_argument('--save_memory', action='store_true', help=' ')
-
-    parser.add_argument('--lmbda', metavar='FLOAT,>=0',
-                        type=ArgCheck.nn_float, default=1e-4, help=' ')
-    parser.add_argument('--lipschitz', action='store_true', help=' ')
-
-    parser.add_argument('--num_epochs', metavar='INT,>0',
-                        type=ArgCheck.p_int, default=10000, help=' ')
-    parser.add_argument('--lr', metavar='FLOAT,>0',
-                        type=ArgCheck.p_float, default=1e-3, help=' ')
-    parser.add_argument('--num_train_samples', metavar='INT,>0',
-                        type=ArgCheck.p_int, default=10000, help=' ')
-
-    parser.add_argument('--save_dir', metavar='STR', type=str)
-    parser.add_argument('--device', choices=['cuda:0', 'cpu'],
-                        type=str, default='cpu', help=' ')
-
-    args = parser.parse_args()
-
-    if args.device.startswith('cuda') and not torch.cuda.is_available():
-        raise OSError('cuda not available...')
-
-    if (args.save_dir is not None) and (not os.path.isdir(args.save_dir)):
-        print(f'\nDirectory {args.save_dir} not found. Creating it.')
-        os.makedirs(args.save_dir)
-
-    if args.save_memory is True and \
-            not args.activation_type.startswith('deepBspline'):
-        raise ValueError(
-            '--save_memory can only be set when using deepBsplines.')
-
+def approximate_parabola(args):
+    """ """
     parab_range = 1  # one-sided range of parabola function
 
     deepspline_params = {'mode': 'fc', 'size': args.spline_size,
@@ -190,7 +139,6 @@ if __name__ == "__main__":
     plt.plot((-1, 1), (1 / 3, 1 / 3), 'k-')
     legend_list += ['best linear approximator']
 
-    ax = plt.gca()
     plt.legend(legend_list, fontsize=6)
 
     plt.title(f'Activation: {activ.__class__.__name__}')
@@ -200,3 +148,111 @@ if __name__ == "__main__":
 
     plt.show()
     plt.close()
+
+
+if __name__ == "__main__":
+
+    # parse arguments
+    parser = argparse.ArgumentParser(
+        description='Approximate a parabola in [-1, 1] '
+                    'with a single activation',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    # for details on the arguments, see main.py
+    activation_choices = {'deepBspline', 'deepReLUspline',
+                          'deepBspline_explicit_linear'}
+    parser.add_argument(
+        '--activation_type',
+        choices=activation_choices,
+        type=str,
+        default='deepBspline_explicit_linear',
+        help=' '
+    )
+    parser.add_argument(
+        '--spline_init',
+        choices=['leaky_relu', 'relu', 'even_odd'],
+        type=str,
+        default='leaky_relu',
+        help=' '
+    )
+    parser.add_argument(
+        '--spline_size',
+        metavar='INT>0',
+        type=ArgCheck.p_odd_int,
+        default=31,
+        help=' '
+    )
+    parser.add_argument(
+        '--spline_range',
+        metavar='FLOAT,>0',
+        type=ArgCheck.p_float,
+        default=1.,
+        help=' '
+    )
+    parser.add_argument(
+        '--save_memory',
+        action='store_true',
+        help=' '
+    )
+    parser.add_argument(
+        '--lmbda',
+        metavar='FLOAT,>=0',
+        type=ArgCheck.nn_float,
+        default=1e-4,
+        help=' '
+    )
+    parser.add_argument(
+        '--lipschitz',
+        action='store_true',
+        help=' '
+    )
+    parser.add_argument(
+        '--num_epochs',
+        metavar='INT,>0',
+        type=ArgCheck.p_int,
+        default=10000,
+        help=' '
+    )
+    parser.add_argument(
+        '--lr',
+        metavar='FLOAT,>0',
+        type=ArgCheck.p_float,
+        default=1e-3,
+        help=' '
+    )
+    parser.add_argument(
+        '--num_train_samples',
+        metavar='INT,>0',
+        type=ArgCheck.p_int,
+        default=10000,
+        help=' '
+    )
+
+    parser.add_argument(
+        '--save_dir',
+        metavar='STR',
+        type=str
+    )
+    parser.add_argument(
+        '--device',
+        choices=['cuda:0', 'cpu'],
+        type=str,
+        default='cpu',
+        help=' '
+    )
+
+    args = parser.parse_args()
+
+    if args.device.startswith('cuda') and not torch.cuda.is_available():
+        raise OSError('cuda not available...')
+
+    if (args.save_dir is not None) and (not os.path.isdir(args.save_dir)):
+        print(f'\nDirectory {args.save_dir} not found. Creating it.')
+        os.makedirs(args.save_dir)
+
+    if args.save_memory is True and \
+            not args.activation_type.startswith('deepBspline'):
+        raise ValueError(
+            '--save_memory can only be set when using deepBsplines.')
+
+    approximate_parabola(args)
