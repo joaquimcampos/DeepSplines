@@ -1,5 +1,4 @@
 data/*
-!data/*.png
 *.pdf
 ckpt*/
 output*/
