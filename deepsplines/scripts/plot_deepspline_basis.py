@@ -110,8 +110,7 @@ def plot_deepspline_basis(args):
     ax.set_xticklabels(np.concatenate((np.arange(-4, 0), np.arange(1, 5))),
                        fontdict={
                            'horizontalalignment': 'center',
-                           'fontsize': 10
-                       },
+                           'fontsize': 10},
                        minor=False)
 
     ax.tick_params(axis='both', which='major', labelsize=12)
