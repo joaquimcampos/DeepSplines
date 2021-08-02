@@ -38,18 +38,15 @@ A minimal installation requires:
 CUDA version)
 
     conda create -y -n deepsplines python=3.7 cudatoolkit=<X.X>
-    pip install git+https://github.com/joaquimcampos/DeepSplines@develop
+    pip install deepsplines
+    conda install -n pycsou --channel=conda-forge --file=requirements-conda.txt
     source activate deepsplines -->
 
-<!-- TODO: Check this -->
-To use DeepSplines with PyTorch install:
+You can install the package via the commands (replace <X.X> with your CUDA version):
 
-    conda create -y -n deepsplines python=3.7 cudatoolkit=<X.X> pytorch \
-          -c defaults -c pytorch -c conda-forge
+    conda create -y -n deepsplines python=3.7 cudatoolkit=<X.X>
     source activate deepsplines
-    # Install development version of deepsplines:
-    pip install git+https://github.com/joaquimcampos/DeepSplines@develop
-
+    pip install deepsplines
 
 <a id="org3"></a>
 # Usage
