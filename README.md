@@ -46,7 +46,7 @@ You can install the package via the commands (replace <X.X> with your CUDA versi
 
     conda create -y -n deepsplines python=3.7 cudatoolkit=<X.X>
     source activate deepsplines
-    pip install deepsplines
+    python3 -m pip install deepsplines
 
 <a id="org3"></a>
 # Usage
