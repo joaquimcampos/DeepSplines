@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .deepBspline_base import DeepBSplineBase
+from deepsplines.modules.deepBspline_base import DeepBSplineBase
 
 
 class DeepBSplineExplicitLinear(DeepBSplineBase):

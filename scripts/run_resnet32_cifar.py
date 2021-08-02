@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''
-This script reproduces the results for Network-in-Network
-on the CIFAR100 dataset.
+This script reproduces the results for ResNet32
+on the CIFAR10 dataset.
 
 See https://ieeexplore.ieee.org/document/9264754.
 '''
@@ -11,10 +11,10 @@ import argparse
 import copy
 import torch
 
-from main import main_prog
+from deepsplines.main import main_prog
 
 
-def run_nin_cifar(args):
+def run_resnet32_cifar(args):
     """
     Args:
         args: verified arguments from arparser
@@ -31,11 +31,11 @@ def run_nin_cifar(args):
         activation_type = 'relu'
 
     params = {
-        'net': 'nin_cifar',
+        'net': 'resnet32_cifar',
         'device': device,
         'log_dir': args.log_dir,
-        'num_epochs': 320,
-        'milestones': [80, 160, 240],
+        'num_epochs': 300,
+        'milestones': [150, 225, 262],
         'activation_type': activation_type,
         'spline_init': 'leaky_relu',
         'spline_size': 51,
@@ -50,7 +50,7 @@ def run_nin_cifar(args):
         'log_step': 44,  # 8 times per epoch
         'valid_log_step': -1,  # once every epoch
         'test_as_valid': True,  # print test loss at validation
-        'dataset_name': 'cifar100',
+        'dataset_name': 'cifar10',
         'batch_size': 128,
         'plot_imgs': False,
         'verbose': False
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     # parse arguments
     parser = argparse.ArgumentParser(
-        description='Run Network-in-Network on the CIFAR100 dataset.',
+        description='Run ResNet32 on the CIFAR10 dataset.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--log_dir',
@@ -86,4 +86,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    run_nin_cifar(args)
+    run_resnet32_cifar(args)

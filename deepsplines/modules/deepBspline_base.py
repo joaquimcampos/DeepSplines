@@ -53,7 +53,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from abc import abstractproperty
 
-from .deepspline_base import DeepSplineBase
+from deepsplines.modules.deepspline_base import DeepSplineBase
 
 
 class DeepBSpline_Func(torch.autograd.Function):

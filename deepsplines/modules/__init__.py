@@ -1,6 +1,7 @@
-from .basemodel import BaseModel
-from .deepBspline import DeepBSpline
-from .deepBspline_explicit_linear import DeepBSplineExplicitLinear
-from .deepReLUspline import DeepReLUSpline
+from deepsplines.modules.basemodel import BaseModel
+from deepsplines.modules.deepBspline import DeepBSpline
+from deepsplines.modules.deepBspline_explicit_linear import (
+    DeepBSplineExplicitLinear)
+from deepsplines.modules.deepReLUspline import DeepReLUSpline
 
 __all__ = ["DeepBSpline", "DeepBSplineExplicitLinear", "DeepReLUSpline"]

@@ -11,8 +11,8 @@ import argparse
 import copy
 import torch
 
-from main import main_prog
-from generate_save_twoD_dataset import generate_save_dataset
+from deepsplines.main import main_prog
+from deepsplines.datasets import generate_save_dataset
 
 
 def run_twoDnet(args):

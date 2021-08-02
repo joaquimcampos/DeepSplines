@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from abc import ABC, abstractproperty, abstractmethod
 
-from .ds_utils import check_device, denormalize
+from deepsplines.ds_utils import check_device, denormalize, init_sub_dir
 
 
 def init_dataset(**params):
@@ -33,6 +33,53 @@ def init_dataset(**params):
     dataset = dataset_dict[params['dataset_name']](**params)
 
     return dataset
+
+
+def generate_save_dataset(dataset_name,
+                          data_dir,
+                          num_train_samples=1500,
+                          num_valid_samples=1500):
+    """
+    Args:
+        dataset_name (str): 's_shape' or 'circle'
+        data_dir (str): Data directory
+        num_train_samples (int)
+        num_valid_samples (int)
+    """
+    if not os.path.isdir(data_dir):
+        print(f'\nData directory {data_dir} not found. Creating it.')
+        os.makedirs(data_dir)
+
+    dataset_dir = init_sub_dir(data_dir, dataset_name)
+
+    params = {
+        'dataset_name': dataset_name,
+        'log_dir': dataset_dir,
+        'plot_imgs': False,
+        'save_imgs': True
+    }
+
+    dataset = init_dataset(**params)
+
+    print(f'\nSaving {dataset_name} dataset in {dataset_dir}')
+
+    for mode in ['train', 'valid']:
+        num_samples = (num_train_samples
+                       if mode == 'train' else num_valid_samples)
+        inputs, labels = dataset.generate_set(num_samples)
+
+        if mode == 'train':
+            dataset.plot_train_imgs(inputs, labels)  # save training images
+
+        save_dict = {'inputs': inputs, 'labels': labels}
+        torch.save(save_dict,
+                   os.path.join(dataset.log_dir_model, mode + '_data.pth'))
+
+    inputs, labels = dataset.get_test_set()
+    dataset.plot_test_imgs(inputs, labels)  # save test images
+
+    save_dict = {'inputs': inputs, 'labels': labels}
+    torch.save(save_dict, os.path.join(dataset.log_dir_model, 'test_data.pth'))
 
 
 class Dataset(ABC):

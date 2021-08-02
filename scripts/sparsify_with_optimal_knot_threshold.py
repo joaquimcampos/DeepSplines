@@ -18,7 +18,7 @@ import numpy as np
 
 from deepsplines.ds_utils import ArgCheck
 from deepsplines.project import Project
-from main import main_prog
+from deepsplines.main import main_prog
 
 
 def delete_model(log_dir, model_name, results_dict):

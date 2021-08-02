@@ -11,12 +11,13 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 
-from .dataloader import DataLoader
-from .project import Project
-from .ds_utils import update_running_losses
+from deepsplines.dataloader import DataLoader
+from deepsplines.project import Project
+from deepsplines.ds_utils import update_running_losses
 
-from .networks import (TwoDNet, ResNet32Cifar, NiNCifar, ConvNetMnist)
-from .datasets import init_dataset
+from deepsplines.networks import (TwoDNet, ResNet32Cifar,
+                                  NiNCifar, ConvNetMnist)
+from deepsplines.datasets import init_dataset
 
 ##########################################################################
 # MANAGER
