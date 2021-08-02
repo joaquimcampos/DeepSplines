@@ -15,7 +15,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 # Need to import dsnn (takes the role of torch.nn for DeepSplines)
-from deepsplines.modules import dsnn
+from deepsplines.ds_modules import dsnn
 
 ########################################################################
 # Load the data

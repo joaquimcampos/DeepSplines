@@ -58,7 +58,7 @@ Example on how to adapt the [PyTorch CIFAR-10 tutorial](https://pytorch.org/tuto
 to use DeepBSpline activations.
 
 ```
-from deepsplines.modules import dsnn
+from deepsplines.ds_modules import dsnn
 
 
 class DSNet(dsnn.DSModule):
@@ -145,9 +145,9 @@ For full details, please consult the [tutorial](scripts/deepsplines_tutorial.py)
 To reproduce the results shown in the research papers [[1]](#2) and [[2]](#2)
 one can run the following scripts:
 
--    ``./deepsplines/scripts/run_resnet32_cifar.py``
--    ``./deepsplines/scripts/run_nin_cifar.py``
--    ``./deepsplines/scripts/run_twoDnet.py``
+-    ``./scripts/run_resnet32_cifar.py``
+-    ``./scripts/run_nin_cifar.py``
+-    ``./scripts/run_twoDnet.py``
 
 To see the running options, please add ``--help`` to the commands above.
 

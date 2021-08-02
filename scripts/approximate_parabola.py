@@ -14,8 +14,8 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
 
-from deepsplines.modules import (DeepBSpline, DeepBSplineExplicitLinear,
-                                 DeepReLUSpline)
+from deepsplines.ds_modules import (DeepBSpline, DeepBSplineExplicitLinear,
+                                    DeepReLUSpline)
 from deepsplines.ds_utils import ArgCheck, add_date_to_filename
 
 

@@ -15,8 +15,8 @@ from deepsplines.dataloader import DataLoader
 from deepsplines.project import Project
 from deepsplines.ds_utils import update_running_losses
 
-from deepsplines.networks import (TwoDNet, ResNet32Cifar,
-                                  NiNCifar, ConvNetMnist)
+from deepsplines.networks import (TwoDNet, ResNet32Cifar, NiNCifar,
+                                  ConvNetMnist)
 from deepsplines.datasets import init_dataset
 
 ##########################################################################

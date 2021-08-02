@@ -13,8 +13,6 @@ from deepsplines.ds_utils import ArgCheck, assign_tree_structure
 from deepsplines.struct_default_values import structure, default_values
 
 
-# Fix with pep8 again
-# TODO: Ensure that networks and datasets are aligned
 def get_arg_parser():
     """
     Parses command-line arguments.
@@ -392,6 +390,21 @@ def verify_params(params):
             'deep' not in params['activation_type']:
         raise ValueError(
             '--knot_threshold can only be set when using deepsplines.')
+
+    # verify network and dataset_name consistency
+    if params['net'] == 'twoDnet' and \
+            params['dataset_name'] not in ['s_shape', 'circle']:
+        raise ValueError(f'{params["net"]} can only be used with "s_shape" '
+                         'or "circle datasets."')
+
+    if params['net'].endswith('cifar') and (
+            not params['dataset_name'].startswith('cifar')):
+        raise ValueError(
+            f'{params["net"]} can only be used with cifar dataset.')
+
+    if params['net'].endswith('mnist') and (params['dataset_name'] != 'mnist'):
+        raise ValueError(
+            f'{params["net"]} can only be used with mnist dataset.')
 
     return params, user_params
 

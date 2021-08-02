@@ -9,7 +9,6 @@ import argparse
 from deepsplines.datasets import generate_save_dataset
 from deepsplines.ds_utils import ArgCheck
 
-
 if __name__ == "__main__":
 
     # parse arguments
