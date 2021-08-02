@@ -2,7 +2,7 @@
 
 import torch.nn as nn
 
-from deepsplines.modules import BaseModel
+from deepsplines.ds_modules import BaseModel
 
 
 class ConvNetMnist(BaseModel):

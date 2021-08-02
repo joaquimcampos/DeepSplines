@@ -8,10 +8,10 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from deepsplines.modules.deepBspline import DeepBSpline
-from deepsplines.modules.deepBspline_explicit_linear import (
+from deepsplines.ds_modules.deepBspline import DeepBSpline
+from deepsplines.ds_modules.deepBspline_explicit_linear import (
     DeepBSplineExplicitLinear)
-from deepsplines.modules.deepReLUspline import DeepReLUSpline
+from deepsplines.ds_modules.deepReLUspline import DeepReLUSpline
 
 
 class DSModule(nn.Module):

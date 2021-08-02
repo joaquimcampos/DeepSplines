@@ -13,7 +13,7 @@ blob/master/examples/cifar100/NIN/baseline/train_test1.prototxt
 
 import torch.nn as nn
 
-from deepsplines.modules import BaseModel
+from deepsplines.ds_modules import BaseModel
 
 
 class NiNCifar(BaseModel):

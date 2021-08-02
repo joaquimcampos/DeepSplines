@@ -12,7 +12,7 @@ Based on:
 
 import torch.nn as nn
 
-from deepsplines.modules import BaseModel
+from deepsplines.ds_modules import BaseModel
 
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1):

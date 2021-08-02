@@ -13,6 +13,7 @@ from deepsplines.ds_utils import ArgCheck, assign_tree_structure
 from deepsplines.struct_default_values import structure, default_values
 
 
+# Fix with pep8 again
 # TODO: Ensure that networks and datasets are aligned
 def get_arg_parser():
     """
