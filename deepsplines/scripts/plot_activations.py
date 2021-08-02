@@ -144,28 +144,32 @@ if __name__ == "__main__":
         description='Plots the activations of a deepspline network.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('ckpt_filename',
-                        metavar='CKPT_FILENAME[STR]',
-                        type=str,
-                        help='')
+    parser.add_argument(
+        'ckpt_filename',
+        metavar='CKPT_FILENAME[STR]',
+        type=str,
+        help='')
     parser.add_argument(
         '--save_dir',
         metavar='STR',
         type=str,
         help='directory for saving plots. If not given, plots are not saved.')
-    parser.add_argument('--num_activations_per_plot',
-                        '-napp',
-                        metavar='INT,>=0',
-                        default=4,
-                        type=ArgCheck.p_int,
-                        help='Number of activations per plot.')
-    parser.add_argument('--layer',
-                        metavar='INT,>=0',
-                        type=ArgCheck.p_int,
-                        help='Plot activations in this layer alone.')
-    parser.add_argument('--plot_sparsity',
-                        action='store_true',
-                        help='Plot sparse/nonsparse knots')
+    parser.add_argument(
+        '--num_activations_per_plot',
+        '-napp',
+        metavar='INT,>=0',
+        default=4,
+        type=ArgCheck.p_int,
+        help='Number of activations per plot.')
+    parser.add_argument(
+        '--layer',
+        metavar='INT,>=0',
+        type=ArgCheck.p_int,
+        help='Plot activations in this layer alone.')
+    parser.add_argument(
+        '--plot_sparsity',
+        action='store_true',
+        help='Plot sparse/nonsparse knots')
 
     args = parser.parse_args()
 

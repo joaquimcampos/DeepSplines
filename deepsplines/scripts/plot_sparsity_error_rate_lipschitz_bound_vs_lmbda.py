@@ -115,10 +115,11 @@ if __name__ == "__main__":
         'vs TV2/BV2 regularization weight.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('results_json',
-                        metavar='FILE[STR]',
-                        type=str,
-                        help='json file with train/test results.')
+    parser.add_argument(
+        'results_json',
+        metavar='FILE[STR]',
+        type=str,
+        help='json file with train/test results.')
     parser.add_argument(
         '--save_dir',
         metavar='STR',
