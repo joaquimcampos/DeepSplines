@@ -142,8 +142,7 @@ For full details, please consult the [tutorial](scripts/deepsplines_tutorial.py)
 Reproducing results
 -------------------
 
-To reproduce the results shown in the research papers [1]_ and [2]_
-one can run the following scripts:
+To reproduce the results shown in the research papers [1]_ and [2]_ one can run the following scripts:
 
 .. code-block:: bash
 
@@ -168,9 +167,8 @@ Contributor:
 References
 ==========
 
-.. [1]
-P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
-.. [2]
-S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
-.. [3] 
-M. Unser, "A Representer Theorem for Deep Neural Networks," Journal of Machine Learning Research, vol. 20, no. 110, pp. 1-30, January 2019-Present.
+.. [1] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
+
+.. [2] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
+
+.. [3] M. Unser, "A Representer Theorem for Deep Neural Networks," Journal of Machine Learning Research, vol. 20, no. 110, pp. 1-30, January 2019-Present.
