@@ -3,6 +3,9 @@
   :width: 40 %
   :align: center
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5156042.svg
+   :target: https://doi.org/10.5281/zenodo.5156042
+
 Deep Spline Neural Networks
 ===========================
 
@@ -163,7 +166,7 @@ DeepSplines is developed by the Biomedical Imaging Group at BIG. Original author
 Contributor:
 -   **Harshit Gupta**
 
-For citing this package, please see: []
+For citing this package, please see: http://doi.org/10.5281/zenodo.5156042
 
 References
 ==========

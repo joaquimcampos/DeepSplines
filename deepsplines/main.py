@@ -13,8 +13,7 @@ from deepsplines.ds_utils import ArgCheck, assign_tree_structure
 from deepsplines.struct_default_values import structure, default_values
 
 
-# ADD zenodo Badge to README
-# TODO: Check pytorch 1.8 being replaced with 1.9
+# TODO: check torch 1.8->1.9
 def get_arg_parser():
     """
     Parses command-line arguments.
