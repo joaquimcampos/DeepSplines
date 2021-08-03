@@ -10,14 +10,16 @@ Deep Spline Neural Networks
 
 The aim of this repository is to:
 
-. Facilitate the reproduction of the results reported in the research papers
-  . `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_ [Bohra20]_
-  . `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_ [Aziznejad20]_
-. Enable a seamless integration of Deep Spline activation functions in a custom neural network.
+* Facilitate the reproduction of the results reported in the research papers
+
+  * `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_  [Bohra2020]_
+  * `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_  [Aziznejad2020]_
+
+* Enable a seamless integration of Deep Spline activation functions in a custom neural network.
 
 
 The proposed scheme is based on the theoretical work of
-`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_ [Unser20]_
+`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_  [Unser2019]_
 
 
 .. toctree::
@@ -30,11 +32,11 @@ Installation
 
 A minimal installation requires:
 
--   numpy >= 1.10
--   pytorch >= 1.5.1
--   torchvision >= 0.2.2
--   matplotlib >= 3.3.1
--   CUDA
+* numpy >= 1.10
+* pytorch >= 1.5.1
+* torchvision >= 0.2.2
+* matplotlib >= 3.3.1
+* CUDA
 
 You can install the package via the commands (replace <X.X> with your CUDA version):
 
@@ -140,7 +142,7 @@ For full details, please consult the [tutorial](scripts/deepsplines_tutorial.py)
 Reproducing results
 -------------------
 
-To reproduce the results shown in the research papers [Bohra20]_ and [Aziznejad20]_
+To reproduce the results shown in the research papers [Bohra2020]_ and [Aziznejad2020]_
 one can run the following scripts:
 
 .. code-block:: bash
@@ -166,8 +168,8 @@ Contributor:
 References
 ==========
 
-.. [Bohra20] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
+.. [Bohra2020] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
 
-.. [Aziznejad20] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
+.. [Aziznejad2020] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
 
 .. [Unser2019] M. Unser, "A Representer Theorem for Deep Neural Networks," Journal of Machine Learning Research, vol. 20, no. 110, pp. 1-30, January 2019-Present.
