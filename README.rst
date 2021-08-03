@@ -11,14 +11,13 @@ Deep Spline Neural Networks
 The aim of this repository is to:
 
 . Facilitate the reproduction of the results reported in the research papers
-  . `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_ [Ref1]_
-  . `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_ [Ref2]_
-. Enable a seamless integration of Deep Spline activation functions in
-  a custom neural network.
+  . `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_ [1]_
+  . `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_ [2]_
+. Enable a seamless integration of Deep Spline activation functions in a custom neural network.
 
 
 The proposed scheme is based on the theoretical work of
-`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_ [Ref3]_
+`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_ [3]_
 
 
 .. toctree::
@@ -141,7 +140,7 @@ For full details, please consult the [tutorial](scripts/deepsplines_tutorial.py)
 Reproducing results
 -------------------
 
-To reproduce the results shown in the research papers [Ref1]_ and [Ref2]_
+To reproduce the results shown in the research papers [1]_ and [2]_
 one can run the following scripts:
 
 .. code-block:: bash
@@ -152,7 +151,8 @@ one can run the following scripts:
 
 To see the running options, please add ``--help`` to the commands above.
 
-# Authors and contributors
+Authors and contributors
+========================
 
 DeepSplines is developed by the Biomedical Imaging Group at BIG. Original authors:
 
@@ -163,9 +163,11 @@ Contributor:
 -   **Harshit Gupta**
 
 
-# References
-.. [Ref1] [1] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
+References
+==========
 
-.. [Ref2] [2] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
+.. [1] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
 
-.. [Ref3] [3] M. Unser, "A Representer Theorem for Deep Neural Networks," Journal of Machine Learning Research, vol. 20, no. 110, pp. 1-30, January 2019-Present.
+.. [2] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
+
+.. [3] M. Unser, "A Representer Theorem for Deep Neural Networks," Journal of Machine Learning Research, vol. 20, no. 110, pp. 1-30, January 2019-Present.
