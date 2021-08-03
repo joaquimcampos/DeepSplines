@@ -13,17 +13,17 @@ Deep Spline Neural Networks
 
 The aim of this repository is to:
 
-* Facilitate the reproduction of the results reported in the research papers
+* Facilitate the reproduction of the results reported in the research papers:
 
-  * `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_
+  * `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_;
 
-  * `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_
+  * `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_.
 
-* Enable a seamless integration of deep spline activation functions in a custom neural network
+* Enable a seamless integration of deep spline activation functions in a custom neural network.
 
 
 The proposed scheme is based on the theoretical work of
-`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_
+`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_.
 
 
 .. contents:: **Table of Contents**
