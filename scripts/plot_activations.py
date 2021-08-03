@@ -146,24 +146,24 @@ if __name__ == "__main__":
 
     parser.add_argument(
         'ckpt_filename',
-        metavar='CKPT_FILENAME[STR]',
+        metavar='ckpt_filename [STR]',
         type=str,
         help='')
     parser.add_argument(
         '--save_dir',
-        metavar='STR',
+        metavar='[STR]',
         type=str,
         help='directory for saving plots. If not given, plots are not saved.')
     parser.add_argument(
         '--num_activations_per_plot',
         '-napp',
-        metavar='INT,>=0',
+        metavar='[INT,>=0]',
         default=4,
         type=ArgCheck.p_int,
         help='Number of activations per plot.')
     parser.add_argument(
         '--layer',
-        metavar='INT,>=0',
+        metavar='[INT,>=0]',
         type=ArgCheck.p_int,
         help='Plot activations in this layer alone.')
     parser.add_argument(

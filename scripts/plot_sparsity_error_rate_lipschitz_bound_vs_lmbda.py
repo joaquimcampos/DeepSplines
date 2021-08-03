@@ -117,12 +117,12 @@ if __name__ == "__main__":
 
     parser.add_argument(
         'results_json',
-        metavar='FILE[STR]',
+        metavar='results_json [STR]',
         type=str,
         help='json file with train/test results.')
     parser.add_argument(
         '--save_dir',
-        metavar='STR',
+        metavar='[STR]',
         type=str,
         help='directory for saving plots. If not given, plots are not saved.')
     args = parser.parse_args()

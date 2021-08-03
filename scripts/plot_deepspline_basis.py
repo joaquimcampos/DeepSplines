@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         '--save_dir',
-        metavar='STR',
+        metavar='[STR]',
         type=str,
         help='directory for saving plots. If not given, plots are not saved.')
 

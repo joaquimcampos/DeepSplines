@@ -17,39 +17,6 @@ import torch.optim as optim
 # Need to import dsnn (takes the role of torch.nn for DeepSplines)
 from deepsplines.ds_modules import dsnn
 
-########################################################################
-# Load the data
-
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
-
-batch_size = 4
-
-trainset = torchvision.datasets.CIFAR10(root='./data',
-                                        train=True,
-                                        download=True,
-                                        transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset,
-                                          batch_size=batch_size,
-                                          shuffle=True,
-                                          num_workers=2)
-
-testset = torchvision.datasets.CIFAR10(root='./data',
-                                       train=False,
-                                       download=True,
-                                       transform=transform)
-testloader = torch.utils.data.DataLoader(testset,
-                                         batch_size=batch_size,
-                                         shuffle=False,
-                                         num_workers=2)
-
-classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse',
-           'ship', 'truck')
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(f'\nDevice: {device}')
 
 ########################################################################
 # ReLU network
@@ -147,139 +114,176 @@ class DSNet(dsnn.DSModule):
         return x
 
 
-########################################################################
-# Network, optimizer, loss
+if __name__ == "__main__":
 
-net = Net()  # relu network
-net.to(device)
-print('ReLU: nb. parameters - {:d}'.format(net.num_params))
+    ########################################################################
+    # Load the data
 
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
 
-dsnet = DSNet()  # deepsplines network
-dsnet.to(device)
-print('DeepSpline: nb. parameters - {:d}'.format(dsnet.num_params))
+    batch_size = 4
 
-# For the parameters of the deepsplines, an optimizer different from "SGD"
-# is usually required for stability during training (Adam is recommended).
-# Therefore, when using an SGD optimizer for the network parameters, we
-# require an auxiliary one for the deepspline parameters.
-# Inherenting from DSModule allows us to use the parameters_deepspline()
-# and parameters_no_deepspline() methods for this.
-main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(),
-                           lr=0.001,
-                           momentum=0.9)
-aux_optimizer = optim.Adam(dsnet.parameters_deepspline())
+    trainset = torchvision.datasets.CIFAR10(root='./data',
+                                            train=True,
+                                            download=True,
+                                            transform=transform)
+    trainloader = torch.utils.data.DataLoader(trainset,
+                                              batch_size=batch_size,
+                                              shuffle=True,
+                                              num_workers=2)
 
-criterion = nn.CrossEntropyLoss()
+    testset = torchvision.datasets.CIFAR10(root='./data',
+                                           train=False,
+                                           download=True,
+                                           transform=transform)
+    testloader = torch.utils.data.DataLoader(testset,
+                                             batch_size=batch_size,
+                                             shuffle=False,
+                                             num_workers=2)
 
-########################################################################
-# Training the ReLU network
+    classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse',
+               'ship', 'truck')
 
-print('\nTraining ReLU network.')
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f'\nDevice: {device}')
 
-start_time = time.time()
+    ########################################################################
+    # Network, optimizer, loss
 
-for epoch in range(2):  # loop over the dataset multiple times
+    net = Net()  # relu network
+    net.to(device)
+    print('ReLU: nb. parameters - {:d}'.format(net.num_params))
 
-    running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
-        # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = data[0].to(device), data[1].to(device)
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-        # zero the parameter gradients
-        optimizer.zero_grad()
+    dsnet = DSNet()  # deepsplines network
+    dsnet.to(device)
+    print('DeepSpline: nb. parameters - {:d}'.format(dsnet.num_params))
 
-        # forward + backward + optimize
-        outputs = net(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+    # For the parameters of the deepsplines, an optimizer different from "SGD"
+    # is usually required for stability during training (Adam is recommended).
+    # Therefore, when using an SGD optimizer for the network parameters, we
+    # require an auxiliary one for the deepspline parameters.
+    # Inherenting from DSModule allows us to use the parameters_deepspline()
+    # and parameters_no_deepspline() methods for this.
+    main_optimizer = optim.SGD(dsnet.parameters_no_deepspline(),
+                               lr=0.001,
+                               momentum=0.9)
+    aux_optimizer = optim.Adam(dsnet.parameters_deepspline())
 
-        # print statistics
-        running_loss += loss.item()
-        if i % 2000 == 1999:  # print every 2000 mini-batches
-            print('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss / 2000))
-            running_loss = 0.0
+    criterion = nn.CrossEntropyLoss()
 
-end_time = time.time()
+    ########################################################################
+    # Training the ReLU network
 
-print('Finished Training ReLU network. \n'
-      'Took {:d} seconds. '.format(int(end_time - start_time)))
+    print('\nTraining ReLU network.')
 
-########################################################################
-# Training the DeepSpline network
-# Note: Since the original network is small, the time it takes to train
-# deepsplines is significantly larger.
+    start_time = time.time()
 
-# Regularization weight for the TV(2)/BV(2) regularization
-# Needs to be tuned for performance
-lmbda = 1e-4
-# lipschitz control: if True, BV(2) regularization is used instead of TV(2)
-lipschitz = False
+    for epoch in range(2):  # loop over the dataset multiple times
 
-print('\nTraining DeepSpline network.')
+        running_loss = 0.0
+        for i, data in enumerate(trainloader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+            inputs, labels = data[0].to(device), data[1].to(device)
 
-start_time = time.time()
+            # zero the parameter gradients
+            optimizer.zero_grad()
 
-for epoch in range(2):  # loop over the dataset multiple times
+            # forward + backward + optimize
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
 
-    running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
-        # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = data[0].to(device), data[1].to(device)
+            # print statistics
+            running_loss += loss.item()
+            if i % 2000 == 1999:  # print every 2000 mini-batches
+                print('[%d, %5d] loss: %.3f' %
+                      (epoch + 1, i + 1, running_loss / 2000))
+                running_loss = 0.0
 
-        # zero the parameter gradients
-        main_optimizer.zero_grad()
-        aux_optimizer.zero_grad()
+    end_time = time.time()
 
-        # forward + backward + optimize
-        outputs = dsnet(inputs)
-        loss = criterion(outputs, labels)
+    print('Finished Training ReLU network. \n'
+          'Took {:d} seconds. '.format(int(end_time - start_time)))
 
-        # add regularization loss
-        if lipschitz is True:
-            loss = loss + lmbda * dsnet.BV2()
-        else:
-            loss = loss + lmbda * dsnet.TV2()
+    ########################################################################
+    # Training the DeepSpline network
+    # Note: Since the original network is small, the time it takes to train
+    # deepsplines is significantly larger.
 
-        loss.backward()
-        main_optimizer.step()
-        aux_optimizer.step()
+    # Regularization weight for the TV(2)/BV(2) regularization
+    # Needs to be tuned for performance
+    lmbda = 1e-4
+    # lipschitz control: if True, BV(2) regularization is used instead of TV(2)
+    lipschitz = False
 
-        # print statistics
-        running_loss += loss.item()
-        if i % 2000 == 1999:  # print every 2000 mini-batches
-            print('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss / 2000))
-            running_loss = 0.0
+    print('\nTraining DeepSpline network.')
 
-end_time = time.time()
+    start_time = time.time()
 
-print('Finished Training DeepSpline network. \n'
-      'Took {:d} seconds. '.format(int(end_time - start_time)))
+    for epoch in range(2):  # loop over the dataset multiple times
 
-########################################################################
-# Testing the ReLU and DeepSpline networks
+        running_loss = 0.0
+        for i, data in enumerate(trainloader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+            inputs, labels = data[0].to(device), data[1].to(device)
 
-for model, name in zip([net, dsnet], ['ReLU', 'DeepSpline']):
+            # zero the parameter gradients
+            main_optimizer.zero_grad()
+            aux_optimizer.zero_grad()
 
-    print(f'\nTesting {name} network.')
+            # forward + backward + optimize
+            outputs = dsnet(inputs)
+            loss = criterion(outputs, labels)
 
-    correct = 0
-    total = 0
-    # since we're not training, we don't need to calculate the gradients
-    # for our outputs
-    with torch.no_grad():
-        for data in testloader:
-            images, labels = data[0].to(device), data[1].to(device)
-            # calculate outputs by running images through the network
-            outputs = model(images)
-            # the class with the highest energy is what we choose as prediction
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            # add regularization loss
+            if lipschitz is True:
+                loss = loss + lmbda * dsnet.BV2()
+            else:
+                loss = loss + lmbda * dsnet.TV2()
 
-    print(f'Accuracy of the {name} '
-          'network on the 10000 test images: %d %%' % (100 * correct / total))
+            loss.backward()
+            main_optimizer.step()
+            aux_optimizer.step()
+
+            # print statistics
+            running_loss += loss.item()
+            if i % 2000 == 1999:  # print every 2000 mini-batches
+                print('[%d, %5d] loss: %.3f' %
+                      (epoch + 1, i + 1, running_loss / 2000))
+                running_loss = 0.0
+
+    end_time = time.time()
+
+    print('Finished Training DeepSpline network. \n'
+          'Took {:d} seconds. '.format(int(end_time - start_time)))
+
+    ########################################################################
+    # Testing the ReLU and DeepSpline networks
+
+    for model, name in zip([net, dsnet], ['ReLU', 'DeepSpline']):
+
+        print(f'\nTesting {name} network.')
+
+        correct = 0
+        total = 0
+        # since we're not training, we don't need to calculate the gradients
+        # for our outputs
+        with torch.no_grad():
+            for data in testloader:
+                images, labels = data[0].to(device), data[1].to(device)
+                # calculate outputs by running images through the network
+                outputs = model(images)
+                # the class with the highest energy is what we choose
+                # as prediction
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+
+        print(f'Accuracy of the {name} network '
+              'on the 10000 test images: %d %%' % (100 * correct / total))

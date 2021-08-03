@@ -54,7 +54,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('ckpt_filename',
-                        metavar='CKPT_FILENAME[STR]',
+                        metavar='ckpt_filename [STR]',
                         type=str,
                         help='')
     args = parser.parse_args()

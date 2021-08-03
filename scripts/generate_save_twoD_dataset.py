@@ -18,22 +18,22 @@ if __name__ == "__main__":
 
     dataset_choices = {'s_shape', 'circle'}
     parser.add_argument('dataset_name',
-                        metavar='DATASET_NAME[STR]',
+                        metavar='dataset_name [STR]',
                         choices=dataset_choices,
                         type=str,
                         help=f'{dataset_choices}')
     parser.add_argument('--data_dir',
-                        metavar='STR',
+                        metavar='[STR]',
                         type=str,
                         default='./data',
                         help=' ')
     parser.add_argument('--num_train_samples',
-                        metavar='INT,>0',
+                        metavar='[INT,>0]',
                         type=ArgCheck.p_int,
                         default=1500,
                         help=' ')
     parser.add_argument('--num_valid_samples',
-                        metavar='INT,>0',
+                        metavar='[INT,>0]',
                         type=ArgCheck.p_int,
                         default=1500,
                         help=' ')

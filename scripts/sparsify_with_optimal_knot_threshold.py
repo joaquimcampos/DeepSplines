@@ -143,15 +143,15 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('ckpt_filename',
-                        metavar='CKPT_FILENAME[STR]',
+                        metavar='ckpt_filename [STR]',
                         type=str,
                         help='')
     parser.add_argument('out_log_dir',
-                        metavar='out_log_dir[STR]',
+                        metavar='out_log_dir [STR]',
                         type=str,
                         help='Output log directory for sparsified model.')
     parser.add_argument('acc_drop_threshold',
-                        metavar='FLOAT(-1, 0)',
+                        metavar='acc_drop_threshold [FLOAT(-1, 0)]',
                         type=ArgCheck.n_float,
                         default=-0.25,
                         help='Maximum train accuracy percentage drop '
