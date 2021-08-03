@@ -15,14 +15,15 @@ The aim of this repository is to:
 
 * Facilitate the reproduction of the results reported in the research papers
 
-  * `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_  [1]_
-  * `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_  [2]_
+  * `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_
+
+  * `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_
 
 * Enable a seamless integration of deep spline activation functions in a custom neural network
 
 
 The proposed scheme is based on the theoretical work of
-`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_  [3]_
+`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_
 
 
 .. contents:: Table of Contents
@@ -145,7 +146,7 @@ For full details, please consult `scripts/deepsplines_tutorial.py <https://githu
 Reproducing results
 -------------------
 
-To reproduce the results shown in the research papers [1]_ and [2]_ one can run the following scripts:
+To reproduce the results shown in the research papers [Bohra-Campos2020]_ and [Aziznejad2020]_ one can run the following scripts:
 
 .. code-block:: bash
 
@@ -171,8 +172,6 @@ For citing this package, please see: http://doi.org/10.5281/zenodo.5156042
 References
 ==========
 
-.. [1] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
+.. [Bohra-Campos2020] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
 
-.. [2] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
-
-.. [3] M. Unser, "A Representer Theorem for Deep Neural Networks," Journal of Machine Learning Research, vol. 20, no. 110, pp. 1-30, January 2019-Present.
+.. [Aziznejad2020] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
