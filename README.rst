@@ -137,7 +137,7 @@ to use DeepBSpline activations.
             aux_optimizer.step()
 
 
-For full details, please consult the [tutorial](scripts/deepsplines_tutorial.py).
+For full details, please consult `scripts/deepsplines_tutorial.py <https://github.com/joaquimcampos/DeepSplines/blob/master/scripts/deepsplines_tutorial.py>`_.
 
 Reproducing results
 -------------------
