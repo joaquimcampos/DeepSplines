@@ -23,9 +23,7 @@ The proposed scheme is based on the theoretical work of
 
 
 .. contents:: Table of Contents
-   :depth: 2
-
-   Tool1
+    :depth: 2 
 
 
 Installation
