@@ -169,7 +169,5 @@ References
 ==========
 
 .. [Bohra2020] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
-
 .. [Aziznejad2020] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
-
 .. [Unser2019] M. Unser, "A Representer Theorem for Deep Neural Networks," Journal of Machine Learning Research, vol. 20, no. 110, pp. 1-30, January 2019-Present.
