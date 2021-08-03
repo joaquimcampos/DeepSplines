@@ -22,9 +22,10 @@ The proposed scheme is based on the theoretical work of
 `M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_  [3]_
 
 
-.. toctree::
- :numbered:
- :maxdepth: 2
+.. contents:: Table of Contents
+   :depth: 2
+
+   Tool1
 
 
 Installation
