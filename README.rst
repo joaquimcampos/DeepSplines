@@ -1,6 +1,6 @@
 
-.. image:: https://github.com/joaquimcampos/DeepSplines/blob/master/logo.png
-  :width: 40 %
+.. image:: https://user-images.githubusercontent.com/26142730/128066373-a42476b4-6694-4810-8397-d6e1fa2638a8.png
+  :width: 50 %
   :align: center
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5156042.svg
