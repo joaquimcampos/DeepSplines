@@ -43,7 +43,6 @@ def run_nin_cifar(args):
         'save_memory': False,
         'lipschitz': False,
         'lmbda': 1e-4,
-        'optimizer': ['SGD', 'Adam'],
         'lr': 1e-1,
         'aux_lr': 1e-3,
         'weight_decay': 5e-4,
@@ -55,6 +54,11 @@ def run_nin_cifar(args):
         'plot_imgs': False,
         'verbose': False
     }
+
+    if activation_type == 'relu':
+        params['optimizer'] = ['SGD']
+    else:
+        params['optimizer'] = ['SGD', 'Adam']
 
     params['model_name'] = f'{params["net"]}_{params["activation_type"]}_' + \
         'lambda_{:.1E}'.format(params["lmbda"])
@@ -74,7 +78,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--log_dir',
-                        metavar='STR',
+                        metavar='[STR]',
                         type=str,
                         default='./ckpt',
                         help='Model log directory.')
