@@ -26,7 +26,7 @@ The proposed scheme is based on the theoretical work of
 `M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_
 
 
-.. contents:: Table of Contents
+.. contents:: **Table of Contents**
     :depth: 2
 
 
