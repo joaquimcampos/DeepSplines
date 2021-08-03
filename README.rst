@@ -11,13 +11,13 @@ Deep Spline Neural Networks
 The aim of this repository is to:
 
 . Facilitate the reproduction of the results reported in the research papers
-  . `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_ Bohra20_
-  . `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_ Aziznejad20_
+  . `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_ [Bohra20]_
+  . `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_ [Aziznejad20]_
 . Enable a seamless integration of Deep Spline activation functions in a custom neural network.
 
 
 The proposed scheme is based on the theoretical work of
-`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_ Unser20_
+`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_ [Unser20]_
 
 
 .. toctree::
@@ -140,7 +140,7 @@ For full details, please consult the [tutorial](scripts/deepsplines_tutorial.py)
 Reproducing results
 -------------------
 
-To reproduce the results shown in the research papers Bohra20_ and Aziznejad20_
+To reproduce the results shown in the research papers [Bohra20]_ and [Aziznejad20]_
 one can run the following scripts:
 
 .. code-block:: bash
