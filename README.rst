@@ -15,7 +15,7 @@ The aim of this repository is to:
   * `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_  [1]_
   * `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_  [2]_
 
-* Enable a seamless integration of Deep Spline activation functions in a custom neural network.
+* Enable a seamless integration of deep spline activation functions in a custom neural network
 
 
 The proposed scheme is based on the theoretical work of
@@ -23,7 +23,7 @@ The proposed scheme is based on the theoretical work of
 
 
 .. contents:: Table of Contents
-    :depth: 2 
+    :depth: 2
 
 
 Installation
@@ -35,19 +35,20 @@ A minimal installation requires:
 * pytorch >= 1.5.1
 * torchvision >= 0.2.2
 * matplotlib >= 3.3.1
-* CUDA
 
-You can install the package via the commands (replace <X.X> with your CUDA version):
+You can install the package via the commands:
 
 .. code-block:: bash
 
-    >> conda create -y -n deepsplines python=3.7 cudatoolkit=<X.X>
+    >> conda create -y -n deepsplines python=3.7
     >> source activate deepsplines
     >> python3 -m pip install deepsplines
 
-Cite
-----
-For citing this package, please see: []
+.. role:: bash(code)
+   :language: bash
+
+For GPU compatibility, you need to additionally install :bash:`cudatoolkit`
+(*e.g.* via :bash:`conda install -c anaconda cudatoolkit`)
 
 Usage
 =====
@@ -151,8 +152,8 @@ To reproduce the results shown in the research papers [1]_ and [2]_ one can run 
 
 To see the running options, please add ``--help`` to the commands above.
 
-Authors and contributors
-========================
+Authors
+=======
 
 DeepSplines is developed by the Biomedical Imaging Group at BIG. Original authors:
 
@@ -162,6 +163,7 @@ DeepSplines is developed by the Biomedical Imaging Group at BIG. Original author
 Contributor:
 -   **Harshit Gupta**
 
+For citing this package, please see: []
 
 References
 ==========
