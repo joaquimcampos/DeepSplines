@@ -84,8 +84,7 @@ class DSNet(dsnn.DSModule):
             'save_memory': False
         }
 
-        # we generally do not need biases since DeepSplines can do them
-        self.conv1 = nn.Conv2d(3, 6, 5, bias=False)
+        self.conv1 = nn.Conv2d(3, 6, 5)
         # 1st parameter (mode): 'conv' (convolutional) / 'fc' (fully-connected)
         # 2nd parameter: nb. channels (mode='conv') / nb. neurons (mode='fc')
         self.conv_ds.append(dsnn.DeepBSpline('conv', 6, **opt_params))
