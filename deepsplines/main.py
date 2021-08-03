@@ -13,6 +13,7 @@ from deepsplines.ds_utils import ArgCheck, assign_tree_structure
 from deepsplines.struct_default_values import structure, default_values
 
 
+# ADD zenodo Badge to README
 # write .rst README
 # Check pytorch 1.8 being replaced with 1.9
 # Check CUDA TOOLKIT
