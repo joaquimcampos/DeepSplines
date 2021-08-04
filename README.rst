@@ -3,8 +3,8 @@
   :width: 50 %
   :align: center
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5156042.svg
-   :target: https://doi.org/10.5281/zenodo.5156042
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5158821.svg
+   :target: https://doi.org/10.5281/zenodo.5158821
 
 
 *DeepSplines* is a framework to train the activation functions of a neural network.
