@@ -3,4 +3,4 @@
 
 __author__ = """Joaquim Campos"""
 __email__ = "joaquim.campos@hotmail.com"
-__version__ = "0.0.5"  # also change in setup.cfg
+__version__ = "1.0.0"  # also change in setup.cfg
