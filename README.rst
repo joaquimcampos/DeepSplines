@@ -6,8 +6,6 @@
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5156042.svg
    :target: https://doi.org/10.5281/zenodo.5156042
 
-Deep Spline Neural Networks
-===========================
 
 *DeepSplines* is a framework to train the activation functions of a neural network.
 
