@@ -54,7 +54,7 @@ Quick Install
 --------------
 
 *DeepSplines* is available on `Pypi <https://pypi.org/project/deepsplines/>`_.
-After creating the environment, you can install the package via the command:
+Therefore, you can install the package via the command:
 
 .. code-block:: bash
 
@@ -207,3 +207,9 @@ License
 =======
 
 The code is released under the terms of the `MIT License <https://github.com/joaquimcampos/DeepSplines/blob/master/LICENSE>`_
+
+Acknowledgements
+================
+
+This work was supported in part by the Swiss National Science Foundation under Grant 200020_184646 / 1 and in part by the European Research Council (ERC)
+under Grant 692726-GlobalBioIm.
