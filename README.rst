@@ -1,6 +1,6 @@
 
 .. image:: https://user-images.githubusercontent.com/26142730/128066373-a42476b4-6694-4810-8397-d6e1fa2638a8.png
-  :width: 40 %
+  :width: 50 %
   :align: center
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5156042.svg
@@ -30,34 +30,59 @@ The proposed scheme is based on the theoretical work of
     :depth: 2
 
 
-Installation
+Requirements
 ============
 
-A minimal installation requires:
-
+* python >= 3.7
 * numpy >= 1.10
 * pytorch >= 1.5.1
 * torchvision >= 0.2.2
 * matplotlib >= 3.3.1
+* (optional) CUDA
 
-You can install the package via the commands:
+The code was developed and tested on a x86_64 Linux system.
+
+Installation
+============
+
+To install the package, we first create an environment with python 3.7 (or greater):
 
 .. code-block:: bash
 
     >> conda create -y -n deepsplines python=3.7
     >> source activate deepsplines
-    >> python3 -m pip install deepsplines
+
+Quick Install
+--------------
+
+*DeepSplines* is available on `Pypi <https://pypi.org/project/deepsplines/>`_.
+After creating the environment, you can install the package via the command:
+
+.. code-block:: bash
+
+    >> pip install deepsplines
 
 .. role:: bash(code)
    :language: bash
 
-For GPU compatibility, you need to additionally install :bash:`cudatoolkit`
-(*e.g.* via :bash:`conda install -c anaconda cudatoolkit`)
+For NVIDIA GPU compatibility, you need to additionally install :bash:`cudatoolkit`
+(via :bash:`conda install -c anaconda cudatoolkit`)
+
+Developper Install
+------------------
+
+It is also possible to install *DeepSplines* from the source for developpers:
+
+.. code-block:: bash
+
+   >> git clone https://github.com/joaquimcampos/DeepSplines
+   >> cd <repository_dir>/
+   >> pip install -e .
 
 Usage
 =====
 
-Example on how to adapt the `PyTorch CIFAR-10 tutorial <https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html>`_
+Here we show an example on how to adapt the `PyTorch CIFAR-10 tutorial <https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html>`_
 to use DeepBSpline activations.
 
 .. code-block:: python
@@ -154,20 +179,24 @@ To reproduce the results shown in the research papers [Bohra-Campos2020]_ and [A
     >> ./scripts/run_nin_cifar.py
     >> ./scripts/run_twoDnet.py
 
-To see the running options, please add ``--help`` to the commands above.
+To see the running options, please add :bash:`--help` to the commands above.
 
-Authors
-=======
+Developers
+==========
 
-DeepSplines is developed by the Biomedical Imaging Group at BIG. Original authors:
-
--   **Joaquim Campos**
--   **Pakshal Bohra**
-
-Contributor:
--   **Harshit Gupta**
+*DeepSplines* is developed by the `Biomedical Imaging Group <http://bigwww.epfl.ch/>`_,
+`École Polytéchnique Fédérale de Lausanne <https://www.epfl.ch/en/>`_, Switzerland.
 
 For citing this package, please see: http://doi.org/10.5281/zenodo.5156042
+
+Original authors:
+
+-   **Joaquim Campos** (joaquimcampos15@hotmail.com)
+-   **Pakshal Bohra** (pakshal.bohra@epfl.ch)
+
+Contributors:
+
+-   **Harshit Gupta**
 
 References
 ==========
@@ -175,3 +204,8 @@ References
 .. [Bohra-Campos2020] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
 
 .. [Aziznejad2020] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
+
+License
+=======
+
+The code is released under the terms of the `MIT License <https://github.com/joaquimcampos/DeepSplines/blob/master/LICENSE>`_
