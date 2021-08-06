@@ -116,6 +116,11 @@ def plot_deepspline_basis(args):
     ax.tick_params(axis='both', which='major', labelsize=12)
     ax.tick_params(axis='both', which='minor', labelsize=12)
 
+    if args.no_ticks is True:
+        ax.tick_params(axis=u'both', which=u'both', length=0)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
     # draw B-spline (triangular-shaped) basis elements
     for i, center in enumerate(grid_points):
         mode = 'both'
@@ -189,6 +194,10 @@ if __name__ == "__main__":
         metavar='[STR]',
         type=str,
         help='directory for saving plots. If not given, plots are not saved.')
+    parser.add_argument(
+        '--no_ticks',
+        action='store_true',
+        help='Do not add ticks to plot.')
 
     args = parser.parse_args()
 
