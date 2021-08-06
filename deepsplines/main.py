@@ -13,6 +13,8 @@ from deepsplines.ds_utils import ArgCheck, assign_tree_structure
 from deepsplines.struct_default_values import structure, default_values
 
 
+# TODO: Instead of making args=None in def and then checking they
+# are not, make them mandatory.
 def get_arg_parser():
     """
     Parses command-line arguments.
