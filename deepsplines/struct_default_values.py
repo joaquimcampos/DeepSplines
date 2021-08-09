@@ -45,7 +45,7 @@ default_values = {
 # This tree defines the strcuture of self.params in the Project() class.
 # if it is desired to keep an entry in the first level that is also a
 # leaf of deeper levels of the structure, this entry should be added to
-# the first level too (as done for 'dataloader')
+# the first level too (e.g. as done for 'log_dir')
 structure = {
     'log_dir': None,
     'model_name': None,
