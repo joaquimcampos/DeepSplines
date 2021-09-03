@@ -11,13 +11,11 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 
-from deepsplines.dataloader import DataLoader
 from deepsplines.project import Project
 from deepsplines.ds_utils import update_running_losses
 
 from deepsplines.networks import (TwoDNet, ResNet32Cifar, NiNCifar,
                                   ConvNetMnist)
-from deepsplines.datasets import init_dataset
 
 ##########################################################################
 # MANAGER
@@ -25,6 +23,13 @@ from deepsplines.datasets import init_dataset
 
 class Manager(Project):
     """ Class that manages training and testing """
+
+    net = None
+    main_optimizer = None
+    main_scheduler = None
+    aux_optimizer = None
+    aux_scheduler = None
+
     def __init__(self, params, user_params):
         """
         Args:
@@ -49,14 +54,15 @@ class Manager(Project):
         if self.params['verbose']:
             print('\n==> Parameters: ', self.params, sep='\n')
 
-        self.dataset = init_dataset(**self.params['dataset'])
-
         # model requires number of dataset classes for the output layer.
         self.params['model']['num_classes'] = self.dataset.num_classes
         self.net = self.build_model(self.params, self.device)
 
         if self.training:
-            self.set_optimization()
+            (self.main_optimizer, self.main_scheduler,
+             self.aux_optimizer, self.aux_scheduler) = self.set_optimization()
+            if self.params['verbose']:
+                self.print_optimization_info()
 
         if is_ckpt_loaded is True:
             self.restore_model()
@@ -128,11 +134,17 @@ class Manager(Project):
 
         Note: An 'aux' optimizer different from SGD is usually required
         for training deepsplines. Adam generally works well.
+
+        Returns:
+            main_optimizer (torch.optim)
+            main_scheduler (torch.optim.lr_scheduler)
+            aux_optimizer (torch.optim)
+            aux_scheduler (torch.optim.lr_scheduler)
         """
-        self.optim_names = self.params['optimizer']
+        optim_names = self.params['optimizer']
 
         # main optimizer/scheduler
-        if len(self.optim_names) == 2:
+        if len(optim_names) == 2:
             try:
                 # main optimizer only for network parameters
                 main_params_iter = self.net.parameters_no_deepspline()
@@ -143,15 +155,15 @@ class Manager(Project):
             # single optimizer for all parameters
             main_params_iter = self.net.parameters()
 
-        self.main_optimizer = self.construct_optimizer(main_params_iter,
-                                                       self.optim_names[0],
-                                                       self.params['lr'])
+        main_optimizer = self.construct_optimizer(main_params_iter,
+                                                  optim_names[0],
+                                                  self.params['lr'])
 
-        self.main_scheduler = self.construct_scheduler(self.main_optimizer)
+        main_scheduler = self.construct_scheduler(main_optimizer)
 
-        self.aux_optimizer, self.aux_scheduler = None, None
+        aux_optimizer, aux_scheduler = None, None
 
-        if len(self.optim_names) == 2:
+        if len(optim_names) == 2:
             # aux optimizer/scheduler for deepspline parameters
             try:
                 if self.net.deepspline is not None:
@@ -160,14 +172,14 @@ class Manager(Project):
                 print('Cannot use aux optimizer.')
                 raise
 
-            self.aux_optimizer = self.construct_optimizer(
-                aux_params_iter, self.optim_names[1], self.params['aux_lr'])
+            aux_optimizer = self.construct_optimizer(
+                aux_params_iter, optim_names[1], self.params['aux_lr'])
 
             # scheduler parameters are the same for the main and aux optimizers
-            self.aux_scheduler = self.construct_scheduler(self.aux_optimizer)
+            aux_scheduler = self.construct_scheduler(aux_optimizer)
 
-        if self.params['verbose']:
-            self.print_optimization_info()
+            return (main_optimizer, main_scheduler,
+                    aux_optimizer, aux_scheduler)
 
     @staticmethod
     def construct_optimizer(params_iter, optim_name, lr):
@@ -219,13 +231,6 @@ class Manager(Project):
 
         self.net.train()  # set the network in training mode
 
-        # Load the data
-        print('\n==> Loading the data...')
-        self.dataloader = DataLoader(self.dataset, **self.params['dataloader'])
-        self.trainloader, self.validloader = \
-            self.dataloader.get_train_valid_loader()
-
-        self.save_train_info()
         if self.params['verbose']:
             self.print_train_info()
 
@@ -511,10 +516,6 @@ class Manager(Project):
     def test(self):
         """ Test model """
         self.net.eval()
-
-        print('\n==> Loading the data...')
-        self.dataloader = DataLoader(self.dataset, **self.params['dataloader'])
-        self.testloader = self.dataloader.get_test_loader()
 
         if self.params['verbose']:
             self.print_test_info()

@@ -5,13 +5,16 @@ import math
 import collections
 import itertools
 import torch
+from abc import ABC, abstractproperty
 
+from deepsplines.datasets import init_dataset
+from deepsplines.dataloader import DataLoader
 from deepsplines.ds_utils import size_str
 from deepsplines.ds_utils import dict_recursive_merge, flatten_structure
 from deepsplines.ds_utils import json_load, json_dump
 
 
-class Project():
+class Project(ABC):
 
     train_results_json_filename = 'train_results.json'
     test_results_json_filename = 'test_results.json'
@@ -31,6 +34,55 @@ class Project():
 
         if self.training:
             self.start_epoch, self.global_step = 0, 0
+
+        self.dataset = init_dataset(**self.params['dataset'])
+        self.init_dataloader()
+
+    def init_dataloader(self):
+        """
+        Initialize dataloader.
+        """
+        # Load the data
+        print('\n==> Loading the data...')
+        self.dataloader = DataLoader(self.dataset, **self.params['dataloader'])
+        self.trainloader, self.validloader = \
+            self.dataloader.get_train_valid_loader()
+        self.testloader = self.dataloader.get_test_loader()
+
+        self.save_train_info()
+
+    def save_train_info(self):
+        """ """
+        assert (self.trainloader is not None)
+        if self.dataset.is_user_dataset is True:
+            self.num_train_samples = sum(
+                inputs.size(0) for inputs, _ in self.trainloader)
+        else:
+            self.num_train_samples = len(self.trainloader.sampler)
+
+        self.num_train_batches = \
+            math.ceil(self.num_train_samples / self.dataloader.batch_size)
+
+    # TODO: do this just with the model and optimizer states
+    @abstractproperty
+    def net(self):
+        pass
+
+    @abstractproperty
+    def main_optimizer(self):
+        pass
+
+    @abstractproperty
+    def main_scheduler(self):
+        pass
+
+    @abstractproperty
+    def aux_optimizer(self):
+        pass
+
+    @abstractproperty
+    def aux_scheduler(self):
+        pass
 
     def init_log(self):
         """
@@ -547,18 +599,6 @@ class Project():
         torch.save(state, ckpt_filename)
 
         return
-
-    def save_train_info(self):
-        """ """
-        assert (self.trainloader is not None)
-        if self.dataset.is_user_dataset is True:
-            self.num_train_samples = sum(
-                inputs.size(0) for inputs, _ in self.trainloader)
-        else:
-            self.num_train_samples = len(self.trainloader.sampler)
-
-        self.num_train_batches = \
-            math.ceil(self.num_train_samples / self.dataloader.batch_size)
 
     def print_train_info(self):
         """ """
