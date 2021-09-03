@@ -47,8 +47,7 @@ class DataLoader():
         self.pin_memory = torch.cuda.is_available()
 
     def get_dataset_dir(self):
-        """ Returns data_dir/dataset_name/ """
-
+        """Returns data_dir/dataset_name/"""
         return os.path.join(self.data_dir, self.dataset.name)
 
     def get_loader_in_memory(self, inputs, labels, batch_size=None):
@@ -60,6 +59,10 @@ class DataLoader():
             labels (torch.Tensor)
             batch_size (int):
                 loader batch size. If None, self.batch_size is used.
+
+        Returns:
+            dataloader (iter):
+                iterable through batches inputs-label pairs.
         """
         minibatch = self.batch_size if batch_size is None else batch_size
         dataloader = list(zip(inputs.split(minibatch),
@@ -67,15 +70,23 @@ class DataLoader():
 
         return dataloader
 
-    def shuffle_data_in_memory(self, inputs, labels):
+    @staticmethod
+    def shuffle_data_in_memory(inputs, labels):
         """
         Shuffle data when tensors are in memory.
 
         Args:
             inputs (torch.Tensor)
             labels (torch.Tensor)
+
+        Returns:
+            inputs (torch.Tensor):
+                shuffled inputs.
+            labels (torch.Tensor):
+                labels corresponding to shuffled inputs.
         """
-        permutation_idx = torch.randperm(inputs.size(0))
+        permutation_idx = \
+            torch.randperm(inputs.size(0)).to(device=inputs.device)
         inputs = torch.index_select(inputs, 0, permutation_idx)
         labels = torch.index_select(labels, 0, permutation_idx)
 
@@ -86,6 +97,10 @@ class DataLoader():
         Get reshufled trainloader when tensors are in memory.
 
         Shuffles the data and splits it in batches.
+
+        Returns:
+            trainloader (iter):
+                training set iterator of input-label batch pairs.
         """
         train_inputs, train_labels = \
             self.shuffle_data_in_memory(self.train_inputs, self.train_labels)
@@ -94,8 +109,18 @@ class DataLoader():
         return trainloader
 
     def load_dataset_in_memory(self, mode):
-        """ Load dataset saved in memory """
+        """
+        Load dataset saved in memory
 
+        Args:
+            mode (str):
+                'train', 'valid', or 'test'
+
+        Returns:
+            inputs, labels (torch.Tensor):
+                tensors with inputs and corresponding labels from ``mode``
+                dataset.
+        """
         assert mode in ['train', 'valid', 'test']
 
         dataset_dir = self.get_dataset_dir()
@@ -117,11 +142,12 @@ class DataLoader():
         Args:
             shuffle (bool):
                 If true, shuffle the data.
+
         Returns:
             trainloader (iter):
-                training set iterator.
+                training set iterator of input-label batch pairs.
             validloader (iter):
-                validation set iterator.
+                validation set iterator of input-label batch pairs.
         """
         if self.dataset.is_user_dataset is True:
 
@@ -199,6 +225,18 @@ class DataLoader():
         The number of validation samples (indices) is a small fraction of the
         total training_dataset. The remaining indices correspond to the
         training data.
+
+        Args:
+            train_dataset (torchvision.dataset)
+            shuffle (bool):
+                If true, shuffle the data.
+
+        Returns:
+            train_indices (list)
+                indices of samples to use for training dataset.
+            valid_indices (list):
+                indices of samples to use for validation dataset. The set
+                of valid_indices and train_indices aremutually exclusive.
         """
         num_train_samples = len(train_dataset)
         indices = list(range(num_train_samples))
@@ -224,14 +262,12 @@ class DataLoader():
 
     def get_test_loader(self):
         """
-        Utility function for loading and returning a multi-process
-        test iterator over the dataset (for batch testing).
+        Get the test loader for batch testing.
 
         Returns:
             testloader (iter):
-                test set iterator.
+                test set iterator of input-label batch pairs.
         """
-
         if self.dataset.is_user_dataset is True:
             test_inputs, test_labels = self.load_dataset_in_memory('test')
             testloader = self.get_loader_in_memory(test_inputs,
