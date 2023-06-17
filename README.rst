@@ -13,15 +13,15 @@ The aim of this repository is to:
 
 * Facilitate the reproduction of the results reported in the research papers:
 
-  * `Learning Activation Functions in Deep (Spline) Neural Networks <http://bigwww.epfl.ch/publications/bohra2003.html>`_;
+  * `[Bohra-Campos2020] <https://ieeexplore.ieee.org/document/9264754>`_ “Learning Activation Functions in Deep (Spline) Neural Networks.”
 
-  * `Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant <http://bigwww.epfl.ch/publications/aziznejad2001.html>`_.
+  * `[Aziznejad2020] <https://ieeexplore.ieee.org/document/9163082>`_ “Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant.”
 
 * Enable a seamless integration of deep spline activation functions in a custom neural network.
 
 
 The proposed scheme is based on the theoretical work of
-`M.Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_.
+`M. Unser <http://bigwww.epfl.ch/publications/unser1901.html>`_.
 
 
 .. contents:: **Table of Contents**
@@ -169,7 +169,7 @@ For full details, please consult `scripts/deepsplines_tutorial.py <https://githu
 Reproducing results
 -------------------
 
-To reproduce the results shown in the research papers [Bohra-Campos2020]_ and [Aziznejad2020]_ one can run the following scripts:
+To reproduce the results shown in the research papers `[Bohra-Campos2020] <https://ieeexplore.ieee.org/document/9264754>`_ and `[Aziznejad2020] <https://ieeexplore.ieee.org/document/9163082>`_ one can run the following scripts:
 
 .. code-block:: bash
 
@@ -182,14 +182,14 @@ To see the running options, please add :bash:`--help` to the commands above.
 Developers
 ==========
 
-*DeepSplines* is developed by the `Biomedical Imaging Group <http://bigwww.epfl.ch/>`_,
+*DeepSplines* is developed by the `Biomedical Imaging Group <https://bigwww.epfl.ch/>`_,
 `École Polytéchnique Fédérale de Lausanne <https://www.epfl.ch/en/>`_, Switzerland.
 
 For citing this package, please see: http://doi.org/10.5281/zenodo.5156042
 
 Original authors:
 
--   **Joaquim Campos** (joaquimcampos15@hotmail.com)
+-   **Joaquim Campos** (joaquimcampos15@duck.com)
 -   **Pakshal Bohra** (pakshal.bohra@epfl.ch)
 
 Contributors:
@@ -199,9 +199,9 @@ Contributors:
 References
 ==========
 
-.. [Bohra-Campos2020] P. Bohra, J. Campos, H. Gupta, S. Aziznejad, M. Unser, "Learning Activation Functions in Deep (Spline) Neural Networks," IEEE Open Journal of Signal Processing, vol. 1, pp.295-309, November 19, 2020.
+* `[Bohra-Campos2020] <https://ieeexplore.ieee.org/document/9264754>`_ P. Bohra, J. Campos, H. Gupta, S. Aziznejad, and M. Unser, “Learning Activation Functions in Deep (Spline) Neural Networks,” IEEE Open Journal of Signal Processing, vol. 1, pp. 295-309, Nov. 2020.
 
-.. [Aziznejad2020] S. Aziznejad, H. Gupta, J. Campos, M. Unser, "Deep Neural Networks with Trainable Activations and Controlled Lipschitz Constant," IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, August 10, 2020.
+* `[Aziznejad2020] <https://ieeexplore.ieee.org/document/9163082>`_ S. Aziznejad, H. Gupta, J. Campos, and M. Unser, “Deep Neural Networks With Trainable Activations and Controlled Lipschitz Constant,” IEEE Transactions on Signal Processing, vol. 68, pp. 4688-4699, Aug. 2020.
 
 License
 =======
